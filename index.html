@@ -40,7 +40,6 @@
       flex-direction: column;
     }
 
-    /* Górny pasek nawigacji */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -137,7 +136,6 @@
       cursor: not-allowed;
     }
 
-    /* Kontener główny */
     .main-wrapper {
       flex: 1;
     }
@@ -156,7 +154,6 @@
       display: block;
     }
 
-    /* Pasek narzędzi Admina na górze podstron */
     .admin-toolbar {
       display: none;
       background: #121216;
@@ -258,7 +255,6 @@
     .dot-blue { color: #60a5fa; font-weight: 700; }
     .dot-red { color: #f87171; font-weight: 700; }
 
-    /* Nagłówek sekcji (Hero) */
     .hero {
       display: flex;
       justify-content: space-between;
@@ -329,7 +325,6 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Przyciski na stronie START */
     .hero-actions {
       display: flex;
       gap: 12px;
@@ -379,7 +374,6 @@
       border-color: var(--border-hover);
     }
 
-    /* Karty informacyjne na stronie START i API */
     .start-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -457,7 +451,6 @@
       text-decoration: underline;
     }
 
-    /* FAQ Akordeon */
     .faq-list {
       display: flex;
       flex-direction: column;
@@ -516,7 +509,6 @@
       padding-top: 14px;
     }
 
-    /* Wyszukiwarka i filtry */
     .controls {
       margin-bottom: 24px;
     }
@@ -571,7 +563,6 @@
       outline: none;
     }
 
-    /* Pigułki tagów i Ulubione */
     .tags-bar {
       display: flex;
       flex-wrap: wrap;
@@ -660,7 +651,6 @@
       color: var(--text-primary);
     }
 
-    /* Siatka kart */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -687,7 +677,6 @@
       transform: translateY(-2px);
     }
 
-    /* Statusy Admina na kartach */
     .card.status-added {
       background-color: rgba(16, 185, 129, 0.14) !important;
       border-color: rgba(16, 185, 129, 0.6) !important;
@@ -749,7 +738,6 @@
       line-height: 1.35;
     }
 
-    /* Plakietka NOWOŚĆ (< 3 dni) */
     .badge-new {
       background: rgba(16, 185, 129, 0.18);
       border: 1px solid rgba(16, 185, 129, 0.55);
@@ -849,7 +837,6 @@
       border-color: var(--accent-red);
     }
 
-    /* Kontener obrazu i tło kafla dla przezroczystych PNG */
     .card-image-wrap {
       margin: 0 16px;
       border-radius: 8px;
@@ -966,7 +953,6 @@
       color: var(--text-secondary);
     }
 
-    /* Stopka z logowaniem admina */
     .site-footer {
       border-top: 1px solid var(--border-color);
       padding: 24px 40px;
@@ -1008,7 +994,6 @@
       color: var(--text-primary);
     }
 
-    /* Modale */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1040,7 +1025,6 @@
       max-width: 440px;
     }
 
-    /* Duży modal podglądu Static Mesha w układzie Instagrama (Lewo obraz / Prawo szczegóły) */
     .modal.modal-instagram {
       max-width: 1120px;
       width: 96vw;
@@ -1205,7 +1189,6 @@
       padding: 24px;
     }
 
-    /* Pola formularzy i inline błędy */
     .form-group {
       margin-bottom: 16px;
     }
@@ -1275,7 +1258,6 @@
       min-height: 84px;
     }
 
-    /* Strefa wklejania obrazu ze schowka (Ctrl+V / Drag & Drop) */
     .paste-dropzone {
       border: 1px dashed #3a3a45;
       background-color: #09090b;
@@ -1332,7 +1314,6 @@
       display: block;
     }
 
-    /* Checkboxy automatyzacji (Wycinanie tła + Smart Crop + Auto AI) */
     .automation-checks-group {
       display: flex;
       flex-direction: column;
@@ -1383,6 +1364,55 @@
       accent-color: #10b981;
     }
 
+    /* Pasek ustawień cięcia tła (suwak + przycisk reload) */
+    .bg-settings-box {
+      background: #0d0d10;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bg-settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .bg-settings-row input[type="range"] {
+      flex: 1;
+      margin: 0 12px;
+      accent-color: #10b981;
+      cursor: pointer;
+    }
+
+    .btn-reload-bg {
+      background: #1a1a22;
+      border: 1px solid var(--border-color);
+      color: #34d399;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-reload-bg:hover {
+      background: #10b981;
+      color: #09090b;
+      border-color: #10b981;
+    }
+
     .btn-ai-gen {
       background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: #ffffff;
@@ -1401,7 +1431,6 @@
       cursor: wait;
     }
 
-    /* Sekcja Opis + Tagi z nakładką ładowania AI (3 kropki jak z Discorda) */
     .ai-target-wrapper {
       position: relative;
       border-radius: 10px;
@@ -1448,27 +1477,13 @@
       animation: discordPulse 1.4s infinite ease-in-out both;
     }
 
-    .discord-dots-pill span:nth-child(1) {
-      animation-delay: -0.32s;
-    }
-
-    .discord-dots-pill span:nth-child(2) {
-      animation-delay: -0.16s;
-    }
-
-    .discord-dots-pill span:nth-child(3) {
-      animation-delay: 0s;
-    }
+    .discord-dots-pill span:nth-child(1) { animation-delay: -0.32s; }
+    .discord-dots-pill span:nth-child(2) { animation-delay: -0.16s; }
+    .discord-dots-pill span:nth-child(3) { animation-delay: 0s; }
 
     @keyframes discordPulse {
-      0%, 80%, 100% {
-        transform: scale(0.55);
-        opacity: 0.35;
-      }
-      40% {
-        transform: scale(1.1);
-        opacity: 1;
-      }
+      0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
+      40% { transform: scale(1.1); opacity: 1; }
     }
 
     .tag-selector-box {
@@ -1517,7 +1532,6 @@
       border-color: #ffffff;
     }
 
-    /* Sugerowane nowe tagi przez AI (na niebiesko) */
     .tag-option.ai-suggested {
       background: rgba(59, 130, 246, 0.16);
       border-color: rgba(59, 130, 246, 0.55);
@@ -1648,7 +1662,6 @@
 </head>
 <body>
 
-  <!-- Nawigacja -->
   <nav class="navbar">
     <div class="nav-left">
       <div class="brand-logo" onclick="switchTab('start')" title="Strona główna — The Bus Modding Wiki">
@@ -1667,7 +1680,6 @@
   </nav>
 
   <div class="main-wrapper">
-    <!-- ==================== WIDOK 1: START ==================== -->
     <div id="view-start" class="view-section active">
       <div class="container">
         <header class="hero">
@@ -1728,7 +1740,6 @@
       </div>
     </div>
 
-    <!-- ==================== WIDOK 2: BAZA MESHÓW ==================== -->
     <div id="view-meshes" class="view-section">
       <div class="container">
         <div class="admin-toolbar">
@@ -1794,7 +1805,6 @@
       </div>
     </div>
 
-    <!-- ==================== WIDOK 3: PORADNIKI ==================== -->
     <div id="view-tutorials" class="view-section">
       <div class="container">
         <div class="admin-toolbar">
@@ -1851,7 +1861,6 @@
       </div>
     </div>
 
-    <!-- ==================== WIDOK 4: GOOGLE AI API ==================== -->
     <div id="view-api" class="view-section">
       <div class="container">
         <header class="hero">
@@ -1922,7 +1931,6 @@
     </div>
   </div>
 
-  <!-- Stopka z logowaniem admina -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-left">
@@ -1933,13 +1941,9 @@
     </div>
   </footer>
 
-  <!-- ==================== MODAL 1: SZCZEGÓŁY MESHA (UKŁAD INSTAGRAM + LUPA) ==================== -->
   <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal('modal-backdrop')">
     <div class="modal modal-instagram" onclick="event.stopPropagation()">
-      <!-- LEWA KOLUMNA: ZDJĘCIE + LUPA + PRZESUWANIE KAMERĄ -->
       <div class="modal-ig-left" id="modal-media-box"></div>
-
-      <!-- PRAWA KOLUMNA: TAGI, NAZWA, OPIS, PRZYCISKI -->
       <div class="modal-ig-right">
         <div class="modal-ig-header">
           <div class="modal-eyebrow">STATIC MESH • PODGLĄD OBIEKTU</div>
@@ -1959,7 +1963,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: LOGOWANIE ADMINA ==================== -->
   <div class="modal-backdrop" id="login-modal" onclick="closeModal('login-modal')">
     <div class="modal small" onclick="event.stopPropagation()">
       <div class="modal-body">
@@ -1978,7 +1981,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: DODAJ / EDYTUJ MESH ==================== -->
   <div class="modal-backdrop" id="mesh-form-modal" onclick="closeModal('mesh-form-modal')">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-body">
@@ -2008,9 +2010,21 @@
 
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
-              <input type="checkbox" id="mf-auto-bg-checkbox" onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Agresywne usuwanie nieba, chmur i tła (Smart Crop + Auto Sky Clean)</span>
+              <input type="checkbox" id="mf-auto-bg-checkbox" onchange="saveAutoBgPreference(this.checked); toggleBgSettingsVisibility()">
+              <span>✂️ Inteligentne czyszczenie nieba i tła z Edge Protection</span>
             </label>
+
+            <!-- Pasek ustawień cięcia (suwak intensywności + przycisk reload) -->
+            <div class="bg-settings-box" id="bg-settings-box">
+              <div class="bg-settings-row">
+                <span>Intensywność cięcia:</span>
+                <input type="range" id="bg-tolerance-range" min="1" max="10" value="4" oninput="updateToleranceLabel(this.value)">
+                <span id="bg-tolerance-val" style="font-family:'JetBrains Mono', monospace; font-weight:700;">4</span>
+              </div>
+              <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
+                <button type="button" class="btn-reload-bg" onclick="reloadBackgroundRemoval()">🔄 Reload / Przetwórz ponownie</button>
+              </div>
+            </div>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
               <input type="checkbox" id="mf-auto-ai-checkbox" onchange="saveAutoAiPreference(this.checked)">
@@ -2019,7 +2033,6 @@
           </div>
         </div>
 
-        <!-- Kontener objęty nakładką ładowania AI (wyszarzenie + 3 kropki jak w Discordzie) -->
         <div class="ai-target-wrapper" id="ai-target-wrapper">
           <div class="ai-loader-overlay">
             <div class="discord-dots-pill" title="AI analizuje obiekt i dobiera tagi...">
@@ -2067,7 +2080,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 4: DODAJ / EDYTUJ PORADNIK ==================== -->
   <div class="modal-backdrop" id="tutorial-form-modal" onclick="closeModal('tutorial-form-modal')">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-body">
@@ -2104,7 +2116,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 5: KONFIGURACJA GITHUB ==================== -->
   <div class="modal-backdrop" id="github-config-modal" onclick="closeModal('github-config-modal')">
     <div class="modal small" onclick="event.stopPropagation()">
       <div class="modal-body">
@@ -2142,6 +2153,7 @@
     const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
     const AUTO_AI_PREF_KEY = 'thebus_auto_ai_on_upload';
     const AUTO_BG_PREF_KEY = 'thebus_auto_bg_remove';
+    const BG_TOLERANCE_KEY = 'thebus_bg_tolerance';
     const FAVORITES_STORAGE_KEY = 'thebus_favorite_meshes';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -2167,6 +2179,7 @@
     let modalSelectedTags = new Set();
     let aiSuggestedNewTags = new Set();
     let editingTutorialIndex = null;
+    let originalRawBlob = null; // Zachowuje oryginalny surowy zrzut ekranu do ponownego przetwarzania Reload
     let lastPastedBlob = null;
 
     let previewZoomState = {
@@ -2220,7 +2233,21 @@
       return saved === null ? true : saved === '1';
     }
 
-    // Inteligentne wyciąganie nazwy mesha oraz pełnej ścieżki
+    function toggleBgSettingsVisibility() {
+      const enabled = document.getElementById('mf-auto-bg-checkbox').checked;
+      document.getElementById('bg-settings-box').style.display = enabled ? 'flex' : 'none';
+    }
+
+    function updateToleranceLabel(val) {
+      document.getElementById('bg-tolerance-val').textContent = val;
+      localStorage.setItem(BG_TOLERANCE_KEY, val);
+    }
+
+    function getToleranceValue() {
+      const saved = localStorage.getItem(BG_TOLERANCE_KEY);
+      return saved !== null ? parseInt(saved, 10) : 4;
+    }
+
     function parseUnrealPath(rawInput) {
       let trimmed = rawInput.trim();
       let fullPath = trimmed;
@@ -2242,8 +2269,8 @@
 
     function onMeshPathInput() {}
 
-    // Ulepszona funkcja Smart Crop + Agresywne usuwanie jasnego nieba i chmur
-    async function smartProcessImage(blob) {
+    // Inteligentny algorytm usuwania tła z wykrywaniem krawędzi (Edge Protection) i regulowaną czułością
+    async function smartProcessImage(blob, toleranceLevel = 4) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(blob);
@@ -2259,15 +2286,13 @@
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(img, 0, 0);
 
-          // 1. Bardziej agresywne obcięcie pustego viewportu UE (paska edytora, nieba z góry)
+          // Bezpieczny przycisk marginesu wokół shota z Unreal Engine
           let cropX = 0, cropY = 0, cropW = origW, cropH = origH;
-
           if (origW > 800 && origH > 600) {
-            // Wycina marginesy boczne oraz zostawia centralny obszar mesha
-            const startX = Math.round(origW * 0.10);
-            const endX = Math.round(origW * 0.90);
-            const startY = Math.round(origH * 0.08); // mocniej tnie górę z chmurami
-            const endY = Math.round(origH * 0.92);
+            const startX = Math.round(origW * 0.05);
+            const endX = Math.round(origW * 0.95);
+            const startY = Math.round(origH * 0.05);
+            const endY = Math.round(origH * 0.95);
             cropX = startX;
             cropY = startY;
             cropW = endX - startX;
@@ -2283,22 +2308,20 @@
           const imgData = cCtx.getImageData(0, 0, cropW, cropH);
           const data = imgData.data;
 
-          // 2. Pobieranie próbek z krawędzi (niebo, chmury, szare tło edytora)
+          // Pobieranie palety krawędziowej tła (narożniki i krawędzie obrazka)
           const bgPalette = [];
           const addSample = (x, y) => {
             const idx = (y * cropW + x) * 4;
             const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
             if (a < 20) return;
             for (const c of bgPalette) {
-              if (Math.abs(c[0] - r) + Math.abs(c[1] - g) + Math.abs(c[2] - b) < 30) {
-                return;
-              }
+              if (Math.abs(c[0] - r) + Math.abs(c[1] - g) + Math.abs(c[2] - b) < 25) return;
             }
             bgPalette.push([r, g, b]);
           };
 
-          const stepX = Math.max(1, Math.floor(cropW / 30));
-          const stepY = Math.max(1, Math.floor(cropH / 30));
+          const stepX = Math.max(1, Math.floor(cropW / 40));
+          const stepY = Math.max(1, Math.floor(cropH / 40));
           for (let x = 0; x < cropW; x += stepX) {
             addSample(x, 0);
             addSample(x, cropH - 1);
@@ -2308,33 +2331,40 @@
             addSample(cropW - 1, y);
           }
 
-          // 3. Bardziej czuły algorytm wykrywający jasne chmury/niebo
+          // Dynamiczna czułość oparta na suwaku (tolerancia color distance)
+          // Im wyższa wartość suwaka, tym szerszy zakres odcieni nieba/chmur usunie
+          const baseColorThreshold = 1500 + (toleranceLevel * 450); 
+
           const isBackgroundPixel = (idx) => {
             const a = data[idx + 3];
             if (a < 20) return true;
             const r = data[idx], g = data[idx + 1], b = data[idx + 2];
 
-            // Sprawdzenie palety krawędziowej
+            // Ochrona krawędzi (Edge Protection): jeśli piksel ma dużą kontrastowość/nasycenie, chronimy go przed wycięciem
+            const maxCh = Math.max(r, g, b);
+            const minCh = Math.min(r, g, b);
+            const chroma = maxCh - minCh;
+            if (chroma > 35 && maxCh < 235) {
+              // Silny kolor / tekstura budynku - nie tnij
+              return false;
+            }
+
             for (let i = 0; i < bgPalette.length; i++) {
               const c = bgPalette[i];
               const dr = r - c[0];
               const dg = g - c[1];
               const db = b - c[2];
-              if (dr * dr + dg * dg + db * db <= 2800) { // Zwiększona tolerancja na odcienie chmur
+              if (dr * dr + dg * dg + db * db <= baseColorThreshold) {
                 return true;
               }
             }
 
-            const maxCh = Math.max(r, g, b);
-            const minCh = Math.min(r, g, b);
-            const chroma = maxCh - minCh;
+            // Jasne niebo / jednorodne chmury
+            if (maxCh > 200 && chroma < (15 + toleranceLevel * 3)) {
+              return true;
+            }
 
-            // Agresywne usuwanie jasnego nieba i chmur (wysoka jasność + niska saturacja lub błękitny odcień)
-            const isSkyOrCloud = (
-              maxCh > 180 && chroma < 45
-            );
-
-            return isSkyOrCloud;
+            return false;
           };
 
           const visited = new Uint8Array(cropW * cropH);
@@ -2374,25 +2404,6 @@
             if (y < cropH - 1) enqueue(x, y + 1);
           }
 
-          // Wygładzanie krawędzi (antyaliasing)
-          for (let y = 1; y < cropH - 1; y++) {
-            for (let x = 1; x < cropW - 1; x++) {
-              const pos = y * cropW + x;
-              const idx = pos * 4;
-              if (data[idx + 3] === 0) continue;
-
-              let transparentNeighbors = 0;
-              if (data[(pos - 1) * 4 + 3] === 0) transparentNeighbors++;
-              if (data[(pos + 1) * 4 + 3] === 0) transparentNeighbors++;
-              if (data[(pos - cropW) * 4 + 3] === 0) transparentNeighbors++;
-              if (data[(pos + cropW) * 4 + 3] === 0) transparentNeighbors++;
-
-              if (transparentNeighbors >= 2) {
-                data[idx + 3] = Math.round(data[idx + 3] * 0.4);
-              }
-            }
-          }
-
           cCtx.putImageData(imgData, 0, 0);
           croppedCanvas.toBlob((outBlob) => {
             resolve(outBlob || blob);
@@ -2408,17 +2419,20 @@
       });
     }
 
+    async function reloadBackgroundRemoval() {
+      if (!originalRawBlob) {
+        alert('Brak wczytanego oryginalnego obrazka do przetworzenia.');
+        return;
+      }
+      await uploadImageBlobToGithub(originalRawBlob);
+    }
+
     function getNextMeshId() {
       let maxId = 0;
       allAssets.forEach((asset, idx) => {
-        const numericId = typeof asset.id === 'number'
-          ? asset.id
-          : parseInt(asset.id, 10);
-        if (!isNaN(numericId) && numericId > maxId) {
-          maxId = numericId;
-        } else if (idx + 1 > maxId) {
-          maxId = idx + 1;
-        }
+        const numericId = typeof asset.id === 'number' ? asset.id : parseInt(asset.id, 10);
+        if (!isNaN(numericId) && numericId > maxId) maxId = numericId;
+        else if (idx + 1 > maxId) maxId = idx + 1;
       });
       return maxId + 1;
     }
@@ -2490,6 +2504,9 @@
 
     async function uploadImageBlobToGithub(rawBlob) {
       clearFieldError('mf-image', 'err-mf-image');
+      if (!originalRawBlob) {
+        originalRawBlob = rawBlob;
+      }
 
       const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
       const token = localStorage.getItem(GH_TOKEN_KEY);
@@ -2510,9 +2527,10 @@
       const shouldProcess = document.getElementById('mf-auto-bg-checkbox').checked;
 
       if (shouldProcess) {
-        statusText.innerHTML = '✂️ Usuwanie nieba, chmur i tła...';
+        const currentTolerance = getToleranceValue();
+        statusText.innerHTML = `✂️ Czyszczenie tła (intensywność ${currentTolerance})...`;
         try {
-          finalBlob = await smartProcessImage(rawBlob);
+          finalBlob = await smartProcessImage(rawBlob, currentTolerance);
         } catch (err) {
           finalBlob = rawBlob;
         }
@@ -2561,9 +2579,7 @@
           message: `Dodano zdjęcie ${repoFilePath} przez panel admina`,
           content: base64Content
         };
-        if (existingSha) {
-          payload.sha = existingSha;
-        }
+        if (existingSha) payload.sha = existingSha;
 
         const putResp = await fetch(apiUrl, {
           method: 'PUT',
@@ -2592,6 +2608,7 @@
     function handleManualFileSelect(e) {
       const file = e.target.files?.[0];
       if (file && file.type.startsWith('image/')) {
+        originalRawBlob = file;
         uploadImageBlobToGithub(file);
       }
       e.target.value = '';
@@ -2600,6 +2617,7 @@
     function onManualImageUrlInput() {
       clearFieldError('mf-image', 'err-mf-image');
       lastPastedBlob = null;
+      originalRawBlob = null;
       const val = document.getElementById('mf-image').value.trim();
       const previewEl = document.getElementById('mf-paste-preview');
       if (val) {
@@ -2621,7 +2639,10 @@
         if (item.type.startsWith('image/')) {
           e.preventDefault();
           const blob = item.getAsFile();
-          if (blob) uploadImageBlobToGithub(blob);
+          if (blob) {
+            originalRawBlob = blob;
+            uploadImageBlobToGithub(blob);
+          }
           break;
         }
       }
@@ -2640,6 +2661,7 @@
       pasteZone.classList.remove('dragover');
       const file = e.dataTransfer?.files?.[0];
       if (file && file.type.startsWith('image/')) {
+        originalRawBlob = file;
         uploadImageBlobToGithub(file);
       }
     });
@@ -2777,8 +2799,7 @@
         renderGrid();
         renderMeshPreview();
       } catch (err) {
-        document.getElementById('results-info').innerHTML =
-          '<span style="color:#ef4444">Błąd wczytywania assets.json.</span>';
+        document.getElementById('results-info').innerHTML = '<span style="color:#ef4444">Błąd wczytywania assets.json.</span>';
       }
 
       try {
@@ -2788,8 +2809,7 @@
         renderTutorialsGrid();
         renderTutorialsPreview();
       } catch (err) {
-        document.getElementById('tutorials-results-info').innerHTML =
-          '<span style="color:#ef4444">Brak pliku poradniki.json.</span>';
+        document.getElementById('tutorials-results-info').innerHTML = '<span style="color:#ef4444">Brak pliku poradniki.json.</span>';
       }
     }
 
@@ -2867,11 +2887,8 @@
           btn.disabled = true;
         } else {
           btn.onclick = () => {
-            if (selectedTags.has(tag)) {
-              selectedTags.delete(tag);
-            } else {
-              selectedTags.add(tag);
-            }
+            if (selectedTags.has(tag)) selectedTags.delete(tag);
+            else selectedTags.add(tag);
             renderTags();
             renderGrid();
           };
@@ -3000,12 +3017,10 @@
         filtered.sort((a, b) => b.asset.name.localeCompare(a.asset.name));
       }
 
-      document.getElementById('results-info').innerHTML =
-        `Wyświetlono <strong>${filtered.length}</strong> z ${allAssets.length} obiektów`;
+      document.getElementById('results-info').innerHTML = `Wyświetlono <strong>${filtered.length}</strong> z ${allAssets.length} obiektów`;
 
       const grid = document.getElementById('assets-grid');
       grid.innerHTML = '';
-
       filtered.forEach(({ asset, index }) => {
         grid.appendChild(createMeshCardElement(asset, index));
       });
@@ -3016,12 +3031,21 @@
       refreshAdminActivity();
       editingMeshIndex = index;
       lastPastedBlob = null;
+      originalRawBlob = null;
       aiSuggestedNewTags.clear();
       document.getElementById('ai-tags-hint').classList.remove('visible');
       document.getElementById('ai-target-wrapper').classList.remove('ai-loading');
       document.getElementById('mf-tag-search').value = '';
+
+      const autoBgActive = isAutoBgEnabled();
       document.getElementById('mf-auto-ai-checkbox').checked = isAutoAiEnabled();
-      document.getElementById('mf-auto-bg-checkbox').checked = isAutoBgEnabled();
+      document.getElementById('mf-auto-bg-checkbox').checked = autoBgActive;
+      toggleBgSettingsVisibility();
+
+      const currentTolerance = getToleranceValue();
+      document.getElementById('bg-tolerance-range').value = currentTolerance;
+      document.getElementById('bg-tolerance-val').textContent = currentTolerance;
+
       clearFieldError('mf-name', 'err-mf-name');
       clearFieldError('mf-image', 'err-mf-image');
       clearFieldError('mf-desc', 'err-mf-desc');
@@ -3352,8 +3376,7 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
       const thumbUrl = tut.thumbnail || getYoutubeThumbnail(tut.youtubeUrl);
       const newBadgeHtml = isNewItem(tut.addedAt) ? `<span class="badge-new">NOWOŚĆ</span>` : '';
       const imgHtml = thumbUrl
-        ? `<img src="${thumbUrl}" alt="${tut.title}" loading="lazy" onerror="handleImageError(this)">
-           <div class="yt-play-badge">▶</div>`
+        ? `<img src="${thumbUrl}" alt="${tut.title}" loading="lazy" onerror="handleImageError(this)"><div class="yt-play-badge">▶</div>`
         : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
 
       card.innerHTML = `
@@ -3367,9 +3390,7 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
             <button class="icon-btn delete" title="Oznacz do usunięcia / Cofnij" onclick="toggleDeleteTutorial(event, ${index})">🗑</button>
           </div>
         </div>
-        <div class="card-image-wrap">
-          ${imgHtml}
-        </div>
+        <div class="card-image-wrap">${imgHtml}</div>
         <p class="card-desc">${tut.description || ''}</p>
         <div class="card-footer">
           <div class="tutorial-author">Autor: <span>${tut.author || 'Społeczność'}</span></div>
@@ -3410,8 +3431,7 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
         filtered.sort((a, b) => b.tut.title.localeCompare(a.tut.title));
       }
 
-      document.getElementById('tutorials-results-info').innerHTML =
-        `Wyświetlono <strong>${filtered.length}</strong> z ${allTutorials.length} poradników`;
+      document.getElementById('tutorials-results-info').innerHTML = `Wyświetlono <strong>${filtered.length}</strong> z ${allTutorials.length} poradników`;
 
       const grid = document.getElementById('tutorials-grid');
       grid.innerHTML = '';
@@ -3594,9 +3614,8 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
       if (toggleBtn) {
         toggleBtn.onclick = (e) => {
           e.stopPropagation();
-          if (previewZoomState.isZoomed) {
-            resetPreviewZoom();
-          } else {
+          if (previewZoomState.isZoomed) resetPreviewZoom();
+          else {
             previewZoomState.isZoomed = true;
             previewZoomState.panX = 0;
             previewZoomState.panY = 0;
@@ -3606,16 +3625,13 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
       }
 
       box.onmousedown = (e) => {
-        if (e.button !== 0) return;
-        if (e.target === toggleBtn) return;
+        if (e.button !== 0 || e.target === toggleBtn) return;
         e.preventDefault();
         previewZoomState.isDragging = true;
         previewZoomState.hasMoved = false;
         previewZoomState.startX = e.clientX - previewZoomState.panX;
         previewZoomState.startY = e.clientY - previewZoomState.panY;
-        if (previewZoomState.isZoomed) {
-          box.classList.add('is-dragging');
-        }
+        if (previewZoomState.isZoomed) box.classList.add('is-dragging');
 
         const onDocumentMouseMove = (moveEvent) => {
           if (!previewZoomState.isDragging) return;
@@ -3648,9 +3664,7 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
               previewZoomState.panX = offsetX;
               previewZoomState.panY = offsetY;
               applyPreviewTransform();
-            } else {
-              resetPreviewZoom();
-            }
+            } else resetPreviewZoom();
           }
         };
 
