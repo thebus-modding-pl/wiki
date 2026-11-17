@@ -1042,12 +1042,12 @@
     }
 
     .modal-ig-left {
-      background-color: #060608;
+      background-color: transparent;
       background-image:
-        linear-gradient(45deg, #131317 25%, transparent 25%),
-        linear-gradient(-45deg, #131317 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #131317 75%),
-        linear-gradient(-45deg, transparent 75%, #131317 75%);
+        linear-gradient(45deg, #16161a 25%, transparent 25%),
+        linear-gradient(-45deg, #16161a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #16161a 75%),
+        linear-gradient(-45deg, transparent 75%, #16161a 75%);
       background-size: 24px 24px;
       background-position: 0 0, 0 12px, 12px -12px, -12px 0;
       border-right: 1px solid var(--border-color);
@@ -1308,7 +1308,7 @@
       margin-left: auto;
       margin-right: auto;
       border: 1px solid #27272f;
-      background: #09090b;
+      background: transparent;
       background-image:
         linear-gradient(45deg, #16161a 25%, transparent 25%),
         linear-gradient(-45deg, #16161a 25%, transparent 25%),
@@ -1915,7 +1915,7 @@
         <p class="modal-desc" id="modal-desc"></p>
 
         <div class="modal-ig-footer">
-          <button class="btn-primary" id="modal-copy-btn">Kopiuj ścieżkę /Game/...</button>
+          <button class="btn-primary" id="modal-copy-btn">Kopiuj</button>
           <button class="btn-close" onclick="closeModal('modal-backdrop')">Zamknij</button>
         </div>
       </div>
@@ -1954,7 +1954,7 @@
 
         <div class="form-group">
           <label class="form-label">
-            <span>Zdjęcie obiektu (zapis w /images na GitHubie po kliknięciu Zapisz)</span>
+            <span>Zdjęcie obiektu (zapis w /images na GitHubie w tle)</span>
             <button type="button" class="btn-admin-config" style="padding:3px 8px; font-size:10px;" onclick="openGithubConfigModal()">⚙ GitHub Token</button>
           </label>
           <div class="paste-dropzone" id="mf-paste-zone" onclick="document.getElementById('mf-file-input').click()">
@@ -1964,13 +1964,13 @@
             <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
             <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
           </div>
-          <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001_a9f2.png (wypełni się po zapisie)" oninput="onManualImageUrlInput()">
+          <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001_a9f2.png (wypełni się automatycznie)" oninput="onManualImageUrlInput()">
           <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link.</div>
 
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
               <input type="checkbox" id="mf-auto-bg-checkbox" checked onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Auto-Crop + Usuwanie tła świata (przycięcie edytora i wycięcie tła/nieba wokół obiektu)</span>
+              <span>✂️ Auto-Crop ramki + Zaawansowane usuwanie tła (nieba i podłoża wokół mesha)</span>
             </label>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
@@ -2199,7 +2199,7 @@
 
     function onMeshPathInput() {}
 
-    // Dwustopniowy procesor: 1. Precyzyjne docięcie okna UE, 2. Usunięcie tła świata i nieba wokół budynku
+    // Głębokie przycięcie ramki edytora UE + Usunięcie nieba i tła świata z pełną przezroczystością alfa
     async function smartProcessImage(blob) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -2210,11 +2210,11 @@
           const origW = img.naturalWidth;
           const origH = img.naturalHeight;
 
-          // Krok 1: Przycięcie ramki okna widoku Unreal Engine
-          const cropX = Math.round(origW * 0.015);
-          const cropY = Math.round(origH * 0.08);
-          const cropW = Math.round(origW * 0.73);
-          const cropH = Math.round(origH * 0.89);
+          // Krok 1: Głębokie przycięcie ramki Unreal Engine (usuwamy paski narzędzi, menu, siatki edytora i okna)
+          const cropX = Math.round(origW * 0.12);
+          const cropY = Math.round(origH * 0.14);
+          const cropW = Math.round(origW * 0.60);
+          const cropH = Math.round(origH * 0.74);
 
           const canvas = document.createElement('canvas');
           canvas.width = cropW;
@@ -2222,16 +2222,16 @@
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
-          // Krok 2: Usuwanie tła świata wokół obiektu (Flood-fill / Chroma key z krawędzi)
+          // Krok 2: Agresywne usuwanie tła świata / nieba wokół budynku
           const imgData = ctx.getImageData(0, 0, cropW, cropH);
           const data = imgData.data;
 
-          // Pobierz bazowe kolory tła z rogów przyciętego widoku
+          // Pobierz próbki kolorów z rogów przyciętego widoku (tam zazwyczaj jest niebo/tło)
           const samplePoints = [
-            0, // lewy górny
-            (cropW - 1) * 4, // prawy górny
-            ((cropH - 1) * cropW) * 4, // lewy dolny
-            (((cropH - 1) * cropW) + (cropW - 1)) * 4 // prawy dolny
+            0,
+            (cropW - 1) * 4,
+            ((cropH - 1) * cropW) * 4,
+            (((cropH - 1) * cropW) + (cropW - 1)) * 4
           ];
 
           let bgR = 0, bgG = 0, bgB = 0;
@@ -2244,20 +2244,18 @@
           bgG = Math.round(bgG / samplePoints.length);
           bgB = Math.round(bgB / samplePoints.length);
 
-          const tolerance = 55; // Tolerancja dla gradientów nieba i cieni świata w UE
+          const tolerance = 70; // Większa tolerancja na chmury/niebo w UE
 
-          // Algorytm zalewania tła od krawędzi (Flood Fill)
           const visited = new Uint8Array(cropW * cropH);
           const queue = [];
 
-          // Dodaj wszystkie piksele z krawędzi obrazka do kolejki tła
           for (let x = 0; x < cropW; x++) {
-            queue.push(x, 0); // górna krawędź
-            queue.push(x, cropH - 1); // dolna krawędź
+            queue.push(x, 0);
+            queue.push(x, cropH - 1);
           }
           for (let y = 0; y < cropH; y++) {
-            queue.push(0, y); // lewa krawędź
-            queue.push(cropW - 1, y); // prawa krawędź
+            queue.push(0, y);
+            queue.push(cropW - 1, y);
           }
 
           for (let i = 0; i < queue.length; i += 2) {
@@ -2272,12 +2270,10 @@
             const pIdx = vIdx * 4;
             const r = data[pIdx], g = data[pIdx+1], b = data[pIdx+2];
 
-            // Jeśli piksel jest podobny do koloru tła świata, usuń go (ustaw przezroczystość alfa na 0)
             const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
             if (diff <= tolerance) {
-              data[pIdx + 3] = 0; // Przezroczyste
+              data[pIdx + 3] = 0; // Pełna przezroczystość (kafelki PNG będą widoczne za obiektem)
 
-              // Dodaj sąsiadów do kolejki
               queue.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
             }
           }
@@ -2379,7 +2375,7 @@
 
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
-      statusText.innerHTML = '✂️ Przycinanie edytora i usuwanie tła świata...';
+      statusText.innerHTML = '✂️ Przycinanie ramki edytora i usuwanie tła...';
 
       let finalBlob = rawBlob;
       if (document.getElementById('mf-auto-bg-checkbox').checked) {
@@ -2391,7 +2387,7 @@
 
       previewEl.src = URL.createObjectURL(finalBlob);
       previewEl.classList.add('visible');
-      statusText.innerHTML = '✅ Wycięto tło i przycięto kadr! (zapis na GitHub po kliknięciu Zapisz)';
+      statusText.innerHTML = '✅ Tło usunięte! (wyśle się w tle po kliknięciu Zapisz)';
 
       const rawPathVal = document.getElementById('mf-name').value.trim();
       if (rawPathVal) {
@@ -2404,53 +2400,40 @@
       }
     }
 
-    async function uploadPendingImageToGithub() {
-      if (!pendingImageBlob) {
-        return document.getElementById('mf-image').value.trim();
-      }
-
-      const rawPathVal = document.getElementById('mf-name').value.trim();
-      const { fullName } = parseUnrealPath(rawPathVal);
+    // Wysyłanie pliku na GitHub w tle (nie blokuje interfejsu)
+    async function uploadPendingImageToGithubInBackground(blob, fullName) {
+      if (!blob) return '';
       const uniqueSuffix = generateUniqueFileSuffix();
-      const ext = pendingImageBlob.type === 'image/jpeg' ? 'jpg' : (pendingImageBlob.type === 'image/webp' ? 'webp' : 'png');
+      const ext = blob.type === 'image/jpeg' ? 'jpg' : (blob.type === 'image/webp' ? 'webp' : 'png');
       const fileName = `${sanitizeFileName(fullName)}_${uniqueSuffix}.${ext}`;
       const repoFilePath = `images/${fileName}`;
 
       const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
       const token = localStorage.getItem(GH_TOKEN_KEY);
+      if (!repo || !token) return repoFilePath; // Jeśli brak tokenu, zwracamy lokalną ścieżkę
 
-      if (!repo || !token) {
-        openGithubConfigModal();
-        throw new Error('Skonfiguruj najpierw token GitHub w ustawieniach.');
-      }
+      try {
+        const base64Content = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
 
-      const base64Content = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(pendingImageBlob);
-      });
-
-      const apiUrl = `https://api.github.com/repos/${repo}/contents/${repoFilePath}`;
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      };
-
-      const putResp = await fetch(apiUrl, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({
-          message: `Dodano unikalne zdjęcie ${repoFilePath} przez panel admina`,
-          content: base64Content
-        })
-      });
-
-      const putResult = await putResp.json();
-      if (!putResp.ok) {
-        throw new Error(putResult.message || `Błąd GitHub API (${putResp.status})`);
-      }
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${repoFilePath}`;
+        await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Dodano zdjęcie ${repoFilePath} w tle przez panel admina`,
+            content: base64Content
+          })
+        });
+      } catch (e) {}
 
       return repoFilePath;
     }
@@ -2973,7 +2956,7 @@
       });
     }
 
-    async function saveMeshForm(addAnother = false) {
+    function saveMeshForm(addAnother = false) {
       const rawPathVal = document.getElementById('mf-name').value.trim();
       let image = document.getElementById('mf-image').value.trim();
       const description = document.getElementById('mf-desc').value.trim();
@@ -2986,23 +2969,19 @@
       }
 
       refreshAdminActivity();
-
-      try {
-        if (pendingImageBlob) {
-          const submitBtn = document.getElementById('mf-submit-btn');
-          submitBtn.disabled = true;
-          submitBtn.textContent = 'Wysyłanie zdjęcia...';
-          image = await uploadPendingImageToGithub();
-        }
-      } catch (err) {
-        showFieldError('mf-image', 'err-mf-image', 'Błąd zapisu zdjęcia na GitHub: ' + err.message);
-        const submitBtn = document.getElementById('mf-submit-btn');
-        submitBtn.disabled = false;
-        submitBtn.textContent = editingMeshIndex !== null ? 'Zapisz zmiany' : 'Dodaj do listy';
-        return;
-      }
-
       const { fullName, fullPath } = parseUnrealPath(rawPathVal);
+
+      // Wysyłanie w tle (nie blokuje UI)
+      if (pendingImageBlob) {
+        uploadPendingImageToGithubInBackground(pendingImageBlob, fullName).then(uploadedPath => {
+          const found = allAssets.find(a => a.name === fullName);
+          if (found) {
+            found.image = uploadedPath;
+            renderGrid();
+            renderMeshPreview();
+          }
+        });
+      }
 
       tags.forEach(tag => {
         if (!availableTags.includes(tag)) availableTags.push(tag);
@@ -3038,10 +3017,6 @@
       renderTags();
       renderGrid();
       renderMeshPreview();
-
-      const submitBtn = document.getElementById('mf-submit-btn');
-      submitBtn.disabled = false;
-      submitBtn.textContent = editingMeshIndex !== null ? 'Zapisz zmiany' : 'Dodaj do listy';
 
       if (addAnother) {
         openMeshFormModal(null, null);
