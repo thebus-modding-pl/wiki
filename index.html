@@ -2009,7 +2009,7 @@
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
               <input type="checkbox" id="mf-auto-bg-checkbox" onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Automatycznie przytnij pełny ekran (Smart Crop) + usuń tło i cień</span>
+              <span>✂️ Agresywne usuwanie nieba, chmur i tła (Smart Crop + Auto Sky Clean)</span>
             </label>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
@@ -2225,13 +2225,11 @@
       let trimmed = rawInput.trim();
       let fullPath = trimmed;
 
-      // Sprawdź czy jest w apostrofach np. /Script/Engine.StaticMesh'/Game/...'
       const matchApos = trimmed.match(/'([^']+)'/);
       if (matchApos && matchApos[1]) {
         fullPath = matchApos[1];
       }
 
-      // Wyciągnij ostatni człon po ukośniku jako krótką nazwę
       const parts = fullPath.split('/');
       const lastPart = parts[parts.length - 1] || fullPath;
       const shortName = lastPart.includes('.') ? lastPart.split('.')[0] : lastPart;
@@ -2244,6 +2242,7 @@
 
     function onMeshPathInput() {}
 
+    // Ulepszona funkcja Smart Crop + Agresywne usuwanie jasnego nieba i chmur
     async function smartProcessImage(blob) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -2260,13 +2259,15 @@
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(img, 0, 0);
 
+          // 1. Bardziej agresywne obcięcie pustego viewportu UE (paska edytora, nieba z góry)
           let cropX = 0, cropY = 0, cropW = origW, cropH = origH;
 
-          if (origW > 1200 && origH > 700) {
-            const startX = Math.round(origW * 0.15);
-            const endX = Math.round(origW * 0.72);
-            const startY = Math.round(origH * 0.12);
-            const endY = Math.round(origH * 0.88);
+          if (origW > 800 && origH > 600) {
+            // Wycina marginesy boczne oraz zostawia centralny obszar mesha
+            const startX = Math.round(origW * 0.10);
+            const endX = Math.round(origW * 0.90);
+            const startY = Math.round(origH * 0.08); // mocniej tnie górę z chmurami
+            const endY = Math.round(origH * 0.92);
             cropX = startX;
             cropY = startY;
             cropW = endX - startX;
@@ -2282,21 +2283,22 @@
           const imgData = cCtx.getImageData(0, 0, cropW, cropH);
           const data = imgData.data;
 
+          // 2. Pobieranie próbek z krawędzi (niebo, chmury, szare tło edytora)
           const bgPalette = [];
           const addSample = (x, y) => {
             const idx = (y * cropW + x) * 4;
             const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
             if (a < 20) return;
             for (const c of bgPalette) {
-              if (Math.abs(c[0] - r) + Math.abs(c[1] - g) + Math.abs(c[2] - b) < 22) {
+              if (Math.abs(c[0] - r) + Math.abs(c[1] - g) + Math.abs(c[2] - b) < 30) {
                 return;
               }
             }
             bgPalette.push([r, g, b]);
           };
 
-          const stepX = Math.max(1, Math.floor(cropW / 40));
-          const stepY = Math.max(1, Math.floor(cropH / 40));
+          const stepX = Math.max(1, Math.floor(cropW / 30));
+          const stepY = Math.max(1, Math.floor(cropH / 30));
           for (let x = 0; x < cropW; x += stepX) {
             addSample(x, 0);
             addSample(x, cropH - 1);
@@ -2306,17 +2308,19 @@
             addSample(cropW - 1, y);
           }
 
+          // 3. Bardziej czuły algorytm wykrywający jasne chmury/niebo
           const isBackgroundPixel = (idx) => {
             const a = data[idx + 3];
             if (a < 20) return true;
             const r = data[idx], g = data[idx + 1], b = data[idx + 2];
 
+            // Sprawdzenie palety krawędziowej
             for (let i = 0; i < bgPalette.length; i++) {
               const c = bgPalette[i];
               const dr = r - c[0];
               const dg = g - c[1];
               const db = b - c[2];
-              if (dr * dr + dg * dg + db * db <= 1450) {
+              if (dr * dr + dg * dg + db * db <= 2800) { // Zwiększona tolerancja na odcienie chmur
                 return true;
               }
             }
@@ -2325,14 +2329,12 @@
             const minCh = Math.min(r, g, b);
             const chroma = maxCh - minCh;
 
-            const isNeutralOrCoolShadow = (
-              chroma <= 34 &&
-              b >= r - 4 &&
-              g >= r - 6 &&
-              maxCh < 215
+            // Agresywne usuwanie jasnego nieba i chmur (wysoka jasność + niska saturacja lub błękitny odcień)
+            const isSkyOrCloud = (
+              maxCh > 180 && chroma < 45
             );
 
-            return isNeutralOrCoolShadow;
+            return isSkyOrCloud;
           };
 
           const visited = new Uint8Array(cropW * cropH);
@@ -2372,6 +2374,7 @@
             if (y < cropH - 1) enqueue(x, y + 1);
           }
 
+          // Wygładzanie krawędzi (antyaliasing)
           for (let y = 1; y < cropH - 1; y++) {
             for (let x = 1; x < cropW - 1; x++) {
               const pos = y * cropW + x;
@@ -2385,7 +2388,7 @@
               if (data[(pos + cropW) * 4 + 3] === 0) transparentNeighbors++;
 
               if (transparentNeighbors >= 2) {
-                data[idx + 3] = Math.round(data[idx + 3] * 0.5);
+                data[idx + 3] = Math.round(data[idx + 3] * 0.4);
               }
             }
           }
@@ -2507,7 +2510,7 @@
       const shouldProcess = document.getElementById('mf-auto-bg-checkbox').checked;
 
       if (shouldProcess) {
-        statusText.innerHTML = '✂️ Przycinanie ekranu i usuwanie tła...';
+        statusText.innerHTML = '✂️ Usuwanie nieba, chmur i tła...';
         try {
           finalBlob = await smartProcessImage(rawBlob);
         } catch (err) {
