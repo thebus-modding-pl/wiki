@@ -2183,7 +2183,13 @@
 
       return {
         success: (successText) => {
-          toast.querySelector('.toast-spinner').replaceWith(Object.assign(document.createElement('div'), { className: 'toast-check', textContent: '✓' }));
+          const spinner = toast.querySelector('.toast-spinner');
+          if (spinner) {
+            const check = document.createElement('div');
+            check.className = 'toast-check';
+            check.textContent = '✓';
+            spinner.replaceWith(check);
+          }
           toast.querySelector('span').textContent = successText;
           setTimeout(() => {
             toast.classList.add('fade-out');
@@ -2191,7 +2197,8 @@
           }, 2000);
         },
         error: (errText) => {
-          toast.querySelector('.toast-spinner').style.borderTopColor = '#ef4444';
+          const spinner = toast.querySelector('.toast-spinner');
+          if (spinner) spinner.style.borderTopColor = '#ef4444';
           toast.querySelector('span').textContent = errText;
           setTimeout(() => {
             toast.classList.add('fade-out');
@@ -2251,17 +2258,18 @@
       };
     }
 
-    function generateUniqueImageFilename(fullPath, rawName) {
-      const cleanPath = fullPath.replace(/[^a-zA-Z0-9_-]/g, '_');
+    // KRÓTKIE I BEZPIECZNE NAZWY PLIKÓW (np. images/SM_001_A_a9f2.png)
+    function generateUniqueImageFilename(shortName) {
+      const cleanName = shortName.replace(/[^a-zA-Z0-9_-]/g, '_');
       const suffix = Math.random().toString(36).substring(2, 7);
-      return `images/${cleanPath}_${suffix}.png`;
+      return `images/${cleanName}_${suffix}.png`;
     }
 
     function onMeshPathInput() {
       const rawPathVal = document.getElementById('mf-name').value.trim();
       if (rawPathVal && pendingImageBlob) {
-        const { fullPath } = parseUnrealPath(rawPathVal);
-        document.getElementById('mf-image').value = generateUniqueImageFilename(fullPath, rawPathVal);
+        const { fullName } = parseUnrealPath(rawPathVal);
+        document.getElementById('mf-image').value = generateUniqueImageFilename(fullName);
       }
     }
 
@@ -2344,8 +2352,8 @@
 
       const rawPathVal = document.getElementById('mf-name').value.trim();
       if (rawPathVal) {
-        const { fullPath } = parseUnrealPath(rawPathVal);
-        document.getElementById('mf-image').value = generateUniqueImageFilename(fullPath, rawPathVal);
+        const { fullName } = parseUnrealPath(rawPathVal);
+        document.getElementById('mf-image').value = generateUniqueImageFilename(fullName);
       } else {
         document.getElementById('mf-image').value = `images/mesh_${Math.random().toString(36).substring(2, 7)}.png`;
       }
@@ -2933,7 +2941,7 @@
       const { fullName, fullPath } = parseUnrealPath(rawPathVal);
 
       if (pendingImageBlob) {
-        image = generateUniqueImageFilename(fullPath, fullName);
+        image = generateUniqueImageFilename(fullName);
         uploadPendingImageToGithubInBackground(pendingImageBlob, image).then(uploadedPath => {
           const found = allAssets.find(a => a.fullPath === fullPath || a.name === fullName);
           if (found) {
