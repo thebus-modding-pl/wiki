@@ -16,45 +16,76 @@
   ],
   "assets": [
     {
+      "id": "SM_001_A",
+      "name": "SM_001_A",
+      "image": "https://i.imgur.com/II2LsHy.png",
+      "tags": [],
+      "description": "Moduł ścienny z dwoma wysokimi, łukowymi oknami typu francuskiego, wyposażonymi we wspólny, niski balkon z metalową balustradą. Klasyczny element architektoniczny o tradycyjnym charakterze."
+    },
+    {
       "id": "SM_008_Door_LOD0",
       "name": "SM_008_Door_LOD0",
       "image": "https://i.imgur.com/TWOJ_LINK_1.jpg",
-      "tags": ["Wewnątrz", "Drzwi", "Schody"],
+      "tags": [
+        "Wewnątrz",
+        "Drzwi",
+        "Schody"
+      ],
       "description": "Moduł drzwi wejściowych z przeszkleniem oraz fragmentem schodów wewnętrznych."
     },
     {
       "id": "SM_008_Door_B_4m",
       "name": "SM_008_Door_B_4m",
       "image": "https://i.imgur.com/TWOJ_LINK_2.jpg",
-      "tags": ["Drzwi", "Stare", "Zaokrąglone"],
+      "tags": [
+        "Drzwi",
+        "Stare",
+        "Zaokrąglone"
+      ],
       "description": "Podwójne, łukowe drzwi wejściowe osadzone w głębokiej wnęce o szerokości 4 metrów."
     },
     {
       "id": "SM_008_D_LOD0_1",
       "name": "SM_008_D_LOD0",
       "image": "https://i.imgur.com/TWOJ_LINK_3.jpg",
-      "tags": ["Drzwi", "Dach", "Stare"],
+      "tags": [
+        "Drzwi",
+        "Dach",
+        "Stare"
+      ],
       "description": "Moduł parterowy z zadaszeniem, drzwiami oraz dwoma oknami ze szprosami."
     },
     {
       "id": "SM_008_D_LOD0_2",
       "name": "SM_008_D_LOD0",
       "image": "https://i.imgur.com/TWOJ_LINK_4.jpg",
-      "tags": ["Okna", "Stare", "Szachownica"],
+      "tags": [
+        "Okna",
+        "Stare",
+        "Szachownica"
+      ],
       "description": "Zestaw trzech prostokątnych okien ze szprosami w starym stylu."
     },
     {
       "id": "SM_008_C_LOD0_1",
       "name": "SM_008_C_LOD0",
       "image": "https://i.imgur.com/TWOJ_LINK_5.jpg",
-      "tags": ["Okna", "Nowe", "Sklep"],
+      "tags": [
+        "Okna",
+        "Nowe",
+        "Sklep"
+      ],
       "description": "Szeroka, nowoczesna witryna sklepowa z dużym centralnym przeszkleniem."
     },
     {
       "id": "SM_008_C_LOD0_2",
       "name": "SM_008_C_LOD0",
       "image": "https://i.imgur.com/TWOJ_LINK_6.jpg",
-      "tags": ["Okna", "Stare", "Szachownica"],
+      "tags": [
+        "Okna",
+        "Stare",
+        "Szachownica"
+      ],
       "description": "Podwójny moduł okienny z ozdobnymi podziałami szyb."
     }
   ]
