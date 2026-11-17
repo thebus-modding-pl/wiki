@@ -842,7 +842,7 @@
       border-radius: 8px;
       overflow: hidden;
       aspect-ratio: 16 / 9;
-      background-color: var(--bg-surface);
+      background-color: transparent;
       background-image:
         linear-gradient(45deg, #16161a 25%, transparent 25%),
         linear-gradient(-45deg, #16161a 25%, transparent 25%),
@@ -1345,16 +1345,6 @@
       transition: border-color 0.15s, background-color 0.15s;
     }
 
-    .auto-ai-checkbox-row.bg-cut {
-      background: rgba(16, 185, 129, 0.08);
-      border-color: rgba(16, 185, 129, 0.28);
-    }
-
-    .auto-ai-checkbox-row.bg-cut:hover {
-      border-color: rgba(52, 211, 153, 0.55);
-      background: rgba(16, 185, 129, 0.13);
-    }
-
     .auto-ai-checkbox-row:hover {
       border-color: rgba(96, 165, 250, 0.55);
       background: rgba(59, 130, 246, 0.13);
@@ -1366,10 +1356,6 @@
       accent-color: #3b82f6;
       cursor: pointer;
       flex-shrink: 0;
-    }
-
-    .auto-ai-checkbox-row.bg-cut input[type="checkbox"] {
-      accent-color: #10b981;
     }
 
     .btn-ai-gen {
@@ -1954,12 +1940,12 @@
 
         <div class="form-group">
           <label class="form-label">
-            <span>Zdjęcie obiektu (zapis w /images na GitHubie w tle)</span>
+            <span>Zdjęcie obiektu PNG (zapis w /images na GitHubie w tle)</span>
             <button type="button" class="btn-admin-config" style="padding:3px 8px; font-size:10px;" onclick="openGithubConfigModal()">⚙ GitHub Token</button>
           </label>
           <div class="paste-dropzone" id="mf-paste-zone" onclick="document.getElementById('mf-file-input').click()">
             <div class="paste-dropzone-text" id="mf-paste-status">
-              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ekranu, przeciągnij plik lub <u>wybierz z dysku</u>
+              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zdjęcie PNG, przeciągnij plik lub <u>wybierz z dysku</u>
             </div>
             <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
             <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
@@ -1968,11 +1954,6 @@
           <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link.</div>
 
           <div class="automation-checks-group">
-            <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
-              <input type="checkbox" id="mf-auto-bg-checkbox" checked onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Auto-Crop ramki + Zaawansowane usuwanie tła (nieba i podłoża wokół mesha)</span>
-            </label>
-
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
               <input type="checkbox" id="mf-auto-ai-checkbox" onchange="saveAutoAiPreference(this.checked)">
               <span>✨ Automatycznie twórz opis i dobieraj tagi AI po wklejeniu zdjęcia</span>
@@ -2099,7 +2080,6 @@
     const GH_TOKEN_KEY = 'thebus_gh_token';
     const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
     const AUTO_AI_PREF_KEY = 'thebus_auto_ai_on_upload';
-    const AUTO_BG_PREF_KEY = 'thebus_auto_bg_remove';
     const FAVORITES_STORAGE_KEY = 'thebus_favorite_meshes';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -2169,15 +2149,6 @@
       return localStorage.getItem(AUTO_AI_PREF_KEY) === '1';
     }
 
-    function saveAutoBgPreference(isChecked) {
-      localStorage.setItem(AUTO_BG_PREF_KEY, isChecked ? '1' : '0');
-    }
-
-    function isAutoBgEnabled() {
-      const saved = localStorage.getItem(AUTO_BG_PREF_KEY);
-      return saved === null ? true : saved === '1';
-    }
-
     function parseUnrealPath(rawInput) {
       let trimmed = rawInput.trim();
       let fullPath = trimmed;
@@ -2198,101 +2169,6 @@
     }
 
     function onMeshPathInput() {}
-
-    // Głębokie przycięcie ramki edytora UE + Usunięcie nieba i tła świata z pełną przezroczystością alfa
-    async function smartProcessImage(blob) {
-      return new Promise((resolve) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(blob);
-
-        img.onload = () => {
-          URL.revokeObjectURL(objectUrl);
-          const origW = img.naturalWidth;
-          const origH = img.naturalHeight;
-
-          // Krok 1: Głębokie przycięcie ramki Unreal Engine (usuwamy paski narzędzi, menu, siatki edytora i okna)
-          const cropX = Math.round(origW * 0.12);
-          const cropY = Math.round(origH * 0.14);
-          const cropW = Math.round(origW * 0.60);
-          const cropH = Math.round(origH * 0.74);
-
-          const canvas = document.createElement('canvas');
-          canvas.width = cropW;
-          canvas.height = cropH;
-          const ctx = canvas.getContext('2d', { willReadFrequently: true });
-          ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-
-          // Krok 2: Agresywne usuwanie tła świata / nieba wokół budynku
-          const imgData = ctx.getImageData(0, 0, cropW, cropH);
-          const data = imgData.data;
-
-          // Pobierz próbki kolorów z rogów przyciętego widoku (tam zazwyczaj jest niebo/tło)
-          const samplePoints = [
-            0,
-            (cropW - 1) * 4,
-            ((cropH - 1) * cropW) * 4,
-            (((cropH - 1) * cropW) + (cropW - 1)) * 4
-          ];
-
-          let bgR = 0, bgG = 0, bgB = 0;
-          samplePoints.forEach(idx => {
-            bgR += data[idx];
-            bgG += data[idx + 1];
-            bgB += data[idx + 2];
-          });
-          bgR = Math.round(bgR / samplePoints.length);
-          bgG = Math.round(bgG / samplePoints.length);
-          bgB = Math.round(bgB / samplePoints.length);
-
-          const tolerance = 70; // Większa tolerancja na chmury/niebo w UE
-
-          const visited = new Uint8Array(cropW * cropH);
-          const queue = [];
-
-          for (let x = 0; x < cropW; x++) {
-            queue.push(x, 0);
-            queue.push(x, cropH - 1);
-          }
-          for (let y = 0; y < cropH; y++) {
-            queue.push(0, y);
-            queue.push(cropW - 1, y);
-          }
-
-          for (let i = 0; i < queue.length; i += 2) {
-            const x = queue[i];
-            const y = queue[i+1];
-            if (x < 0 || x >= cropW || y < 0 || y >= cropH) continue;
-            
-            const vIdx = y * cropW + x;
-            if (visited[vIdx]) continue;
-            visited[vIdx] = 1;
-
-            const pIdx = vIdx * 4;
-            const r = data[pIdx], g = data[pIdx+1], b = data[pIdx+2];
-
-            const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
-            if (diff <= tolerance) {
-              data[pIdx + 3] = 0; // Pełna przezroczystość (kafelki PNG będą widoczne za obiektem)
-
-              queue.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
-            }
-          }
-
-          ctx.putImageData(imgData, 0, 0);
-
-          canvas.toBlob((outBlob) => {
-            resolve(outBlob || blob);
-          }, 'image/png');
-        };
-
-        img.onerror = () => {
-          URL.revokeObjectURL(objectUrl);
-          resolve(blob);
-        };
-
-        img.src = objectUrl;
-      });
-    }
 
     function getNextMeshId() {
       let maxId = 0;
@@ -2369,25 +2245,16 @@
       return Math.random().toString(36).substring(2, 7);
     }
 
-    async function handleLocalImageSelected(rawBlob) {
+    function handleLocalImageSelected(rawBlob) {
       clearFieldError('mf-image', 'err-mf-image');
       pendingImageBlob = rawBlob;
 
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
-      statusText.innerHTML = '✂️ Przycinanie ramki edytora i usuwanie tła...';
 
-      let finalBlob = rawBlob;
-      if (document.getElementById('mf-auto-bg-checkbox').checked) {
-        try {
-          finalBlob = await smartProcessImage(rawBlob);
-          pendingImageBlob = finalBlob;
-        } catch (e) {}
-      }
-
-      previewEl.src = URL.createObjectURL(finalBlob);
+      previewEl.src = URL.createObjectURL(rawBlob);
       previewEl.classList.add('visible');
-      statusText.innerHTML = '✅ Tło usunięte! (wyśle się w tle po kliknięciu Zapisz)';
+      statusText.innerHTML = '✅ Obraz załadowany! (wyśle się w tle po kliknięciu Zapisz)';
 
       const rawPathVal = document.getElementById('mf-name').value.trim();
       if (rawPathVal) {
@@ -2410,7 +2277,7 @@
 
       const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
       const token = localStorage.getItem(GH_TOKEN_KEY);
-      if (!repo || !token) return repoFilePath; // Jeśli brak tokenu, zwracamy lokalną ścieżkę
+      if (!repo || !token) return repoFilePath;
 
       try {
         const base64Content = await new Promise((resolve, reject) => {
@@ -2864,7 +2731,6 @@
       document.getElementById('mf-tag-search').value = '';
 
       document.getElementById('mf-auto-ai-checkbox').checked = isAutoAiEnabled();
-      document.getElementById('mf-auto-bg-checkbox').checked = isAutoBgEnabled();
 
       clearFieldError('mf-name', 'err-mf-name');
       clearFieldError('mf-image', 'err-mf-image');
@@ -2873,7 +2739,7 @@
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
       const submitNextBtn = document.getElementById('mf-submit-next-btn');
-      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ekranu, przeciągnij plik lub <u>wybierz z dysku</u>';
+      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zdjęcie PNG, przeciągnij plik lub <u>wybierz z dysku</u>';
 
       if (index !== null) {
         const asset = allAssets[index];
