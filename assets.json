@@ -19,9 +19,37 @@
       "id": 8,
       "name": "SM_001_A",
       "image": "images/mesh_1794941577619.png",
-      "tags": [],
-      "description": "Moduł ścienny z dwoma wysokimi, łukowymi oknami typu francuskiego, wyposażonymi w niski, wspólny balkonik z balustradą. Klasyczny element architektoniczny o tradycyjnym charakterze.",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Stare",
+        "Zaokrąglone"
+      ],
+      "description": "Moduł ściany z dwoma łukowymi oknami i małym balkonem z barierką, charakteryzujący się starszym stylem architektonicznym.",
       "addedAt": "2026-11-17T18:57:24.447Z"
+    },
+    {
+      "id": 9,
+      "name": "SM_001_A_LOD0",
+      "image": "images/mesh_1794942198093.png",
+      "tags": [
+        "Okna",
+        "Stare",
+        "Roleta"
+      ],
+      "description": "Moduł ścienny z podwójnymi oknami, z których jedno posiada górne podziały ze szprosami, a drugie roletę.",
+      "addedAt": "2026-11-17T19:03:40.890Z"
+    },
+    {
+      "id": 10,
+      "name": "SM_001_A_LOD0",
+      "image": "images/mesh_1794942232395.png",
+      "tags": [
+        "Okna",
+        "Nowe"
+      ],
+      "description": "Moduł ścienny z dwoma parami standardowych okien umieszczonych obok siebie.",
+      "addedAt": "2026-11-17T19:04:29.113Z"
     }
   ]
 }
