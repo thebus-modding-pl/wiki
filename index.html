@@ -842,14 +842,7 @@
       border-radius: 8px;
       overflow: hidden;
       aspect-ratio: 16 / 9;
-      background-color: transparent;
-      background-image:
-        linear-gradient(45deg, #16161a 25%, transparent 25%),
-        linear-gradient(-45deg, #16161a 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #16161a 75%),
-        linear-gradient(-45deg, transparent 75%, #16161a 75%);
-      background-size: 16px 16px;
-      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-color: var(--bg-surface);
       border: 1px solid #1c1c21;
       position: relative;
       display: flex;
@@ -1001,6 +994,77 @@
       color: var(--text-primary);
     }
 
+    /* System powiadomień w rogu (Toast Container) */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast-item {
+      background: #18181c;
+      border: 1px solid #2e2e38;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      pointer-events: auto;
+      animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      min-width: 280px;
+    }
+
+    .toast-item.fade-out {
+      animation: toastSlideOut 0.25s ease-in forwards;
+    }
+
+    @keyframes toastSlideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes toastSlideOut {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(20px); opacity: 0; }
+    }
+
+    .toast-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #3f3f46;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .toast-check {
+      width: 18px;
+      height: 18px;
+      background: #10b981;
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1042,14 +1106,7 @@
     }
 
     .modal-ig-left {
-      background-color: transparent;
-      background-image:
-        linear-gradient(45deg, #16161a 25%, transparent 25%),
-        linear-gradient(-45deg, #16161a 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #16161a 75%),
-        linear-gradient(-45deg, transparent 75%, #16161a 75%);
-      background-size: 24px 24px;
-      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      background-color: var(--bg-surface);
       border-right: 1px solid var(--border-color);
       position: relative;
       overflow: hidden;
@@ -1308,14 +1365,7 @@
       margin-left: auto;
       margin-right: auto;
       border: 1px solid #27272f;
-      background: transparent;
-      background-image:
-        linear-gradient(45deg, #16161a 25%, transparent 25%),
-        linear-gradient(-45deg, #16161a 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #16161a 75%),
-        linear-gradient(-45deg, transparent 75%, #16161a 75%);
-      background-size: 12px 12px;
-      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+      background: var(--bg-surface);
     }
 
     .paste-preview-img.visible {
@@ -1876,6 +1926,9 @@
     </div>
   </div>
 
+  <!-- Kontener na powiadomienia (Toasty w prawym dolnym rogu) -->
+  <div class="toast-container" id="toast-container"></div>
+
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-left">
@@ -2118,6 +2171,36 @@
       startY: 0
     };
 
+    function showToast(text) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast-item';
+      toast.innerHTML = `
+        <div class="toast-spinner"></div>
+        <span>${text}</span>
+      `;
+      container.appendChild(toast);
+
+      return {
+        success: (successText) => {
+          toast.querySelector('.toast-spinner').replaceWith(Object.assign(document.createElement('div'), { className: 'toast-check', textContent: '✓' }));
+          toast.querySelector('span').textContent = successText;
+          setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 250);
+          }, 2000);
+        },
+        error: (errText) => {
+          toast.querySelector('.toast-spinner').style.borderTopColor = '#ef4444';
+          toast.querySelector('span').textContent = errText;
+          setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 250);
+          }, 3500);
+        }
+      };
+    }
+
     function getFavoriteIds() {
       try {
         const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
@@ -2168,7 +2251,19 @@
       };
     }
 
-    function onMeshPathInput() {}
+    function generateUniqueImageFilename(fullPath, rawName) {
+      const cleanPath = fullPath.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const suffix = Math.random().toString(36).substring(2, 7);
+      return `images/${cleanPath}_${suffix}.png`;
+    }
+
+    function onMeshPathInput() {
+      const rawPathVal = document.getElementById('mf-name').value.trim();
+      if (rawPathVal && pendingImageBlob) {
+        const { fullPath } = parseUnrealPath(rawPathVal);
+        document.getElementById('mf-image').value = generateUniqueImageFilename(fullPath, rawPathVal);
+      }
+    }
 
     function getNextMeshId() {
       let maxId = 0;
@@ -2236,15 +2331,6 @@
       closeModal('github-config-modal');
     }
 
-    function sanitizeFileName(rawName) {
-      const cleaned = rawName.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-      return cleaned || `mesh`;
-    }
-
-    function generateUniqueFileSuffix() {
-      return Math.random().toString(36).substring(2, 7);
-    }
-
     function handleLocalImageSelected(rawBlob) {
       clearFieldError('mf-image', 'err-mf-image');
       pendingImageBlob = rawBlob;
@@ -2258,8 +2344,10 @@
 
       const rawPathVal = document.getElementById('mf-name').value.trim();
       if (rawPathVal) {
-        const { fullName } = parseUnrealPath(rawPathVal);
-        document.getElementById('mf-image').value = `images/${sanitizeFileName(fullName)}_${generateUniqueFileSuffix()}.png`;
+        const { fullPath } = parseUnrealPath(rawPathVal);
+        document.getElementById('mf-image').value = generateUniqueImageFilename(fullPath, rawPathVal);
+      } else {
+        document.getElementById('mf-image').value = `images/mesh_${Math.random().toString(36).substring(2, 7)}.png`;
       }
 
       if (isAutoAiEnabled()) {
@@ -2267,17 +2355,16 @@
       }
     }
 
-    // Wysyłanie pliku na GitHub w tle (nie blokuje interfejsu)
-    async function uploadPendingImageToGithubInBackground(blob, fullName) {
-      if (!blob) return '';
-      const uniqueSuffix = generateUniqueFileSuffix();
-      const ext = blob.type === 'image/jpeg' ? 'jpg' : (blob.type === 'image/webp' ? 'webp' : 'png');
-      const fileName = `${sanitizeFileName(fullName)}_${uniqueSuffix}.${ext}`;
-      const repoFilePath = `images/${fileName}`;
+    async function uploadPendingImageToGithubInBackground(blob, targetRepoFilePath) {
+      if (!blob) return targetRepoFilePath;
+      const toast = showToast(`Wysyłanie ${targetRepoFilePath}...`);
 
       const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
       const token = localStorage.getItem(GH_TOKEN_KEY);
-      if (!repo || !token) return repoFilePath;
+      if (!repo || !token) {
+        toast.success(`Zapisano lokalnie (${targetRepoFilePath})`);
+        return targetRepoFilePath;
+      }
 
       try {
         const base64Content = await new Promise((resolve, reject) => {
@@ -2287,8 +2374,8 @@
           reader.readAsDataURL(blob);
         });
 
-        const apiUrl = `https://api.github.com/repos/${repo}/contents/${repoFilePath}`;
-        await fetch(apiUrl, {
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${targetRepoFilePath}`;
+        const resp = await fetch(apiUrl, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -2296,13 +2383,21 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            message: `Dodano zdjęcie ${repoFilePath} w tle przez panel admina`,
+            message: `Dodano zdjęcie ${targetRepoFilePath} w tle przez panel admina`,
             content: base64Content
           })
         });
-      } catch (e) {}
 
-      return repoFilePath;
+        if (resp.ok) {
+          toast.success(`Wgrano na serwer: ${targetRepoFilePath}`);
+        } else {
+          toast.error(`Błąd wgrania pliku na serwer GitHub`);
+        }
+      } catch (e) {
+        toast.error(`Błąd sieci podczas wgrania zdjęcia`);
+      }
+
+      return targetRepoFilePath;
     }
 
     function handleManualFileSelect(e) {
@@ -2837,10 +2932,10 @@
       refreshAdminActivity();
       const { fullName, fullPath } = parseUnrealPath(rawPathVal);
 
-      // Wysyłanie w tle (nie blokuje UI)
       if (pendingImageBlob) {
-        uploadPendingImageToGithubInBackground(pendingImageBlob, fullName).then(uploadedPath => {
-          const found = allAssets.find(a => a.name === fullName);
+        image = generateUniqueImageFilename(fullPath, fullName);
+        uploadPendingImageToGithubInBackground(pendingImageBlob, image).then(uploadedPath => {
+          const found = allAssets.find(a => a.fullPath === fullPath || a.name === fullName);
           if (found) {
             found.image = uploadedPath;
             renderGrid();
@@ -3015,9 +3110,9 @@
 
         const existingTagsJson = JSON.stringify(availableTags);
         const promptText = `Jesteś asystentem bazy assetów 3D do gry The Bus. Na obrazku znajduje się moduł architektoniczny (Static Mesh) budynku. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
-1. "description": Opisz po polsku w 1-2 zwięzłych zdaniach kształt i typ tego elementu.
+1. "description": Opisz po polsku w 1-2 zwięzłych zdaniach wyłącznie konstrukcję, architekturę i kształt tego elementu budynku. ABSOLUTNY ZAKAZ wspominania o szachownicy, przezroczystości, teksturach, kolorach, różowym kolorze tła, niebie ani żadnych elementach otoczenia graficznego.
 2. "matchedTags": Wybierz z poniższej listy istniejących tagów pasujące: ${existingTagsJson}
-3. "suggestedNewTags": Zaproponuj maksymalnie 1-2 nowe tagi jeśli brakuje (lub tablica []).
+3. "suggestedNewTags": Zaproponuj maksymalnie 1-2 nowe tagi konstrukcyjne lub architektoniczne jeśli brakuje (zakaz tagów dotyczących kolorów, tekstur czy tła, lub tablica []).
 Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags": [] }`;
 
         const aiJson = await callGeminiWithFallback(apiKey, promptText, blob.type || 'image/jpeg', base64Data);
