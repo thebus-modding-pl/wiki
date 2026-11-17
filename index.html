@@ -60,6 +60,7 @@
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      flex-wrap: wrap;
     }
 
     .nav-links a {
@@ -286,6 +287,9 @@
       text-transform: uppercase;
       cursor: pointer;
       transition: opacity 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
     }
 
     .btn-white:hover {
@@ -313,7 +317,7 @@
       border-color: var(--border-hover);
     }
 
-    /* Karty informacyjne na stronie START */
+    /* Karty informacyjne na stronie START i API */
     .start-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -354,6 +358,12 @@
       line-height: 1.6;
     }
 
+    .info-card a {
+      color: #ffffff;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
     .home-section {
       margin-bottom: 48px;
     }
@@ -383,6 +393,65 @@
 
     .link-all:hover {
       text-decoration: underline;
+    }
+
+    /* FAQ Akordeon (podstrona Google AI API) */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 900px;
+    }
+
+    .faq-item {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .faq-item[open] {
+      border-color: var(--border-hover);
+    }
+
+    .faq-question {
+      padding: 18px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .faq-question::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-question::after {
+      content: "+";
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      color: var(--text-secondary);
+      transition: transform 0.2s;
+    }
+
+    .faq-item[open] .faq-question::after {
+      content: "−";
+      color: #ffffff;
+    }
+
+    .faq-answer {
+      padding: 0 22px 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      border-top: 1px solid #1a1a1f;
+      padding-top: 14px;
     }
 
     /* Wyszukiwarka i filtry */
@@ -545,7 +614,7 @@
       transform: translateY(-2px);
     }
 
-    /* Statusy Admina na kartach (Zielony, Niebieski, Czerwony) */
+    /* Statusy Admina na kartach */
     .card.status-added {
       background-color: rgba(16, 185, 129, 0.14) !important;
       border-color: rgba(16, 185, 129, 0.6) !important;
@@ -616,7 +685,6 @@
       color: #000000;
     }
 
-    /* Przyciski edycji i kosza widoczne tylko dla admina */
     .admin-card-actions {
       display: none;
       gap: 6px;
@@ -812,7 +880,7 @@
       color: var(--text-primary);
     }
 
-    /* Modale (Szczegóły, Logowanie, Formularze Admina) */
+    /* Modale */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -887,7 +955,7 @@
       margin-bottom: 20px;
     }
 
-    /* Pola formularzy w modalach */
+    /* Pola formularzy i inline błędy (bez wyskakujących alertów) */
     .form-group {
       margin-bottom: 16px;
     }
@@ -902,6 +970,13 @@
       letter-spacing: 0.05em;
       color: var(--text-secondary);
       margin-bottom: 6px;
+    }
+
+    .form-label-opt {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: none;
     }
 
     .form-input, .form-textarea {
@@ -919,6 +994,22 @@
 
     .form-input:focus, .form-textarea:focus {
       border-color: #ffffff;
+    }
+
+    .form-input.input-error {
+      border-color: var(--accent-red);
+    }
+
+    .field-error-text {
+      color: #f87171;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .field-error-text.visible {
+      display: block;
     }
 
     .form-textarea {
@@ -1035,6 +1126,7 @@
       <a id="nav-start" class="active" onclick="switchTab('start')">START</a>
       <a id="nav-meshes" onclick="switchTab('meshes')">BAZA MESHÓW</a>
       <a id="nav-tutorials" onclick="switchTab('tutorials')">PORADNIKI</a>
+      <a id="nav-api" onclick="switchTab('api')">GOOGLE AI API</a>
     </div>
     <button class="btn-ai-soon" title="Wkrótce dodamy wyszukiwanie ze Street View">AI STREET VIEW (WKRÓTCE)</button>
   </nav>
@@ -1104,7 +1196,6 @@
     <!-- ==================== WIDOK 2: BAZA MESHÓW ==================== -->
     <div id="view-meshes" class="view-section">
       <div class="container">
-        <!-- Pasek Admina (widoczny po zalogowaniu) -->
         <div class="admin-toolbar">
           <div class="admin-toolbar-left">
             <span class="admin-badge">TRYB ADMINA</span>
@@ -1166,7 +1257,6 @@
     <!-- ==================== WIDOK 3: PORADNIKI ==================== -->
     <div id="view-tutorials" class="view-section">
       <div class="container">
-        <!-- Pasek Admina dla Poradników -->
         <div class="admin-toolbar">
           <div class="admin-toolbar-left">
             <span class="admin-badge">TRYB ADMINA</span>
@@ -1213,6 +1303,78 @@
         <main class="grid" id="tutorials-grid"></main>
       </div>
     </div>
+
+    <!-- ==================== WIDOK 4: GOOGLE AI API ==================== -->
+    <div id="view-api" class="view-section">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">KONFIGURACJA ASYSTENTA AI</div>
+            <h1>GOOGLE AI API</h1>
+            <p>Dowiedz się, jak w mniej niż minutę uzyskać bezpłatny klucz Google Gemini API, aby korzystać z rozpoznawania budynków ze Street View oraz automatycznego opisywania obiektów.</p>
+            <div class="hero-actions">
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="btn-white">OTWÓRZ GOOGLE AI STUDIO ↗</a>
+            </div>
+          </div>
+        </header>
+
+        <!-- Instrukcja krok po kroku -->
+        <section class="start-grid">
+          <div class="info-card">
+            <div class="info-card-num">KROK 01 / LOGOWANIE</div>
+            <h3>WEJDŹ DO GOOGLE AI STUDIO</h3>
+            <p>Otwórz oficjalną stronę <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/app/apikey</a> i zaloguj się na swoje zwykłe konto Google (Gmail). Nie musisz zakładać konta firmowego ani podawać karty płatniczej.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">KROK 02 / GENEROWANIE</div>
+            <h3>UTWÓRZ NOWY KLUCZ API</h3>
+            <p>Kliknij niebieski przycisk <strong>„Create API key”</strong> w prawym górnym rogu, a następnie potwierdź utworzenie klucza w nowym projekcie. Po kilku sekundach pojawi się ciąg znaków zaczynający się od <code>AIza...</code>.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">KROK 03 / UŻYCIE NA WIKI</div>
+            <h3>WKLEJ KLUCZ W PRZEGLĄDARCE</h3>
+            <p>Skopiuj wygenerowany klucz i wklej go w okienku na naszej stronie, gdy zostaniesz o to poproszony. Klucz zapisuje się wyłącznie w pamięci lokalnej Twojej przeglądarki.</p>
+          </div>
+        </section>
+
+        <!-- Sekcja FAQ rozwijana -->
+        <section class="home-section">
+          <div class="section-header">
+            <h2>NAJCZĘŚCIEJ ZADAWANE PYTANIA (FAQ)</h2>
+          </div>
+
+          <div class="faq-list">
+            <details class="faq-item" open>
+              <summary class="faq-question">Dlaczego potrzebuję własny klucz API?</summary>
+              <div class="faq-answer">
+                Nasza strona działa jako darmowy projekt społecznościowy na GitHub Pages i nie posiada płatnego serwera pośredniczącego. Google nakłada limity zapytań na każdy pojedynczy klucz API — gdyby wszyscy użytkownicy korzystali z jednego wspólnego klucza, limit wyczerpałby się po kilkunastu minutach. Własny klucz daje Ci indywidualną, darmową pulę zapytań tylko dla Ciebie.
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">Czy jest to w 100% darmowe?</summary>
+              <div class="faq-answer">
+                Tak. Google udostępnia darmowy plan (Free Tier) w Google AI Studio bez konieczności podpinania karty kredytowej ani danych rozliczeniowych. Dla lekkich modeli (takich jak Gemini Flash-Lite, z którego korzystamy) darmowy limit wynosi aż <strong>500 zapytań dziennie</strong> oraz 15 zapytań na minutę — to w zupełności wystarcza do codziennej pracy przy budowie map.
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">Czy wklejenie klucza na stronie jest bezpieczne?</summary>
+              <div class="faq-answer">
+                Tak. Twój klucz API nigdy nie jest wysyłany na żaden nasz serwer ani nigdzie publikowany — zapisuje się wyłącznie w pamięci Twojej własnej przeglądarki (<code>localStorage</code>) i służy jedynie do bezpośredniej komunikacji między Twoim komputerem a serwerami Google. W każdej chwili możesz go też usunąć lub unieważnić jednym kliknięciem w panelu Google AI Studio.
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">Czy Google może naliczyć opłaty po przekroczeniu limitu?</summary>
+              <div class="faq-answer">
+                Nie. Dopóki sam ręcznie nie podepniesz karty płatniczej w Google Cloud Billing, Twoje konto działa wyłącznie w darmowym trybie. Po przekroczeniu dziennego limitu zapytań API po prostu zwróci komunikat o limicie i odblokuje się automatycznie następnego dnia — bez jakichkolwiek opłat.
+              </div>
+            </details>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
 
   <!-- Stopka z logowaniem admina -->
@@ -1250,11 +1412,11 @@
         <h2 class="modal-title">LOGOWANIE</h2>
         <div class="form-group">
           <label class="form-label">Hasło administratora</label>
-          <input type="password" id="admin-password-input" class="form-input" placeholder="Wpisz hasło..." onkeydown="if(event.key==='Enter') submitAdminLogin()">
+          <input type="password" id="admin-password-input" class="form-input" placeholder="Wpisz hasło..." oninput="clearFieldError('admin-password-input', 'login-error-msg')" onkeydown="if(event.key==='Enter') submitAdminLogin()">
+          <div class="field-error-text" id="login-error-msg">Nieprawidłowe hasło administratora.</div>
         </div>
-        <div id="login-error-msg" style="color:#f87171; font-size:12px; display:none; margin-bottom:10px;">Nieprawidłowe hasło!</div>
         <div class="modal-actions">
-          <button class="btn-primary" onclick="submitAdminLogin()">Zaloguj (sesja 1h)</button>
+          <button class="btn-primary" onclick="submitAdminLogin()">Zaloguj się</button>
           <button class="btn-close" onclick="closeModal('login-modal')">Anuluj</button>
         </div>
       </div>
@@ -1270,20 +1432,23 @@
 
         <div class="form-group">
           <label class="form-label">Nazwa (ID obiektu)</label>
-          <input type="text" id="mf-name" class="form-input" placeholder="np. SM_001_A">
+          <input type="text" id="mf-name" class="form-input" placeholder="np. SM_001_A" oninput="clearFieldError('mf-name', 'err-mf-name')">
+          <div class="field-error-text" id="err-mf-name">To pole jest wymagane — wpisz nazwę mesha.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Zdjęcie (bezpośredni URL)</label>
-          <input type="text" id="mf-image" class="form-input" placeholder="https://i.imgur.com/...png">
+          <input type="text" id="mf-image" class="form-input" placeholder="https://i.imgur.com/...png" oninput="clearFieldError('mf-image', 'err-mf-image')">
+          <div class="field-error-text" id="err-mf-image">Wklej najpierw link do zdjęcia, aby wygenerować opis AI.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label">
-            <span>Opis obiektu</span>
+            <span>Opis obiektu <span class="form-label-opt">(opcjonalnie)</span></span>
             <button type="button" class="btn-ai-gen" id="btn-ai-desc" onclick="generateAiMeshDescription()">✨ Generuj opis AI ze zdjęcia</button>
           </label>
-          <textarea id="mf-desc" class="form-textarea" placeholder="Krótki opis wyglądu budynku (lub kliknij przycisk AI powyżej)..."></textarea>
+          <textarea id="mf-desc" class="form-textarea" placeholder="Krótki opis wyglądu budynku (niewymagany)..." oninput="clearFieldError('mf-desc', 'err-mf-desc')"></textarea>
+          <div class="field-error-text" id="err-mf-desc"></div>
         </div>
 
         <div class="form-group">
@@ -1311,22 +1476,24 @@
 
         <div class="form-group">
           <label class="form-label">Tytuł poradnika</label>
-          <input type="text" id="tf-title" class="form-input" placeholder="np. Jak tworzyć skrzyżowania w The Bus">
+          <input type="text" id="tf-title" class="form-input" placeholder="np. Jak tworzyć skrzyżowania w The Bus" oninput="clearFieldError('tf-title', 'err-tf-title')">
+          <div class="field-error-text" id="err-tf-title">Podaj tytuł poradnika.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Link do wideo YouTube</label>
-          <input type="text" id="tf-url" class="form-input" placeholder="https://www.youtube.com/watch?v=...">
+          <input type="text" id="tf-url" class="form-input" placeholder="https://www.youtube.com/watch?v=..." oninput="clearFieldError('tf-url', 'err-tf-url')">
+          <div class="field-error-text" id="err-tf-url">Wklej poprawny link do filmu na YouTube.</div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Autor wideo</label>
+          <label class="form-label">Autor wideo <span class="form-label-opt">(opcjonalnie)</span></label>
           <input type="text" id="tf-author" class="form-input" placeholder="np. Piotrullo978">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Opis poradnika</label>
-          <textarea id="tf-desc" class="form-textarea" placeholder="Czego dotyczy film..."></textarea>
+          <label class="form-label">Opis poradnika <span class="form-label-opt">(opcjonalnie)</span></label>
+          <textarea id="tf-desc" class="form-textarea" placeholder="Czego dotyczy film (niewymagane)..."></textarea>
         </div>
 
         <div class="modal-actions">
@@ -1340,6 +1507,7 @@
   <script>
     const ADMIN_PASS = 'admin6767';
     const SESSION_KEY = 'thebus_admin_expires';
+    const IDLE_TIMEOUT_MS = 60 * 60 * 1000; // 1 godzina bezczynności
 
     let availableTags = [];
     let allAssets = [];
@@ -1350,12 +1518,18 @@
     let sortMode = 'default';
     let tutorialSearchQuery = '';
 
-    // Zmienne formularzy admina
     let editingMeshIndex = null;
     let modalSelectedTags = new Set();
     let editingTutorialIndex = null;
 
-    // ==================== SESJA ADMINA (1 GODZINA) ====================
+    // ==================== SESJA ADMINA (1H BEZCZYNNOŚCI) ====================
+    function refreshAdminActivity() {
+      if (localStorage.getItem(SESSION_KEY)) {
+        localStorage.setItem(SESSION_KEY, (Date.now() + IDLE_TIMEOUT_MS).toString());
+        updateAdminUI();
+      }
+    }
+
     function isAdminLoggedIn() {
       const expires = localStorage.getItem(SESSION_KEY);
       if (!expires) return false;
@@ -1373,7 +1547,7 @@
       const trigger = document.getElementById('admin-auth-trigger');
       if (logged) {
         const minsLeft = Math.max(1, Math.round((parseInt(localStorage.getItem(SESSION_KEY), 10) - Date.now()) / 60000));
-        trigger.innerHTML = `🔓 Zalogowano jako admin (${minsLeft} min) — Wyloguj`;
+        trigger.innerHTML = `🔓 Panel admina aktywny (wygasa po ${minsLeft} min bezczynności) — Wyloguj`;
         trigger.style.color = '#34d399';
       } else {
         trigger.innerHTML = `🔒 Logowanie admina`;
@@ -1387,29 +1561,46 @@
         updateAdminUI();
       } else {
         document.getElementById('admin-password-input').value = '';
-        document.getElementById('login-error-msg').style.display = 'none';
+        clearFieldError('admin-password-input', 'login-error-msg');
         document.getElementById('login-modal').classList.add('open');
         setTimeout(() => document.getElementById('admin-password-input').focus(), 50);
       }
     }
 
     function submitAdminLogin() {
-      const val = document.getElementById('admin-password-input').value;
-      if (val === ADMIN_PASS) {
-        // Sesja 1 godzina (3600 * 1000 ms)
-        localStorage.setItem(SESSION_KEY, (Date.now() + 3600 * 1000).toString());
+      const input = document.getElementById('admin-password-input');
+      if (input.value === ADMIN_PASS) {
+        localStorage.setItem(SESSION_KEY, (Date.now() + IDLE_TIMEOUT_MS).toString());
         closeModal('login-modal');
         updateAdminUI();
       } else {
-        document.getElementById('login-error-msg').style.display = 'block';
+        showFieldError('admin-password-input', 'login-error-msg', 'Nieprawidłowe hasło administratora.');
       }
     }
 
     setInterval(updateAdminUI, 30000);
 
+    // ==================== WALIDACJA INLINE (BEZ ALERTÓW) ====================
+    function showFieldError(inputId, errorId, message) {
+      const inputEl = document.getElementById(inputId);
+      const errEl = document.getElementById(errorId);
+      if (inputEl) inputEl.classList.add('input-error');
+      if (errEl) {
+        if (message) errEl.textContent = message;
+        errEl.classList.add('visible');
+      }
+    }
+
+    function clearFieldError(inputId, errorId) {
+      const inputEl = document.getElementById(inputId);
+      const errEl = document.getElementById(errorId);
+      if (inputEl) inputEl.classList.remove('input-error');
+      if (errEl) errEl.classList.remove('visible');
+    }
+
     // ==================== NAWIGACJA I POMOCNICZE ====================
     function switchTab(tab) {
-      ['start', 'meshes', 'tutorials'].forEach(name => {
+      ['start', 'meshes', 'tutorials', 'api'].forEach(name => {
         document.getElementById(`view-${name}`).classList.toggle('active', name === tab);
         document.getElementById(`nav-${name}`).classList.toggle('active', name === tab);
       });
@@ -1455,7 +1646,6 @@
         const res = await fetch('assets.json');
         const data = await res.json();
 
-        // Obsługa nowego formatu { "tags": [...], "assets": [...] } oraz starego [...]
         if (Array.isArray(data)) {
           allAssets = data;
           availableTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
@@ -1644,8 +1834,12 @@
     // ==================== PANEL ADMINA: MESHE ====================
     function openMeshFormModal(e, index = null) {
       if (e) e.stopPropagation();
+      refreshAdminActivity();
       editingMeshIndex = index;
       document.getElementById('mf-tag-search').value = '';
+      clearFieldError('mf-name', 'err-mf-name');
+      clearFieldError('mf-image', 'err-mf-image');
+      clearFieldError('mf-desc', 'err-mf-desc');
 
       if (index !== null) {
         const asset = allAssets[index];
@@ -1681,6 +1875,7 @@
         el.className = `tag-option ${modalSelectedTags.has(tag) ? 'selected' : ''}`;
         el.textContent = tag;
         el.onclick = () => {
+          refreshAdminActivity();
           if (modalSelectedTags.has(tag)) modalSelectedTags.delete(tag);
           else modalSelectedTags.add(tag);
           renderModalTagSelector();
@@ -1696,9 +1891,12 @@
       const tags = Array.from(modalSelectedTags);
 
       if (!name) {
-        alert('Podaj nazwę mesha (np. SM_001_A).');
+        showFieldError('mf-name', 'err-mf-name', 'To pole jest wymagane — wpisz nazwę mesha.');
+        document.getElementById('mf-name').focus();
         return;
       }
+
+      refreshAdminActivity();
 
       if (editingMeshIndex !== null) {
         const current = allAssets[editingMeshIndex];
@@ -1731,6 +1929,7 @@
 
     function toggleDeleteMesh(e, index) {
       e.stopPropagation();
+      refreshAdminActivity();
       const item = allAssets[index];
       if (item._status === 'deleted') {
         item._status = item._prevStatus || null;
@@ -1744,7 +1943,7 @@
     }
 
     function exportAssetsJson(btn) {
-      // Pomijamy usunięte (czerwone) i usuwamy techniczne pola _status
+      refreshAdminActivity();
       const cleanAssets = allAssets
         .filter(a => a._status !== 'deleted')
         .map(({ _status, _prevStatus, ...rest }) => rest);
@@ -1766,29 +1965,34 @@
       }, 2000);
     }
 
-    // Generator opisu AI na podstawie zdjęcia (Gemini Flash)
+    // Generator opisu AI na podstawie zdjęcia (Gemini Flash-Lite)
     async function generateAiMeshDescription() {
       const imgUrl = document.getElementById('mf-image').value.trim();
+      clearFieldError('mf-image', 'err-mf-image');
+      clearFieldError('mf-desc', 'err-mf-desc');
+
       if (!imgUrl) {
-        alert('Wklej najpierw link do zdjęcia, aby AI mogło je przeanalizować.');
+        showFieldError('mf-image', 'err-mf-image', 'Wklej najpierw link do zdjęcia, aby AI mogło je przeanalizować.');
+        document.getElementById('mf-image').focus();
         return;
       }
 
       let apiKey = localStorage.getItem('gemini_admin_api_key');
       if (!apiKey) {
-        apiKey = prompt('Wklej swój darmowy klucz API Google Gemini (zapisze się w Twojej przeglądarce):');
+        apiKey = prompt('Wklej swój darmowy klucz Google AI API (zapisze się w Twojej przeglądarce):');
         if (!apiKey) return;
         localStorage.setItem('gemini_admin_api_key', apiKey.trim());
       }
 
+      refreshAdminActivity();
       const btn = document.getElementById('btn-ai-desc');
       const origText = btn.textContent;
       btn.disabled = true;
       btn.textContent = 'Analizowanie obrazu...';
 
       try {
-        // Pobranie obrazka i konwersja na base64
         const imgResp = await fetch(imgUrl);
+        if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka z podanego linku.');
         const blob = await imgResp.blob();
         const base64Data = await new Promise((resolve) => {
           const reader = new FileReader();
@@ -1798,7 +2002,7 @@
 
         const promptText = `Jesteś asystentem bazy assetów 3D do gry The Bus. Na obrazku znajduje się moduł architektoniczny (Static Mesh) budynku — kolorowe maski (różowy, zielony, czerwony) oznaczają ściany, drzwi i okna. Opisz po polsku w 1-2 zwięzłych zdaniach kształt i typ tego elementu (np. czy to łukowe drzwi, witryna sklepowa, podwójne okna ze szprosami, nowoczesne czy stare), aby ułatwić wyszukiwanie po opisie. Nie wspominaj o różowych i zielonych kolorach maski.`;
 
-        const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1820,7 +2024,7 @@
         const generatedText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
         document.getElementById('mf-desc').value = generatedText.trim();
       } catch (err) {
-        alert('Nie udało się wygenerować opisu (sprawdź klucz API lub czy serwer obrazka pozwala na pobranie): ' + err.message);
+        showFieldError('mf-desc', 'err-mf-desc', 'Błąd AI: ' + err.message);
       } finally {
         btn.disabled = false;
         btn.textContent = origText;
@@ -1897,7 +2101,10 @@
     // ==================== PANEL ADMINA: PORADNIKI ====================
     function openTutorialFormModal(e, index = null) {
       if (e) e.stopPropagation();
+      refreshAdminActivity();
       editingTutorialIndex = index;
+      clearFieldError('tf-title', 'err-tf-title');
+      clearFieldError('tf-url', 'err-tf-url');
 
       if (index !== null) {
         const tut = allTutorials[index];
@@ -1927,10 +2134,18 @@
       const author = document.getElementById('tf-author').value.trim() || 'Społeczność';
       const description = document.getElementById('tf-desc').value.trim();
 
-      if (!title || !youtubeUrl) {
-        alert('Podaj tytuł oraz link do filmu na YouTube.');
-        return;
+      let hasError = false;
+      if (!title) {
+        showFieldError('tf-title', 'err-tf-title', 'To pole jest wymagane — podaj tytuł poradnika.');
+        hasError = true;
       }
+      if (!youtubeUrl) {
+        showFieldError('tf-url', 'err-tf-url', 'To pole jest wymagane — wklej link do filmu na YouTube.');
+        hasError = true;
+      }
+      if (hasError) return;
+
+      refreshAdminActivity();
 
       if (editingTutorialIndex !== null) {
         const current = allTutorials[editingTutorialIndex];
@@ -1960,6 +2175,7 @@
 
     function toggleDeleteTutorial(e, index) {
       e.stopPropagation();
+      refreshAdminActivity();
       const item = allTutorials[index];
       if (item._status === 'deleted') {
         item._status = item._prevStatus || null;
@@ -1973,6 +2189,7 @@
     }
 
     function exportTutorialsJson(btn) {
+      refreshAdminActivity();
       const cleanTutorials = allTutorials
         .filter(t => t._status !== 'deleted')
         .map(({ _status, _prevStatus, ...rest }) => rest);
