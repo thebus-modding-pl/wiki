@@ -13,6 +13,129 @@
     "Szachownica",
     "Dach",
     "Schody",
-    "Witryna"
+    "Witryna",
+    "Ściana",
+    "Klasyczny",
+    "Kamienica",
+    "Łukowe",
+    "Balkon francuski"
+  ],
+  "assets": [
+    {
+      "id": 1,
+      "name": "LOD2_3x3",
+      "fullPath": "/Game/Generated_Buildings/Mesh/LOD2_3x3.LOD2_3x3",
+      "image": "images/LOD2_3x3_nk4qc.png",
+      "tags": [
+        "Ściana"
+      ],
+      "description": "Prosty, płaski panel ścienny o różowo-białym wzorze w szachownicę, służący jako testowy moduł architektoniczny.",
+      "addedAt": "2026-11-17T22:24:25.661Z"
+    },
+    {
+      "id": 2,
+      "name": "LOD2_5x3",
+      "fullPath": "/Game/Generated_Buildings/Mesh/LOD2_5x3.LOD2_5x3",
+      "image": "images/LOD2_5x3_eeve3.png",
+      "tags": [
+        "Ściana"
+      ],
+      "description": "Prosty, prostokątny moduł ściany.",
+      "addedAt": "2026-11-17T22:24:55.891Z"
+    },
+    {
+      "id": 3,
+      "name": "SM_001_A",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/GreatBritain/SM_001_A.SM_001_A",
+      "image": "images/SM_001_A_z2nyr.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Klasyczny",
+        "Kamienica"
+      ],
+      "description": "Moduł ściany zewnętrznej z dwoma ozdobnymi oknami w stylu klasycznym. Posiada charakterystyczne gzymsy nadokienne oraz teksturowanie w różową szachownicę.",
+      "addedAt": "2026-11-17T22:25:15.747Z"
+    },
+    {
+      "id": 4,
+      "name": "SM_001_A",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Region_Ostsee/SM_001_A.SM_001_A",
+      "image": "images/SM_001_A_dmclh.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Zaokrąglone",
+        "Kamienica"
+      ],
+      "description": "Różowy moduł ściany budynku z dwoma dużymi, łukowatymi oknami i ozdobnymi barierkami zewnętrznymi. Tekstura ściany ma charakterystyczny wzór w szachownicę.",
+      "addedAt": "2026-11-17T22:25:33.867Z"
+    },
+    {
+      "id": 5,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_gckkk.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Klasyczny",
+        "Kamienica",
+        "Łukowe"
+      ],
+      "description": "Różowa ściana budynku z dwoma łukowymi oknami i niebieskim cokołem u podstawy. Element posiada klasyczny styl miejskiej kamienicy.",
+      "addedAt": "2026-11-17T22:25:51.043Z"
+    },
+    {
+      "id": 6,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Berlin/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_59idw.png",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Ściana"
+      ],
+      "description": "Moduł ściany budynku z dużymi oknami i małym balkonem z barierką. Element posiada kolorowe, kontrastowe ramki i przeszklenia.",
+      "addedAt": "2026-11-17T22:26:17.466Z"
+    },
+    {
+      "id": 7,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Historical/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_mthct.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Roleta"
+      ],
+      "description": "Moduł ściany zewnętrznej w kolorze różowym z dwoma dużymi oknami, z których jedno posiada opuszczoną roletę.",
+      "addedAt": "2026-11-17T22:26:37.042Z"
+    },
+    {
+      "id": 8,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Residential/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_xnaqm.png",
+      "tags": [
+        "Okna"
+      ],
+      "description": "Moduł ściany zewnętrznej budynku z dwoma prostokątnymi oknami. Posiada charakterystyczną różową teksturę w szachownicę.",
+      "addedAt": "2026-11-17T22:26:56.914Z"
+    },
+    {
+      "id": 9,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/France/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_7p5xz.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Kamienica",
+        "Balkon francuski"
+      ],
+      "description": "Moduł ściany zewnętrznej budynku z dwoma dużymi oknami i ozdobnymi barierkami typu francuskiego. Powierzchnia posiada teksturę w różową szachownicę.",
+      "addedAt": "2026-11-17T22:27:39.937Z"
+    }
   ]
 }
