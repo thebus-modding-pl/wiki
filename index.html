@@ -1276,12 +1276,6 @@
       background-color: #131318;
     }
 
-    .paste-dropzone.uploading {
-      border-color: var(--accent-blue);
-      background-color: rgba(59, 130, 246, 0.08);
-      pointer-events: none;
-    }
-
     .paste-dropzone-text {
       font-size: 12px;
       color: var(--text-secondary);
@@ -1941,33 +1935,33 @@
         <div class="form-group">
           <label class="form-label">Ścieżka Static Mesha (Ctrl + C w UE)</label>
           <input type="text" id="mf-name" class="form-input" placeholder="/Script/Engine.StaticMesh'/Game/.../SM_001.SM_001'" oninput="onMeshPathInput(); clearFieldError('mf-name', 'err-mf-name')">
-          <div class="field-error-text" id="err-mf-name">To pole jest wymagane — wklej najpierw ścieżku mesha powyżej!</div>
+          <div class="field-error-text" id="err-mf-name">To pole jest wymagane — wklej ścieżkę mesha.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label">
-            <span>Zdjęcie obiektu (zapis w /images na GitHubie)</span>
+            <span>Zdjęcie obiektu (zapis w /images na GitHubie po kliknięciu Zapisz)</span>
             <button type="button" class="btn-admin-config" style="padding:3px 8px; font-size:10px;" onclick="openGithubConfigModal()">⚙ GitHub Token</button>
           </label>
           <div class="paste-dropzone" id="mf-paste-zone" onclick="document.getElementById('mf-file-input').click()">
             <div class="paste-dropzone-text" id="mf-paste-status">
-              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut pełnego ekranu, przeciągnij plik lub <u>wybierz z dysku</u>
+              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ekranu, przeciągnij plik lub <u>wybierz z dysku</u>
             </div>
             <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
             <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
           </div>
-          <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001_a9f2.png (wypełni się samo po wklejeniu)" oninput="onManualImageUrlInput()">
+          <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001_a9f2.png (wypełni się po zapisie)" oninput="onManualImageUrlInput()">
           <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link.</div>
 
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
               <input type="checkbox" id="mf-auto-bg-checkbox" checked onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Automatyczny Smart Crop (kadrowanie marginesów i edytora UE)</span>
+              <span>✂️ Auto-Crop (automatyczne wykrywanie krawędzi i przycięcie otoczenia edytora UE)</span>
             </label>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
               <input type="checkbox" id="mf-auto-ai-checkbox" onchange="saveAutoAiPreference(this.checked)">
-              <span>✨ Automatycznie twórz opis i dobieraj tagi AI po wrzuceniu zdjęcia</span>
+              <span>✨ Automatycznie twórz opis i dobieraj tagi AI po wklejeniu zdjęcia</span>
             </label>
           </div>
         </div>
@@ -2117,7 +2111,7 @@
     let modalSelectedTags = new Set();
     let aiSuggestedNewTags = new Set();
     let editingTutorialIndex = null;
-    let lastPastedBlob = null;
+    let pendingImageBlob = null;
 
     let previewZoomState = {
       isZoomed: false,
@@ -2191,41 +2185,74 @@
 
     function onMeshPathInput() {}
 
-    // Bezpieczny Smart Crop: przycina marginesy (paski narzędzi edytora UE, boki), nie niszcząc kolorów budynku
+    // Prawdziwy Auto-Crop: skanuje krawędzie w poszukiwaniu jednolitego tła edytora Unreal Engine i docina dokładnie do obiektu 3D
     async function smartProcessImage(blob) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(blob);
 
         img.onload = () => {
           URL.revokeObjectURL(objectUrl);
-          const origW = img.naturalWidth;
-          const origH = img.naturalHeight;
+          const w = img.naturalWidth;
+          const h = img.naturalHeight;
 
           const canvas = document.createElement('canvas');
-          canvas.width = origW;
-          canvas.height = origH;
+          canvas.width = w;
+          canvas.height = h;
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(img, 0, 0);
 
-          // Delikatne usunięcie zbędnych ramek okna edytora UE (np. z góry i po bokach)
-          let cropX = 0, cropY = 0, cropW = origW, cropH = origH;
-          if (origW > 800 && origH > 600) {
-            const startX = Math.round(origW * 0.02);
-            const endX = Math.round(origW * 0.98);
-            const startY = Math.round(origH * 0.04);
-            const endY = Math.round(origH * 0.98);
-            cropX = startX;
-            cropY = startY;
-            cropW = endX - startX;
-            cropH = endY - startY;
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const data = imgData.data;
+
+          // Pobierz kolor bazowy z rogu (tło edytora UE)
+          const bgR = data[0], bgG = data[1], bgB = data[2];
+
+          let minX = w, maxX = 0, minY = h, maxY = 0;
+          let sampleCount = 0;
+
+          // Próg tolerancji dla różnic odcieni tła edytora
+          const tolerance = 35;
+
+          for (let y = 0; y < h; y += 2) {
+            for (let x = 0; x < w; x += 2) {
+              const idx = (y * w + x) * 4;
+              const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+
+              // Sprawdź czy piksel różni się od tła (należy do obiektu)
+              const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+              if (diff > tolerance) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+                sampleCount++;
+              }
+            }
           }
+
+          // Jeśli nie wykryto obiektu lub obraz jest zbyt jednolity, zwracamy oryginał
+          if (sampleCount < 100 || minX >= maxX || minY >= maxY) {
+            resolve(blob);
+            return;
+          }
+
+          // Dodaj delikatny margines wokół wykrytego mesha (2%)
+          const padX = Math.round(w * 0.02);
+          const padY = Math.round(h * 0.02);
+          minX = Math.max(0, minX - padX);
+          maxX = Math.min(w, maxX + padX);
+          minY = Math.max(0, minY - padY);
+          maxY = Math.min(h, maxY + padY);
+
+          const cropW = maxX - minX;
+          const cropH = maxY - minY;
 
           const croppedCanvas = document.createElement('canvas');
           croppedCanvas.width = cropW;
           croppedCanvas.height = cropH;
-          const cCtx = croppedCanvas.getContext('2d', { willReadFrequently: true });
-          cCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+          const cCtx = croppedCanvas.getContext('2d');
+          cCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
 
           croppedCanvas.toBlob((outBlob) => {
             resolve(outBlob || blob);
@@ -2234,7 +2261,7 @@
 
         img.onerror = () => {
           URL.revokeObjectURL(objectUrl);
-          reject(new Error('Nie udało się przetworzyć obrazu.'));
+          resolve(blob);
         };
 
         img.src = objectUrl;
@@ -2305,10 +2332,6 @@
       localStorage.setItem(GH_REPO_KEY, repo);
       localStorage.setItem(GH_TOKEN_KEY, token);
       closeModal('github-config-modal');
-
-      if (lastPastedBlob && document.getElementById('mesh-form-modal').classList.contains('open')) {
-        uploadImageBlobToGithub(lastPastedBlob);
-      }
     }
 
     function sanitizeFileName(rawName) {
@@ -2316,121 +2339,104 @@
       return cleaned || `mesh`;
     }
 
-    // Generuje unikalny losowy sufiks (np. a8f2c), żeby nigdy nie nadpisać ani nie zduplikować zdjęć
     function generateUniqueFileSuffix() {
       return Math.random().toString(36).substring(2, 7);
     }
 
-    async function uploadImageBlobToGithub(rawBlob) {
+    async function handleLocalImageSelected(rawBlob) {
       clearFieldError('mf-image', 'err-mf-image');
-      clearFieldError('mf-name', 'err-mf-name');
+      pendingImageBlob = rawBlob;
+
+      const statusText = document.getElementById('mf-paste-status');
+      const previewEl = document.getElementById('mf-paste-preview');
+      statusText.innerHTML = '✂️ Przycinanie obszaru mesha...';
+
+      let finalBlob = rawBlob;
+      if (document.getElementById('mf-auto-bg-checkbox').checked) {
+        try {
+          finalBlob = await smartProcessImage(rawBlob);
+          pendingImageBlob = finalBlob;
+        } catch (e) {}
+      }
+
+      previewEl.src = URL.createObjectURL(finalBlob);
+      previewEl.classList.add('visible');
+      statusText.innerHTML = '✅ Gotowe do zapisu (plik wyśle się na GitHub po kliknięciu Zapisz)';
 
       const rawPathVal = document.getElementById('mf-name').value.trim();
-      if (!rawPathVal) {
-        showFieldError('mf-name', 'err-mf-name', 'Najpierw wklej ścieżkę mesha powyżej, aby wygenerować unikalną nazwę pliku!');
-        document.getElementById('mf-name').focus();
-        return;
+      if (rawPathVal) {
+        const { fullName } = parseUnrealPath(rawPathVal);
+        document.getElementById('mf-image').value = `images/${sanitizeFileName(fullName)}_${generateUniqueFileSuffix()}.png`;
       }
+
+      if (isAutoAiEnabled()) {
+        generateAiMeshDescription();
+      }
+    }
+
+    // Wysyłanie pliku na GitHub następuje WYŁĄCZNIE w momencie zapisu formularza!
+    async function uploadPendingImageToGithub() {
+      if (!pendingImageBlob) {
+        return document.getElementById('mf-image').value.trim();
+      }
+
+      const rawPathVal = document.getElementById('mf-name').value.trim();
+      const { fullName } = parseUnrealPath(rawPathVal);
+      const uniqueSuffix = generateUniqueFileSuffix();
+      const ext = pendingImageBlob.type === 'image/jpeg' ? 'jpg' : (pendingImageBlob.type === 'image/webp' ? 'webp' : 'png');
+      const fileName = `${sanitizeFileName(fullName)}_${uniqueSuffix}.${ext}`;
+      const repoFilePath = `images/${fileName}`;
 
       const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
       const token = localStorage.getItem(GH_TOKEN_KEY);
 
       if (!repo || !token) {
-        lastPastedBlob = rawBlob;
         openGithubConfigModal();
-        return;
+        throw new Error('Skonfiguruj najpierw token GitHub w ustawieniach.');
       }
 
-      refreshAdminActivity();
-      const zone = document.getElementById('mf-paste-zone');
-      const statusText = document.getElementById('mf-paste-status');
-      const previewEl = document.getElementById('mf-paste-preview');
-      zone.classList.add('uploading');
+      const base64Content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(pendingImageBlob);
+      });
 
-      let finalBlob = rawBlob;
-      const shouldProcess = document.getElementById('mf-auto-bg-checkbox').checked;
+      const apiUrl = `https://api.github.com/repos/${repo}/contents/${repoFilePath}`;
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      };
 
-      if (shouldProcess) {
-        statusText.innerHTML = '✂️ Przetwarzanie Smart Crop...';
-        try {
-          finalBlob = await smartProcessImage(rawBlob);
-        } catch (err) {
-          finalBlob = rawBlob;
-        }
-      }
-
-      lastPastedBlob = finalBlob;
-      previewEl.src = URL.createObjectURL(finalBlob);
-      previewEl.classList.add('visible');
-
-      const { fullName } = parseUnrealPath(rawPathVal);
-      const uniqueSuffix = generateUniqueFileSuffix();
-      const ext = finalBlob.type === 'image/jpeg' ? 'jpg' : (finalBlob.type === 'image/webp' ? 'webp' : 'png');
-      const fileName = `${sanitizeFileName(fullName)}_${uniqueSuffix}.${ext}`;
-      const repoFilePath = `images/${fileName}`;
-
-      statusText.innerHTML = `⏳ Wysyłanie <code>${repoFilePath}</code> na GitHub...`;
-
-      const shouldAutoRunAi = document.getElementById('mf-auto-ai-checkbox').checked;
-      if (shouldAutoRunAi) {
-        generateAiMeshDescription();
-      }
-
-      try {
-        const base64Content = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result.split(',')[1]);
-          reader.onerror = reject;
-          reader.readAsDataURL(finalBlob);
-        });
-
-        const apiUrl = `https://api.github.com/repos/${repo}/contents/${repoFilePath}`;
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github+json',
-          'Content-Type': 'application/json'
-        };
-
-        const payload = {
+      const putResp = await fetch(apiUrl, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
           message: `Dodano unikalne zdjęcie ${repoFilePath} przez panel admina`,
           content: base64Content
-        };
+        })
+      });
 
-        const putResp = await fetch(apiUrl, {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(payload)
-        });
-
-        const putResult = await putResp.json();
-        if (!putResp.ok) {
-          if (putResp.status === 401 || putResp.status === 403) {
-            localStorage.removeItem(GH_TOKEN_KEY);
-          }
-          throw new Error(putResult.message || `Błąd GitHub API (${putResp.status})`);
-        }
-
-        document.getElementById('mf-image').value = repoFilePath;
-        statusText.innerHTML = `✅ Zapisano w repozytorium jako <code>${repoFilePath}</code>`;
-      } catch (err) {
-        statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut pełnego ekranu, przeciągnij plik lub <u>wybierz z dysku</u>';
-        showFieldError('mf-image', 'err-mf-image', 'Błąd zapisu na GitHub: ' + err.message);
-      } finally {
-        zone.classList.remove('uploading');
+      const putResult = await putResp.json();
+      if (!putResp.ok) {
+        throw new Error(putResult.message || `Błąd GitHub API (${putResp.status})`);
       }
+
+      return repoFilePath;
     }
 
     function handleManualFileSelect(e) {
       const file = e.target.files?.[0];
       if (file && file.type.startsWith('image/')) {
-        uploadImageBlobToGithub(file);
+        handleLocalImageSelected(file);
       }
       e.target.value = '';
     }
 
     function onManualImageUrlInput() {
       clearFieldError('mf-image', 'err-mf-image');
-      lastPastedBlob = null;
+      pendingImageBlob = null;
       const val = document.getElementById('mf-image').value.trim();
       const previewEl = document.getElementById('mf-paste-preview');
       if (val) {
@@ -2452,7 +2458,7 @@
         if (item.type.startsWith('image/')) {
           e.preventDefault();
           const blob = item.getAsFile();
-          if (blob) uploadImageBlobToGithub(blob);
+          if (blob) handleLocalImageSelected(blob);
           break;
         }
       }
@@ -2471,7 +2477,7 @@
       pasteZone.classList.remove('dragover');
       const file = e.dataTransfer?.files?.[0];
       if (file && file.type.startsWith('image/')) {
-        uploadImageBlobToGithub(file);
+        handleLocalImageSelected(file);
       }
     });
 
@@ -2839,7 +2845,7 @@
       if (e) e.stopPropagation();
       refreshAdminActivity();
       editingMeshIndex = index;
-      lastPastedBlob = null;
+      pendingImageBlob = null;
       aiSuggestedNewTags.clear();
       document.getElementById('ai-tags-hint').classList.remove('visible');
       document.getElementById('ai-target-wrapper').classList.remove('ai-loading');
@@ -2855,7 +2861,7 @@
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
       const submitNextBtn = document.getElementById('mf-submit-next-btn');
-      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut pełnego ekranu, przeciągnij plik lub <u>wybierz z dysku</u>';
+      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ekranu, przeciągnij plik lub <u>wybierz z dysku</u>';
 
       if (index !== null) {
         const asset = allAssets[index];
@@ -2938,9 +2944,9 @@
       });
     }
 
-    function saveMeshForm(addAnother = false) {
+    async function saveMeshForm(addAnother = false) {
       const rawPathVal = document.getElementById('mf-name').value.trim();
-      const image = document.getElementById('mf-image').value.trim();
+      let image = document.getElementById('mf-image').value.trim();
       const description = document.getElementById('mf-desc').value.trim();
       const tags = Array.from(modalSelectedTags);
 
@@ -2951,6 +2957,21 @@
       }
 
       refreshAdminActivity();
+
+      try {
+        if (pendingImageBlob) {
+          const submitBtn = document.getElementById('mf-submit-btn');
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Wysyłanie zdjęcia...';
+          image = await uploadPendingImageToGithub();
+        }
+      } catch (err) {
+        showFieldError('mf-image', 'err-mf-image', 'Błąd zapisu zdjęcia na GitHub: ' + err.message);
+        const submitBtn = document.getElementById('mf-submit-btn');
+        submitBtn.disabled = false;
+        submitBtn.textContent = editingMeshIndex !== null ? 'Zapisz zmiany' : 'Dodaj do listy';
+        return;
+      }
 
       const { fullName, fullPath } = parseUnrealPath(rawPathVal);
 
@@ -2988,6 +3009,10 @@
       renderTags();
       renderGrid();
       renderMeshPreview();
+
+      const submitBtn = document.getElementById('mf-submit-btn');
+      submitBtn.disabled = false;
+      submitBtn.textContent = editingMeshIndex !== null ? 'Zapisz zmiany' : 'Dodaj do listy';
 
       if (addAnother) {
         openMeshFormModal(null, null);
@@ -3081,7 +3106,7 @@
       clearFieldError('mf-image', 'err-mf-image');
       clearFieldError('mf-desc', 'err-mf-desc');
 
-      if (!imgUrl && !lastPastedBlob) {
+      if (!imgUrl && !pendingImageBlob) {
         showFieldError('mf-image', 'err-mf-image', 'Wklej najpierw zdjęcie ze schowka lub link.');
         document.getElementById('mf-image').focus();
         return;
@@ -3105,7 +3130,7 @@
       wrapper.classList.add('ai-loading');
 
       try {
-        let blob = lastPastedBlob;
+        let blob = pendingImageBlob;
         if (!blob) {
           const imgResp = await fetch(imgUrl);
           if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka.');
