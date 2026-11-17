@@ -1054,6 +1054,14 @@
       letter-spacing: 0.05em;
       color: var(--text-secondary);
       margin-bottom: 6px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .form-label-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .form-label-opt {
@@ -1742,7 +1750,10 @@
             <div class="form-group">
               <label class="form-label">
                 <span>Opis obiektu <span class="form-label-opt">(opcjonalnie)</span></span>
-                <button type="button" class="btn-ai-gen" id="btn-ai-desc" onclick="generateAiMeshDescription()">✨ Generuj opis i tagi AI</button>
+                <div class="form-label-actions">
+                  <button type="button" class="btn-admin-config" style="padding:4px 8px; font-size:10px;" title="Zmień klucz Google AI API" onclick="changeGeminiApiKey()">🔑 Klucz AI</button>
+                  <button type="button" class="btn-ai-gen" id="btn-ai-desc" onclick="generateAiMeshDescription()">✨ Generuj opis i tagi AI</button>
+                </div>
               </label>
               <textarea id="mf-desc" class="form-textarea" placeholder="Krótki opis wyglądu budynku (niewymagany)..." oninput="clearFieldError('mf-desc', 'err-mf-desc')"></textarea>
               <div class="field-error-text" id="err-mf-desc"></div>
@@ -1842,8 +1853,16 @@
     const SESSION_KEY = 'thebus_admin_expires';
     const GH_REPO_KEY = 'thebus_gh_repo';
     const GH_TOKEN_KEY = 'thebus_gh_token';
+    const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+    // Lista modeli od najlżejszego do zapasowych (na wypadek chwilowego przeciążenia 503)
+    const GEMINI_MODELS_FALLBACK = [
+      'gemini-3.5-flash-lite',
+      'gemini-2.5-flash-lite',
+      'gemini-2.5-flash'
+    ];
 
     let availableTags = [];
     let allAssets = [];
@@ -2479,7 +2498,6 @@
       const list = document.getElementById('mf-tag-list');
       list.innerHTML = '';
 
-      // Połącz bazowe tagi z nowymi sugestiami AI (sugestie AI na początku dla widoczności)
       const combinedTags = Array.from(new Set([...aiSuggestedNewTags, ...availableTags]));
       const tagsToShow = combinedTags.filter(t => t.toLowerCase().includes(q));
 
@@ -2522,7 +2540,6 @@
 
       refreshAdminActivity();
 
-      // Dopisz zaakceptowane sugestie AI do globalnej listy dostępnych tagów
       tags.forEach(tag => {
         if (!availableTags.includes(tag)) {
           availableTags.push(tag);
@@ -2598,6 +2615,75 @@
       }, 2000);
     }
 
+    function changeGeminiApiKey() {
+      const current = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+      const newKey = prompt('Wklej swój klucz Google AI API (AIza...):', current);
+      if (newKey !== null && newKey.trim() !== '') {
+        localStorage.setItem(GEMINI_KEY_STORAGE, newKey.trim());
+        clearFieldError('mf-desc', 'err-mf-desc');
+      }
+    }
+
+    async function callGeminiWithFallback(apiKey, promptText, mimeType, base64Data) {
+      let lastError = null;
+
+      for (const modelName of GEMINI_MODELS_FALLBACK) {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: promptText },
+                { inlineData: { mimeType, data: base64Data } }
+              ]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        const data = await resp.json();
+
+        if (!data.error) {
+          return data;
+        }
+
+        lastError = data.error;
+        const msg = (data.error.message || '').toLowerCase();
+        const status = data.error.code || resp.status;
+
+        // Usuwaj klucz TYLKO gdy rzeczywiście jest nieprawidłowy / zablokowany
+        const isInvalidKey =
+          msg.includes('api key not valid') ||
+          msg.includes('api_key_invalid') ||
+          msg.includes('permission denied') ||
+          status === 400 ||
+          status === 403;
+
+        if (isInvalidKey) {
+          localStorage.removeItem(GEMINI_KEY_STORAGE);
+          throw new Error('Nieprawidłowy klucz Google AI API. Kliknij ponownie „Generuj”, aby wkleić poprawny klucz.');
+        }
+
+        // Jeśli to chwilowe przeciążenie (503 / high demand / overloaded / 429) — spróbuj następnego modelu z listy
+        const isTransientOverload =
+          status === 503 ||
+          status === 429 ||
+          msg.includes('high demand') ||
+          msg.includes('overloaded') ||
+          msg.includes('unavailable') ||
+          msg.includes('resource exhausted');
+
+        if (!isTransientOverload) {
+          throw new Error(data.error.message || 'Błąd komunikacji z Google AI.');
+        }
+      }
+
+      throw new Error((lastError?.message || 'Serwery Google AI są chwilowo przeciążone') + ' (Twój klucz pozostał zapisany — spróbuj ponownie za kilka sekund).');
+    }
+
     async function generateAiMeshDescription() {
       const imgUrl = document.getElementById('mf-image').value.trim();
       clearFieldError('mf-image', 'err-mf-image');
@@ -2609,11 +2695,12 @@
         return;
       }
 
-      let apiKey = localStorage.getItem('gemini_admin_api_key');
+      let apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
       if (!apiKey) {
         apiKey = prompt('Wklej swój darmowy klucz Google AI API (zapisze się w Twojej przeglądarce):');
-        if (!apiKey) return;
-        localStorage.setItem('gemini_admin_api_key', apiKey.trim());
+        if (!apiKey || !apiKey.trim()) return;
+        apiKey = apiKey.trim();
+        localStorage.setItem(GEMINI_KEY_STORAGE, apiKey);
       }
 
       refreshAdminActivity();
@@ -2629,7 +2716,7 @@
         let blob = lastPastedBlob;
         if (!blob) {
           const imgResp = await fetch(imgUrl);
-          if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka z podanego linku.');
+          if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka z podanego linku (jeśli dopiero wysłałeś plik na GitHub, odczekaj chwilę lub wklej obrazek bezpośrednio przez Ctrl+V).');
           blob = await imgResp.blob();
         }
 
@@ -2654,27 +2741,12 @@ Format odpowiedzi JSON:
   "suggestedNewTags": []
 }`;
 
-        const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: promptText },
-                { inlineData: { mimeType: blob.type || 'image/jpeg', data: base64Data } }
-              ]
-            }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
-
-        const aiJson = await aiResp.json();
-        if (aiJson.error) {
-          localStorage.removeItem('gemini_admin_api_key');
-          throw new Error(aiJson.error.message);
-        }
+        const aiJson = await callGeminiWithFallback(
+          apiKey,
+          promptText,
+          blob.type || 'image/jpeg',
+          base64Data
+        );
 
         const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
         const cleanedJsonText = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
@@ -2684,13 +2756,11 @@ Format odpowiedzi JSON:
           document.getElementById('mf-desc').value = parsed.description.trim();
         }
 
-        // Wyczyść poprzednie sugestie AI
         for (const oldSug of aiSuggestedNewTags) {
           modalSelectedTags.delete(oldSug);
         }
         aiSuggestedNewTags.clear();
 
-        // Zaznacz dopasowane istniejące tagi
         if (Array.isArray(parsed.matchedTags)) {
           parsed.matchedTags.forEach(tag => {
             const exactMatch = availableTags.find(t => t.toLowerCase() === String(tag).toLowerCase().trim());
@@ -2700,7 +2770,6 @@ Format odpowiedzi JSON:
           });
         }
 
-        // Dodaj i zaznacz na niebiesko nowe ogólne tagi zaproponowane przez AI
         if (Array.isArray(parsed.suggestedNewTags)) {
           parsed.suggestedNewTags.slice(0, 2).forEach(rawTag => {
             const cleanTag = String(rawTag).trim();
