@@ -230,7 +230,7 @@
       "id": 14,
       "name": "SM_001_B_LOD0",
       "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_B_LOD0.SM_001_B_LOD0",
-      "image": "images/SM_001_B_LOD0_mbpn9.png",
+      "image": "images/SM_001_B_LOD0_pjjd1.png",
       "tags": [
         "Okna",
         "Ściana",
@@ -308,6 +308,146 @@
       ],
       "description": "Moduł ściany zewnętrznej budynku z dwoma dużymi oknami ozdobionymi dekoracyjnymi nadokiennikami, opaskami okiennymi oraz profilowanym gzymsem podokiennym. Całość reprezentuje klasyczną architekturę fasady miejskiej.",
       "addedAt": "2026-11-17T23:17:13.310Z"
+    },
+    {
+      "id": 19,
+      "name": "SM_001_B_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Office/SM_001_B_LOD0.SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0_gif49.png",
+      "tags": [
+        "Okna",
+        "Roleta",
+        "Ściana",
+        "Fasada"
+      ],
+      "description": "Moduł ściany z osadzonymi dwoma prostokątnymi oknami wyposażonymi w zewnętrzne rolety. Całość stanowi płaski fragment fasady budynku.",
+      "addedAt": "2026-11-17T23:28:37.653Z"
+    },
+    {
+      "id": 20,
+      "name": "SM_001_B_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Residential/SM_001_B_LOD0.SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0_pjjd1.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Parapet",
+        "Fasada"
+      ],
+      "description": "Płaska, prostokątna ściana budynku wyposażona w dwa osadzone obok siebie okna z widocznymi parapetami. Konstrukcja przedstawia standardowy moduł fasadowy.",
+      "addedAt": "2026-11-17T23:32:41.953Z"
+    },
+    {
+      "id": 21,
+      "name": "SM_001_C_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_C_LOD0.SM_001_C_LOD0",
+      "image": "images/SM_001_C_LOD0_2w0f6.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Fasada",
+        "Opaska okienna"
+      ],
+      "description": "Moduł ściany zewnętrznej z dwoma prostokątnymi oknami podzielonymi na mniejsze kwatery. Element posiada gładką powierzchnię oraz pionowe podziały architektoniczne.",
+      "addedAt": "2026-11-17T23:33:02.193Z"
+    },
+    {
+      "id": 22,
+      "name": "SM_001_C_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Berlin/SM_001_C_LOD0.SM_001_C_LOD0",
+      "image": "images/SM_001_C_LOD0_fpnnz.png",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Ściana",
+        "Fasada",
+        "Balustrada"
+      ],
+      "description": "Moduł ścienny budynku z dużym przeszkleniem i zintegrowanym balkonem zabezpieczonym prostą balustradą. Konstrukcja obejmuje płaską fasadę z wyjściem balkonowym oraz ramami okiennymi.",
+      "addedAt": "2026-11-17T23:33:14.240Z"
+    },
+    {
+      "id": 23,
+      "name": "SM_001_C_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Historical/SM_001_C_LOD0.SM_001_C_LOD0",
+      "image": "images/SM_001_C_LOD0_355nu.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Zaokrąglone",
+        "Parapet",
+        "Opaska okienna"
+      ],
+      "description": "Moduł ścienny z osadzonym oknem o zaokrąglonych górnych narożnikach i trójdzielnym podziale skrzydła. Pod otworem okiennym znajduje się profilowany parapet.",
+      "addedAt": "2026-11-17T23:34:26.607Z"
+    },
+    {
+      "id": 24,
+      "name": "SM_001_C_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Residential/SM_001_C_LOD0.SM_001_C_LOD0",
+      "image": "images/SM_001_C_LOD0_c5f2o.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Kamienica",
+        "Klasyczny",
+        "Nadokiennik",
+        "Parapet",
+        "Opaska okienna",
+        "Fasada"
+      ],
+      "description": "Moduł ściany kamienice z dwoma prostokątnymi oknami ozdobionymi klasycznymi oprawami architektonicznymi. Obiekt posiada profilowane nadokienniki oraz widoczne parapety.",
+      "addedAt": "2026-11-17T23:36:25.566Z"
+    },
+    {
+      "id": 25,
+      "name": "SM_001_C_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/France/SM_001_C_LOD0.SM_001_C_LOD0",
+      "image": "images/SM_001_C_LOD0_7blor.png",
+      "tags": [
+        "Okna",
+        "Balkon francuski",
+        "Gzyms",
+        "Fasada",
+        "Balustrada",
+        "Cokół",
+        "Ściana"
+      ],
+      "description": "Moduł ściany zewnętrznej budynku z dwoma prostokątnymi oknami, przed którymi zamontowano ozdobne balustrady typu francuskiego. Całość uzupełnia poziomy gzyms oddzielający dolną część elewacji.",
+      "addedAt": "2026-11-17T23:36:43.493Z"
+    },
+    {
+      "id": 26,
+      "name": "SM_001_C_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Office/SM_001_C_LOD0.SM_001_C_LOD0",
+      "image": "images/SM_001_C_LOD0_2w0f6.png",
+      "tags": [
+        "Okna",
+        "Drzwi",
+        "Roleta",
+        "Ściana",
+        "Cokół",
+        "Gzyms",
+        "Fasada"
+      ],
+      "description": "Moduł fasadowy budynku zawiera centralnie umieszczone drzwi oraz duże okna wyposażone w zewnętrzne rolety. Konstrukcja posiada widoczny cokół u podstawy oraz profilowany gzyms w górnej części.",
+      "addedAt": "2026-11-17T23:38:58.107Z"
+    },
+    {
+      "id": 27,
+      "name": "SM_001_C_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Residential/SM_001_C_LOD0.SM_001_C_LOD0",
+      "image": "images/SM_001_C_LOD0_vhoeo.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Balkon",
+        "Balustrada",
+        "Cokół",
+        "Fasada"
+      ],
+      "description": "Moduł fasady budynku z dwoma prostokątnymi oknami i wystającą płytą balkonową zabezpieczoną metalową balustradą. Ściana posiada widoczny cokół w dolnej części.",
+      "addedAt": "2026-11-17T23:39:56.186Z"
     }
   ]
 }
