@@ -24,7 +24,8 @@
     "Fasada",
     "Balustrada",
     "Cokół",
-    "Parapet"
+    "Parapet",
+    "Opaska okienna"
   ],
   "assets": [
     {
@@ -87,7 +88,7 @@
       "id": 5,
       "name": "SM_001_A_LOD0",
       "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_A_LOD0.SM_001_A_LOD0",
-      "image": "images/SM_001_A_LOD0_5noa1.png",
+      "image": "images/SM_001_A_LOD0_35buc.png",
       "tags": [
         "Okna",
         "Łukowe",
@@ -162,6 +163,151 @@
       ],
       "description": "Moduł fasady budynku z dwoma dużymi oknami wyposażonymi w nadokienniki oraz ozdobne balustrady typu balkonu francuskiego. Całość uzupełnia poziomy gzyms biegnący pod oknami.",
       "addedAt": "2026-11-17T23:04:39.809Z"
+    },
+    {
+      "id": 10,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Office/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_muxh4.png",
+      "tags": [
+        "Okna",
+        "Witryna",
+        "Fasada",
+        "Cokół"
+      ],
+      "description": "Moduł fasadowy budynku z dużymi witrynami okiennymi podzielonymi na segmenty. Posiada widoczny cokół w dolnej części.",
+      "addedAt": "2026-11-17T23:10:31.908Z"
+    },
+    {
+      "id": 11,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Residential/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_35buc.png",
+      "tags": [
+        "Ściana",
+        "Okna",
+        "Fasada",
+        "Parapet"
+      ],
+      "description": "Moduł ścienny budynku zawiera dwa prostokątne otwory okienne z widocznymi ramami. Element stanowi płaski panel elewacyjny przeznaczony do tworzenia konstrukcji budowlanych.",
+      "addedAt": "2026-11-17T23:10:48.732Z"
+    },
+    {
+      "id": 12,
+      "name": "SM_001_B",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/GreatBritain/SM_001_B.SM_001_B",
+      "image": "images/SM_001_B_934hu.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Klasyczny",
+        "Kamienica",
+        "Nadokiennik",
+        "Fasada",
+        "Parapet"
+      ],
+      "description": "Płaska sekcja ściany zewnętrznej wyposażona w dwa prostokątne otwory okienne ozdobione klasycznymi nadokiennikami i parapetami. Architektura elementu nawiązuje do tradycyjnych miejskich kamienic.",
+      "addedAt": "2026-11-17T23:10:59.932Z"
+    },
+    {
+      "id": 13,
+      "name": "SM_001_B",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Region_Ostsee/SM_001_B.SM_001_B",
+      "image": "images/SM_001_B_934hu.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Fasada",
+        "Łukowe",
+        "Gzyms",
+        "Nadokiennik",
+        "Cokół"
+      ],
+      "description": "Modułowa fasada budynku z dwoma dużymi przeszkleniami ozdobionymi łukowymi nadokiennikami. Całość osadzona jest na niskim cokole i zwieńczona gzymsem.\n//BALKON/WYKUSZ",
+      "addedAt": "2026-11-17T23:14:45.680Z"
+    },
+    {
+      "id": 14,
+      "name": "SM_001_B_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_B_LOD0.SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0_mbpn9.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Zaokrąglone",
+        "Fasada"
+      ],
+      "description": "Moduł fasady budynku z trzema dużymi oknami i panelami poniżej. Całość ma lekko zaokrąglony kształt z bocznymi filarami.",
+      "addedAt": "2026-11-17T23:15:00.104Z"
+    },
+    {
+      "id": 15,
+      "name": "SM_001_B_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Berlin/SM_001_B_LOD0.SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0_asu8t.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Balkon francuski",
+        "Parapet",
+        "Fasada",
+        "Balustrada"
+      ],
+      "description": "Prostokątny moduł ściany zewnętrznej wyposażony w dwa duże okna z parapetami oraz balustradami w formie balkonów francuskich. Całość stanowi płaski element fasady budynku.",
+      "addedAt": "2026-11-17T23:15:10.192Z"
+    },
+    {
+      "id": 16,
+      "name": "SM_001_B_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Historical/SM_001_B_LOD0.SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0_g4nmn.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Łukowe",
+        "Gzyms",
+        "Fasada"
+      ],
+      "description": "Płaski moduł ściany budynku z poziomym gzymsem i rzędem czterech łukowych okien zakończonych półkoliście. Konstrukcja charakteryzuje się klasycznym układem fasetowym z wyraźnymi obramowania otworów okiennych.",
+      "addedAt": "2026-11-17T23:15:23.279Z"
+    },
+    {
+      "id": 17,
+      "name": "SM_001_B_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Residential/SM_001_B_LOD0.SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0_vfaqw.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Klasyczny",
+        "Kamienica",
+        "Gzyms",
+        "Nadokiennik",
+        "Fasada",
+        "Balustrada",
+        "Opaska okienna"
+      ],
+      "description": "Moduł ściany zewnętrznej budynku z dwoma dużymi oknami ozdobionymi klasycznymi gzymsami, nadokiennikami oraz ozdobnymi balustradami podokiennymi. Całość charakteryzuje się detalami architektonicznymi w stylu kamienicznym.",
+      "addedAt": "2026-11-17T23:17:00.798Z"
+    },
+    {
+      "id": 18,
+      "name": "SM_001_B_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/France/SM_001_B_LOD0.SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0_mbpn9.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Klasyczny",
+        "Kamienica",
+        "Gzyms",
+        "Nadokiennik",
+        "Fasada",
+        "Opaska okienna",
+        "Balkon francuski"
+      ],
+      "description": "Moduł ściany zewnętrznej budynku z dwoma dużymi oknami ozdobionymi dekoracyjnymi nadokiennikami, opaskami okiennymi oraz profilowanym gzymsem podokiennym. Całość reprezentuje klasyczną architekturę fasady miejskiej.",
+      "addedAt": "2026-11-17T23:17:13.310Z"
     }
   ]
 }
