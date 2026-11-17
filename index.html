@@ -1956,7 +1956,7 @@
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
               <input type="checkbox" id="mf-auto-bg-checkbox" checked onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Auto-Crop (automatyczne wykrywanie krawędzi i przycięcie otoczenia edytora UE)</span>
+              <span>✂️ Auto-Crop (inteligentne wykrywanie krawędzi i usunięcie tła Unreal Engine)</span>
             </label>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
@@ -2185,7 +2185,7 @@
 
     function onMeshPathInput() {}
 
-    // Prawdziwy Auto-Crop: skanuje krawędzie w poszukiwaniu jednolitego tła edytora Unreal Engine i docina dokładnie do obiektu 3D
+    // Poprawiony silnik Auto-Crop: próbuje wykryć tło wokół krawędzi (szare/ciemne ramki viewu UE) i przycina do mesha
     async function smartProcessImage(blob) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -2205,21 +2205,33 @@
           const imgData = ctx.getImageData(0, 0, w, h);
           const data = imgData.data;
 
-          // Pobierz kolor bazowy z rogu (tło edytora UE)
-          const bgR = data[0], bgG = data[1], bgB = data[2];
+          // Próbka kolorów z 4 narożników (tło edytora UE)
+          const corners = [
+            0, // lewy górny
+            (w - 1) * 4, // prawy górny
+            ((h - 1) * w) * 4, // lewy dolny
+            (((h - 1) * w) + (w - 1)) * 4 // prawy dolny
+          ];
+
+          let bgR = 0, bgG = 0, bgB = 0;
+          corners.forEach(idx => {
+            bgR += data[idx];
+            bgG += data[idx + 1];
+            bgB += data[idx + 2];
+          });
+          bgR = Math.round(bgR / 4);
+          bgG = Math.round(bgG / 4);
+          bgB = Math.round(bgB / 4);
 
           let minX = w, maxX = 0, minY = h, maxY = 0;
           let sampleCount = 0;
-
-          // Próg tolerancji dla różnic odcieni tła edytora
-          const tolerance = 35;
+          const tolerance = 45; // Duża tolerancja na cienie i odcienie tła UE
 
           for (let y = 0; y < h; y += 2) {
             for (let x = 0; x < w; x += 2) {
               const idx = (y * w + x) * 4;
               const r = data[idx], g = data[idx + 1], b = data[idx + 2];
 
-              // Sprawdź czy piksel różni się od tła (należy do obiektu)
               const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
               if (diff > tolerance) {
                 if (x < minX) minX = x;
@@ -2231,15 +2243,13 @@
             }
           }
 
-          // Jeśli nie wykryto obiektu lub obraz jest zbyt jednolity, zwracamy oryginał
-          if (sampleCount < 100 || minX >= maxX || minY >= maxY) {
+          if (sampleCount < 150 || minX >= maxX || minY >= maxY) {
             resolve(blob);
             return;
           }
 
-          // Dodaj delikatny margines wokół wykrytego mesha (2%)
-          const padX = Math.round(w * 0.02);
-          const padY = Math.round(h * 0.02);
+          const padX = Math.round(w * 0.015);
+          const padY = Math.round(h * 0.015);
           minX = Math.max(0, minX - padX);
           maxX = Math.min(w, maxX + padX);
           minY = Math.max(0, minY - padY);
@@ -2349,7 +2359,7 @@
 
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
-      statusText.innerHTML = '✂️ Przycinanie obszaru mesha...';
+      statusText.innerHTML = '✂️ Auto-Crop: docinanie obszaru mesha...';
 
       let finalBlob = rawBlob;
       if (document.getElementById('mf-auto-bg-checkbox').checked) {
@@ -2361,7 +2371,7 @@
 
       previewEl.src = URL.createObjectURL(finalBlob);
       previewEl.classList.add('visible');
-      statusText.innerHTML = '✅ Gotowe do zapisu (plik wyśle się na GitHub po kliknięciu Zapisz)';
+      statusText.innerHTML = '✅ Przycięto! (plik wyśle się na GitHub dopiero po kliknięciu Zapisz)';
 
       const rawPathVal = document.getElementById('mf-name').value.trim();
       if (rawPathVal) {
@@ -2374,7 +2384,6 @@
       }
     }
 
-    // Wysyłanie pliku na GitHub następuje WYŁĄCZNIE w momencie zapisu formularza!
     async function uploadPendingImageToGithub() {
       if (!pendingImageBlob) {
         return document.getElementById('mf-image').value.trim();
