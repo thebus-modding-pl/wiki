@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Bus Modding Wiki — Polska Społeczność</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-body: #09090b;
+      --bg-surface: #111114;
+      --bg-surface-hover: #18181c;
+      --border-color: #222226;
+      --border-hover: #3a3a42;
+      --text-primary: #ffffff;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --pill-active-bg: #ffffff;
+      --pill-active-text: #09090b;
+      --accent-green: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Górny pasek nawigacji */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(9, 9, 11, 0.92);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+      padding-bottom: 4px;
+      cursor: pointer;
+    }
+
+    .nav-links a.active {
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--text-primary);
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .btn-ai-soon {
+      background-color: #18181b;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: not-allowed;
+    }
+
+    /* Kontener główny */
+    .main-wrapper {
+      flex: 1;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    .view-section {
+      display: none;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    /* Nagłówek sekcji (Hero) */
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 36px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background-color: var(--text-muted);
+    }
+
+    .hero h1 {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      max-width: 620px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+    }
+
+    .stat-box {
+      text-align: right;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Przyciski na stronie START */
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn-white {
+      background-color: #ffffff;
+      color: #09090b;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-white:hover {
+      opacity: 0.9;
+    }
+
+    .btn-outline {
+      background-color: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 12px 22px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--border-hover);
+    }
+
+    /* Karty informacyjne na stronie START */
+    .start-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+
+    .info-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 28px;
+      transition: border-color 0.15s;
+    }
+
+    .info-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .info-card-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .info-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .info-card p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Sekcje podglądu na START */
+    .home-section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+    }
+
+    .link-all {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .link-all:hover {
+      text-decoration: underline;
+    }
+
+    /* Wyszukiwarka i filtry */
+    .controls {
+      margin-bottom: 24px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-input-wrap svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 18px;
+      height: 18px;
+    }
+
+    .search-input {
+      width: 100%;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px 16px 14px 46px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-hover);
+    }
+
+    .sort-select {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0 18px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Pigułki tagów (multi-select) */
+    .tags-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tag-pill:hover:not(:disabled) {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .tag-pill.active {
+      background-color: var(--pill-active-bg);
+      color: var(--pill-active-text);
+      border-color: var(--pill-active-bg);
+    }
+
+    .tag-pill:disabled {
+      opacity: 0.32;
+      cursor: not-allowed;
+      background-color: #0d0d10;
+      border-color: #18181c;
+    }
+
+    .tag-count {
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .tag-pill.active .tag-count {
+      background-color: rgba(0, 0, 0, 0.14);
+      color: var(--pill-active-text);
+    }
+
+    .btn-reset-filters {
+      background-color: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-left: 4px;
+    }
+
+    .btn-reset-filters:hover {
+      background-color: rgba(239, 68, 68, 0.22);
+      color: #fca5a5;
+    }
+
+    .results-info {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .results-info strong {
+      color: var(--text-primary);
+    }
+
+    /* Siatka kart */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      background-color: var(--bg-surface-hover);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      padding: 16px 16px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+
+    .tutorial-card-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+
+    .copy-btn {
+      background: #1f1f24;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    /* Kontener obrazu i fallback "Brak podglądu obrazu" */
+    .card-image-wrap {
+      margin: 0 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background-color: #070709;
+      border: 1px solid #1c1c21;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .no-image-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      padding: 16px;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        -45deg,
+        #0a0a0d,
+        #0a0a0d 10px,
+        #0e0e12 10px,
+        #0e0e12 20px
+      );
+    }
+
+    /* Ikona Play na miniaturce poradnika */
+    .yt-play-badge {
+      position: absolute;
+      width: 46px;
+      height: 32px;
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .card:hover .yt-play-badge {
+      background: #ffffff;
+      color: #09090b;
+      transform: scale(1.08);
+    }
+
+    .card-desc {
+      padding: 12px 16px 4px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-top: auto;
+    }
+
+    .card-tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .card-tag {
+      background-color: #1a1a1f;
+      border: 1px solid #2a2a32;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .tutorial-author {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .tutorial-author span {
+      color: var(--text-primary);
+    }
+
+    .yt-watch-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    /* Stopka z notą prawną */
+    .site-footer {
+      border-top: 1px solid var(--border-color);
+      padding: 24px 40px;
+      margin-top: 40px;
+      background-color: #070709;
+    }
+
+    .footer-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Modal szczegółów mesha */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 12px;
+      max-width: 720px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .modal-media-box {
+      width: 100%;
+      height: 380px;
+      background: #050507;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .modal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .modal-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-primary {
+      background: #ffffff;
+      color: #09090b;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-close {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .navbar, .container, .site-footer { padding: 20px; }
+      .hero h1 { font-size: 30px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nawigacja -->
+  <nav class="navbar">
+    <div class="nav-links">
+      <a id="nav-start" class="active" onclick="switchTab('start')">START</a>
+      <a id="nav-meshes" onclick="switchTab('meshes')">BAZA MESHÓW</a>
+      <a id="nav-tutorials" onclick="switchTab('tutorials')">PORADNIKI</a>
+    </div>
+    <button class="btn-ai-soon" title="Wkrótce dodamy wyszukiwanie ze Street View">AI STREET VIEW (WKRÓTCE)</button>
+  </nav>
+
+  <div class="main-wrapper">
+    <!-- ==================== WIDOK 1: START ==================== -->
+    <div id="view-start" class="view-section active">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">POLSKA SPOŁECZNOŚĆ MODERSKA</div>
+            <h1>THE BUS MODDING WIKI</h1>
+            <p>Centralna baza wiedzy, poradników wideo oraz katalog wygenerowanych obiektów 3D tworzona przez i dla polskiej społeczności moderów gry The Bus.</p>
+            <div class="hero-actions">
+              <button class="btn-white" onclick="switchTab('meshes')">PRZEGLĄDAJ BAZĘ MESHÓW</button>
+              <button class="btn-outline" onclick="switchTab('tutorials')">ZOBACZ PORADNIKI</button>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div class="stat-label">OBIEKTY W BAZIE</div>
+              <div class="stat-value" id="start-total-count">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">PORADNIKI</div>
+              <div class="stat-value" id="start-tutorials-count">0</div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Karty informacyjne -->
+        <section class="start-grid">
+          <div class="info-card">
+            <div class="info-card-num">01 / KATALOG ASSETÓW</div>
+            <h3>GOTOWE MODUŁY BUDYNKÓW</h3>
+            <p>Przeszukuj uporządkowaną bibliotekę Static Meshów. Łącz wiele filtrów naraz (np. okna i zaokrąglone), aby błyskawicznie znaleźć konkretny element architektoniczny.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">02 / BAZA WIEDZY WIDEO</div>
+            <h3>PORADNIKI DLA TWÓRCÓW</h3>
+            <p>Zbiór sprawdzonych materiałów wideo tworzonych przez społeczność — od podstaw pracy w edytorze map, po zaawansowaną optymalizację i konfigurację ruchu.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">03 / ASYSTENT AI (WKRÓTCE)</div>
+            <h3>DOPASOWANIE ZE STREET VIEW</h3>
+            <p>Wkrótce uruchomimy moduł AI: wkleisz zrzut ekranu prawdziwego budynku z Google Street View, a system automatycznie wskaże najlepiej pasujące moduły z naszej bazy.</p>
+          </div>
+        </section>
+
+        <!-- Podgląd ostatnich obiektów -->
+        <section class="home-section">
+          <div class="section-header">
+            <h2>OSTATNIO DODANE MESHE</h2>
+            <a class="link-all" onclick="switchTab('meshes')">Zobacz wszystkie obiekty →</a>
+          </div>
+          <div class="grid" id="preview-meshes-grid"></div>
+        </section>
+
+        <!-- Podgląd ostatnich poradników -->
+        <section class="home-section">
+          <div class="section-header">
+            <h2>OSTATNIE PORADNIKI</h2>
+            <a class="link-all" onclick="switchTab('tutorials')">Zobacz wszystkie poradniki →</a>
+          </div>
+          <div class="grid" id="preview-tutorials-grid"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ==================== WIDOK 2: BAZA MESHÓW ==================== -->
+    <div id="view-meshes" class="view-section">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">REJESTR PUBLICZNY</div>
+            <h1>BAZA STATIC MESHÓW</h1>
+            <p>Wybierz jeden lub kilka filtrów jednocześnie, aby zawęzić wyniki. Kliknij nazwę lub przycisk, aby skopiować ID obiektu.</p>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div class="stat-label">DOSTĘPNE MESHE</div>
+              <div class="stat-value" id="total-count">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">KATEGORIE</div>
+              <div class="stat-value" id="tags-count">0</div>
+            </div>
+          </div>
+        </header>
+
+        <section class="controls">
+          <div class="search-row">
+            <div class="search-input-wrap">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input type="text" id="search-input" class="search-input" placeholder="Szukaj po nazwie mesha (np. SM_008), tagu lub opisie...">
+            </div>
+            <select id="sort-select" class="sort-select">
+              <option value="default">Domyślne</option>
+              <option value="az">Nazwa A–Z</option>
+              <option value="za">Nazwa Z–A</option>
+            </select>
+          </div>
+
+          <div class="tags-bar" id="tags-bar"></div>
+
+          <div class="results-info" id="results-info">
+            Ładowanie bazy...
+          </div>
+        </section>
+
+        <main class="grid" id="assets-grid"></main>
+      </div>
+    </div>
+
+    <!-- ==================== WIDOK 3: PORADNIKI ==================== -->
+    <div id="view-tutorials" class="view-section">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">BAZA WIEDZY SPOŁECZNOŚCI</div>
+            <h1>PORADNIKI WIDEO</h1>
+            <p>Materiały szkoleniowe, omówienia narzędzi oraz poradniki tworzenia map i obiektów do gry The Bus.</p>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div class="stat-label">DOSTĘPNE FILMY</div>
+              <div class="stat-value" id="tutorials-total-count">0</div>
+            </div>
+          </div>
+        </header>
+
+        <section class="controls">
+          <div class="search-row">
+            <div class="search-input-wrap">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input type="text" id="tutorial-search-input" class="search-input" placeholder="Szukaj poradnika po tytule, autorze lub opisie...">
+            </div>
+          </div>
+
+          <div class="results-info" id="tutorials-results-info">
+            Ładowanie poradników...
+          </div>
+        </section>
+
+        <main class="grid" id="tutorials-grid"></main>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stopka (Disclaimer) -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>THE BUS MODDING WIKI — POLSKA SPOŁECZNOŚĆ</span>
+      <span>Nieoficjalny projekt polskiej społeczności moderskiej. „The Bus” jest znakiem towarowym firmy TML-Studios.</span>
+    </div>
+  </footer>
+
+  <!-- Modal szczegółów mesha -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-media-box" id="modal-media-box"></div>
+      <div class="modal-body">
+        <div class="modal-eyebrow" id="modal-tags-text"></div>
+        <h2 class="modal-title" id="modal-title"></h2>
+        <p class="modal-desc" id="modal-desc"></p>
+        <div class="modal-actions">
+          <button class="btn-primary" id="modal-copy-btn">Kopiuj nazwę mesha</button>
+          <button class="btn-close" id="modal-close-btn">Zamknij</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allAssets = [];
+    let allTutorials = [];
+    let selectedTags = new Set();
+    let searchQuery = '';
+    let sortMode = 'default';
+    let tutorialSearchQuery = '';
+
+    // Przełączanie zakładek
+    function switchTab(tab) {
+      ['start', 'meshes', 'tutorials'].forEach(name => {
+        document.getElementById(`view-${name}`).classList.toggle('active', name === tab);
+        document.getElementById(`nav-${name}`).classList.toggle('active', name === tab);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Wyciąganie ID filmu z linku YouTube (automatyczna miniaturka)
+    function getYoutubeId(url) {
+      if (!url) return null;
+      const regExp = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+      const match = url.match(regExp);
+      return match ? match[1] : null;
+    }
+
+    function getYoutubeThumbnail(url) {
+      const id = getYoutubeId(url);
+      return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+    }
+
+    // Obsługa błędu ładowania obrazka -> "Brak podglądu obrazu"
+    function handleImageError(imgEl) {
+      const parent = imgEl.parentElement;
+      if (!parent) return;
+      parent.innerHTML = `
+        <div class="no-image-placeholder">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <path d="m21 15-5-5L5 21"></path>
+          </svg>
+          <span>Brak podglądu obrazu</span>
+        </div>
+      `;
+    }
+
+    async function init() {
+      // Ładowanie meshów
+      try {
+        const res = await fetch('assets.json');
+        allAssets = await res.json();
+        updateMeshStats();
+        renderTags();
+        renderGrid();
+        renderMeshPreview();
+      } catch (err) {
+        document.getElementById('results-info').innerHTML =
+          '<span style="color:#ef4444">Błąd wczytywania assets.json. Sprawdź poprawność składni pliku JSON.</span>';
+      }
+
+      // Ładowanie poradników
+      try {
+        const resTut = await fetch('poradniki.json');
+        allTutorials = await resTut.json();
+        document.getElementById('tutorials-total-count').textContent = allTutorials.length;
+        document.getElementById('start-tutorials-count').textContent = allTutorials.length;
+        renderTutorialsGrid();
+        renderTutorialsPreview();
+      } catch (err) {
+        document.getElementById('tutorials-results-info').innerHTML =
+          '<span style="color:#ef4444">Brak pliku poradniki.json lub błąd jego składni.</span>';
+      }
+    }
+
+    function updateMeshStats() {
+      const total = allAssets.length;
+      const uniqueTags = new Set(allAssets.flatMap(a => a.tags)).size;
+
+      document.getElementById('total-count').textContent = total;
+      document.getElementById('tags-count').textContent = uniqueTags;
+      document.getElementById('start-total-count').textContent = total;
+    }
+
+    // Filtrowanie po wyszukiwarce tekstowej
+    function matchesSearchText(asset) {
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        asset.name.toLowerCase().includes(q) ||
+        (asset.description && asset.description.toLowerCase().includes(q)) ||
+        asset.tags.some(t => t.toLowerCase().includes(q))
+      );
+    }
+
+    // Renderowanie pigułek tagów z dynamicznym licznikiem dla kombinacji AND
+    function renderTags() {
+      const allUniqueTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
+      const tagsBar = document.getElementById('tags-bar');
+      tagsBar.innerHTML = '';
+
+      // Przycisk "Wszystkie"
+      const allBtn = document.createElement('button');
+      allBtn.className = `tag-pill ${selectedTags.size === 0 ? 'active' : ''}`;
+      allBtn.innerHTML = `Wszystkie <span class="tag-count">${allAssets.filter(matchesSearchText).length}</span>`;
+      allBtn.onclick = () => {
+        selectedTags.clear();
+        renderTags();
+        renderGrid();
+      };
+      tagsBar.appendChild(allBtn);
+
+      // Poszczególne tagi
+      allUniqueTags.forEach(tag => {
+        const isSelected = selectedTags.has(tag);
+
+        const matchingCount = allAssets.filter(asset => {
+          if (!matchesSearchText(asset)) return false;
+          for (const activeTag of selectedTags) {
+            if (!asset.tags.includes(activeTag)) return false;
+          }
+          return asset.tags.includes(tag);
+        }).length;
+
+        const btn = document.createElement('button');
+        btn.className = `tag-pill ${isSelected ? 'active' : ''}`;
+        btn.innerHTML = `${tag} <span class="tag-count">${matchingCount}</span>`;
+
+        if (matchingCount === 0 && !isSelected) {
+          btn.disabled = true;
+        } else {
+          btn.onclick = () => {
+            if (selectedTags.has(tag)) {
+              selectedTags.delete(tag);
+            } else {
+              selectedTags.add(tag);
+            }
+            renderTags();
+            renderGrid();
+          };
+        }
+
+        tagsBar.appendChild(btn);
+      });
+
+      if (selectedTags.size > 0 || searchQuery.trim() !== '') {
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'btn-reset-filters';
+        resetBtn.textContent = '✕ Resetuj filtry';
+        resetBtn.onclick = () => {
+          selectedTags.clear();
+          searchQuery = '';
+          document.getElementById('search-input').value = '';
+          renderTags();
+          renderGrid();
+        };
+        tagsBar.appendChild(resetBtn);
+      }
+    }
+
+    function createMeshCardElement(asset) {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.onclick = () => openModal(asset);
+
+      const tagsHtml = asset.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+      const imgContent = asset.image
+        ? `<img src="${asset.image}" alt="${asset.name}" loading="lazy" onerror="handleImageError(this)">`
+        : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">${asset.name}</div>
+          <button class="copy-btn" onclick="copyName(event, '${asset.name}', this)">Kopiuj</button>
+        </div>
+        <div class="card-image-wrap">
+          ${imgContent}
+        </div>
+        <div class="card-footer">
+          <div class="card-tags-list">${tagsHtml}</div>
+        </div>
+      `;
+      return card;
+    }
+
+    function renderMeshPreview() {
+      const previewGrid = document.getElementById('preview-meshes-grid');
+      previewGrid.innerHTML = '';
+      allAssets.slice(0, 3).forEach(asset => {
+        previewGrid.appendChild(createMeshCardElement(asset));
+      });
+    }
+
+    function renderGrid() {
+      let filtered = allAssets.filter(asset => {
+        if (!matchesSearchText(asset)) return false;
+        for (const tag of selectedTags) {
+          if (!asset.tags.includes(tag)) return false;
+        }
+        return true;
+      });
+
+      if (sortMode === 'az') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sortMode === 'za') {
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
+      }
+
+      document.getElementById('results-info').innerHTML =
+        `Wyświetlono <strong>${filtered.length}</strong> z ${allAssets.length} obiektów`;
+
+      const grid = document.getElementById('assets-grid');
+      grid.innerHTML = '';
+
+      filtered.forEach(asset => {
+        grid.appendChild(createMeshCardElement(asset));
+      });
+    }
+
+    // ==================== PORADNIKI ====================
+    function createTutorialCardElement(tut) {
+      const card = document.createElement('a');
+      card.className = 'card';
+      card.href = tut.youtubeUrl;
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
+
+      const thumbUrl = tut.thumbnail || getYoutubeThumbnail(tut.youtubeUrl);
+      const imgHtml = thumbUrl
+        ? `<img src="${thumbUrl}" alt="${tut.title}" loading="lazy" onerror="handleImageError(this)">
+           <div class="yt-play-badge">▶</div>`
+        : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="tutorial-card-title">${tut.title}</div>
+        </div>
+        <div class="card-image-wrap">
+          ${imgHtml}
+        </div>
+        <p class="card-desc">${tut.description || ''}</p>
+        <div class="card-footer">
+          <div class="tutorial-author">Autor: <span>${tut.author || 'Społeczność'}</span></div>
+          <span class="yt-watch-label">Oglądaj na YT ↗</span>
+        </div>
+      `;
+      return card;
+    }
+
+    function renderTutorialsPreview() {
+      const previewGrid = document.getElementById('preview-tutorials-grid');
+      previewGrid.innerHTML = '';
+      allTutorials.slice(0, 3).forEach(tut => {
+        previewGrid.appendChild(createTutorialCardElement(tut));
+      });
+    }
+
+    function renderTutorialsGrid() {
+      const q = tutorialSearchQuery.toLowerCase().trim();
+      const filtered = allTutorials.filter(tut => {
+        if (!q) return true;
+        return (
+          tut.title.toLowerCase().includes(q) ||
+          (tut.author && tut.author.toLowerCase().includes(q)) ||
+          (tut.description && tut.description.toLowerCase().includes(q))
+        );
+      });
+
+      document.getElementById('tutorials-results-info').innerHTML =
+        `Wyświetlono <strong>${filtered.length}</strong> z ${allTutorials.length} poradników`;
+
+      const grid = document.getElementById('tutorials-grid');
+      grid.innerHTML = '';
+
+      filtered.forEach(tut => {
+        grid.appendChild(createTutorialCardElement(tut));
+      });
+    }
+
+    // Kopiowanie nazwy mesha
+    function copyName(e, name, btn) {
+      e.stopPropagation();
+      navigator.clipboard.writeText(name);
+      const original = btn.textContent;
+      btn.textContent = 'Skopiowano!';
+      btn.style.background = '#10b981';
+      btn.style.color = '#000';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 1200);
+    }
+
+    // Modal szczegółów mesha
+    const backdrop = document.getElementById('modal-backdrop');
+    function openModal(asset) {
+      const mediaBox = document.getElementById('modal-media-box');
+      if (asset.image) {
+        mediaBox.innerHTML = `<img class="modal-img" src="${asset.image}" alt="${asset.name}" onerror="handleImageError(this)">`;
+      } else {
+        mediaBox.innerHTML = `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+      }
+
+      document.getElementById('modal-tags-text').textContent = asset.tags.join(' • ');
+      document.getElementById('modal-title').textContent = asset.name;
+      document.getElementById('modal-desc').textContent = asset.description || '';
+
+      const copyBtn = document.getElementById('modal-copy-btn');
+      copyBtn.onclick = (e) => copyName(e, asset.name, copyBtn);
+
+      backdrop.classList.add('open');
+    }
+
+    document.getElementById('modal-close-btn').onclick = () => backdrop.classList.remove('open');
+    backdrop.onclick = () => backdrop.classList.remove('open');
+
+    // Nasłuchiwanie wyszukiwarek i sortowania
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderTags();
+      renderGrid();
+    });
+
+    document.getElementById('sort-select').addEventListener('change', (e) => {
+      sortMode = e.target.value;
+      renderGrid();
+    });
+
+    document.getElementById('tutorial-search-input').addEventListener('input', (e) => {
+      tutorialSearchQuery = e.target.value;
+      renderTutorialsGrid();
+    });
+
+    init();
+  </script>
+</body>
+</html>
