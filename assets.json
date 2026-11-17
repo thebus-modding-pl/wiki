@@ -169,6 +169,40 @@
       ],
       "description": "Moduł architektoniczny przedstawiający zaokrągloną ścianę z trzema dużymi oknami wyposażonymi w liczne szprosy w starym stylu.",
       "addedAt": "2026-11-17T19:23:52.208Z"
+    },
+    {
+      "id": 21,
+      "name": "SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0.png",
+      "tags": [
+        "Okna",
+        "Nowe",
+        "Roleta"
+      ],
+      "description": "Moduł ścienny budynku z dwoma prostokątnymi oknami umieszczonymi w górnym rogu. Element reprezentuje nowoczesną architekturę miejską.",
+      "addedAt": "2026-11-17T19:34:29.047Z"
+    },
+    {
+      "id": 22,
+      "name": "SM_001_B_LOD0",
+      "image": "images/SM_001_B_LOD0.png",
+      "tags": [
+        "Okna",
+        "Stare"
+      ],
+      "description": "Moduł ściany zewnętrznej z dwoma klasycznymi, wysokimi oknami ozdobionymi tradycyjnymi gzymsami. Element reprezentuje starą zabudowę miejską.",
+      "addedAt": "2026-11-17T19:34:55.918Z"
+    },
+    {
+      "id": 23,
+      "name": "SM_001_B_LOD0",
+      "image": "images/mesh_1794944109929.png",
+      "tags": [
+        "Okna",
+        "Stare"
+      ],
+      "description": "Moduł ściany z dwoma ozdobnymi, klasycznymi oknami wyposażonymi w gzymsy i szprosy.",
+      "addedAt": "2026-11-17T19:35:26.414Z"
     }
   ]
 }
