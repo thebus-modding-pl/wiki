@@ -22,6 +22,146 @@
     "Gzyms",
     "Nadokiennik",
     "Fasada",
-    "Balustrada"
+    "Balustrada",
+    "Cokół",
+    "Parapet"
+  ],
+  "assets": [
+    {
+      "id": 1,
+      "name": "LOD2_3x3",
+      "fullPath": "/Game/Generated_Buildings/Mesh/LOD2_3x3.LOD2_3x3",
+      "image": "images/LOD2_3x3_t2wce.png",
+      "tags": [
+        "Ściana",
+        "Fasada"
+      ],
+      "description": "Jest to płaski, prostokątny moduł architektoniczny stanowiący element ściany lub fasady budynku. Konstrukcja nie posiada żadnych otworów okiennych ani drzwiowych.",
+      "addedAt": "2026-11-17T23:01:51.852Z"
+    },
+    {
+      "id": 2,
+      "name": "LOD2_5x3",
+      "fullPath": "/Game/Generated_Buildings/Mesh/LOD2_5x3.LOD2_5x3",
+      "image": "images/LOD2_5x3_wcakf.png",
+      "tags": [
+        "Ściana",
+        "Fasada"
+      ],
+      "description": "Prostokątny moduł ścienny o płaskiej powierzchni, stanowiący podstawowy element konstrukcyjny fasady budynku.",
+      "addedAt": "2026-11-17T23:02:10.035Z"
+    },
+    {
+      "id": 3,
+      "name": "SM_001_A",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/GreatBritain/SM_001_A.SM_001_A",
+      "image": "images/SM_001_A_qd2rk.png",
+      "tags": [
+        "Okna",
+        "Nadokiennik",
+        "Ściana",
+        "Klasyczny",
+        "Fasada"
+      ],
+      "description": "Moduł ściany z dwoma prostokątnymi oknami ozdobionymi klasycznymi nadokiennikami i opaskami. Całość reprezentuje tradycyjny element architektoniczny fasady budynku.",
+      "addedAt": "2026-11-17T23:02:27.475Z"
+    },
+    {
+      "id": 4,
+      "name": "SM_001_A",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Region_Ostsee/SM_001_A.SM_001_A",
+      "image": "images/SM_001_A_qd2rk.png",
+      "tags": [
+        "Okna",
+        "Balkon francuski",
+        "Gzyms",
+        "Fasada",
+        "Ściana",
+        "Łukowe",
+        "Balustrada"
+      ],
+      "description": "Moduł ściany zewnętrznej budynku wyposażony w dwa łukowe okna z parapetami oraz ozdobnymi balustradami w formie balkonu francuskiego. Całość wieńczy prosty gzyms.",
+      "addedAt": "2026-11-17T23:02:40.555Z"
+    },
+    {
+      "id": 5,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_5noa1.png",
+      "tags": [
+        "Okna",
+        "Łukowe",
+        "Nadokiennik",
+        "Ściana",
+        "Fasada",
+        "Klasyczny",
+        "Cokół"
+      ],
+      "description": "Moduł fasady budynku z dwoma łukowymi oknami osadzonymi w ścianie. Nad otworami okiennymi znajdują się ozdobne nadokienniki.",
+      "addedAt": "2026-11-17T23:03:35.762Z"
+    },
+    {
+      "id": 6,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Berlin/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_l8t9o.png",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Ściana",
+        "Balustrada",
+        "Gzyms",
+        "Fasada"
+      ],
+      "description": "Moduł elewacyjny budynku zawiera duże okna oraz niski balkon zabezpieczony prostą balustradą. Całość osadzona jest w płaszczyźnie ściany z wyraźnie zaznaczonym gzymsem.",
+      "addedAt": "2026-11-17T23:03:46.570Z"
+    },
+    {
+      "id": 7,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Historical/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_liop5.png",
+      "tags": [
+        "Okna",
+        "Roleta",
+        "Ściana",
+        "Fasada",
+        "Parapet"
+      ],
+      "description": "Moduł ściany zewnętrznej z dwoma dużymi oknami, z których jedno wyposażone jest w opuszczoną roletę. Całość charakteryzuje się płaską fasadą z prostymi podziałami stolarki okiennej.",
+      "addedAt": "2026-11-17T23:04:06.882Z"
+    },
+    {
+      "id": 8,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Residential/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_v70xl.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Gzyms",
+        "Parapet",
+        "Fasada"
+      ],
+      "description": "Moduł prostokątnej ściany zewnętrznej z dwoma osadzonymi oknami oraz dekoracyjnym gzymsem na górnej krawędzi. Konstrukcja charakteryzuje się płaską fasadą z widocznymi parapetami pod otworami okiennymi.",
+      "addedAt": "2026-11-17T23:04:28.761Z"
+    },
+    {
+      "id": 9,
+      "name": "SM_001_A_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/France/SM_001_A_LOD0.SM_001_A_LOD0",
+      "image": "images/SM_001_A_LOD0_5noa1.png",
+      "tags": [
+        "Okna",
+        "Balkon francuski",
+        "Gzyms",
+        "Nadokiennik",
+        "Fasada",
+        "Balustrada",
+        "Ściana"
+      ],
+      "description": "Moduł fasady budynku z dwoma dużymi oknami wyposażonymi w nadokienniki oraz ozdobne balustrady typu balkonu francuskiego. Całość uzupełnia poziomy gzyms biegnący pod oknami.",
+      "addedAt": "2026-11-17T23:04:39.809Z"
+    }
   ]
 }
