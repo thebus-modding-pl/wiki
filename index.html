@@ -1364,55 +1364,6 @@
       accent-color: #10b981;
     }
 
-    /* Pasek ustawień cięcia tła (suwak + przycisk reload) */
-    .bg-settings-box {
-      background: #0d0d10;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .bg-settings-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
-
-    .bg-settings-row input[type="range"] {
-      flex: 1;
-      margin: 0 12px;
-      accent-color: #10b981;
-      cursor: pointer;
-    }
-
-    .btn-reload-bg {
-      background: #1a1a22;
-      border: 1px solid var(--border-color);
-      color: #34d399;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .btn-reload-bg:hover {
-      background: #10b981;
-      color: #09090b;
-      border-color: #10b981;
-    }
-
     .btn-ai-gen {
       background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: #ffffff;
@@ -1990,7 +1941,7 @@
         <div class="form-group">
           <label class="form-label">Ścieżka Static Mesha (Ctrl + C w UE)</label>
           <input type="text" id="mf-name" class="form-input" placeholder="/Script/Engine.StaticMesh'/Game/.../SM_001.SM_001'" oninput="onMeshPathInput(); clearFieldError('mf-name', 'err-mf-name')">
-          <div class="field-error-text" id="err-mf-name">To pole jest wymagane — wklej ścieżkę mesha.</div>
+          <div class="field-error-text" id="err-mf-name">To pole jest wymagane — wklej najpierw ścieżku mesha powyżej!</div>
         </div>
 
         <div class="form-group">
@@ -2005,26 +1956,14 @@
             <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
             <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
           </div>
-          <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001.png (wypełni się samo po wklejeniu)" oninput="onManualImageUrlInput()">
-          <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link, aby wygenerować opis AI.</div>
+          <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001_a9f2.png (wypełni się samo po wklejeniu)" oninput="onManualImageUrlInput()">
+          <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link.</div>
 
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
-              <input type="checkbox" id="mf-auto-bg-checkbox" onchange="saveAutoBgPreference(this.checked); toggleBgSettingsVisibility()">
-              <span>✂️ Inteligentne czyszczenie nieba i tła z Edge Protection</span>
+              <input type="checkbox" id="mf-auto-bg-checkbox" checked onchange="saveAutoBgPreference(this.checked)">
+              <span>✂️ Automatyczny Smart Crop (kadrowanie marginesów i edytora UE)</span>
             </label>
-
-            <!-- Pasek ustawień cięcia (suwak intensywności + przycisk reload) -->
-            <div class="bg-settings-box" id="bg-settings-box">
-              <div class="bg-settings-row">
-                <span>Intensywność cięcia:</span>
-                <input type="range" id="bg-tolerance-range" min="1" max="10" value="4" oninput="updateToleranceLabel(this.value)">
-                <span id="bg-tolerance-val" style="font-family:'JetBrains Mono', monospace; font-weight:700;">4</span>
-              </div>
-              <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
-                <button type="button" class="btn-reload-bg" onclick="reloadBackgroundRemoval()">🔄 Reload / Przetwórz ponownie</button>
-              </div>
-            </div>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
               <input type="checkbox" id="mf-auto-ai-checkbox" onchange="saveAutoAiPreference(this.checked)">
@@ -2153,7 +2092,6 @@
     const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
     const AUTO_AI_PREF_KEY = 'thebus_auto_ai_on_upload';
     const AUTO_BG_PREF_KEY = 'thebus_auto_bg_remove';
-    const BG_TOLERANCE_KEY = 'thebus_bg_tolerance';
     const FAVORITES_STORAGE_KEY = 'thebus_favorite_meshes';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -2179,7 +2117,6 @@
     let modalSelectedTags = new Set();
     let aiSuggestedNewTags = new Set();
     let editingTutorialIndex = null;
-    let originalRawBlob = null; // Zachowuje oryginalny surowy zrzut ekranu do ponownego przetwarzania Reload
     let lastPastedBlob = null;
 
     let previewZoomState = {
@@ -2233,21 +2170,6 @@
       return saved === null ? true : saved === '1';
     }
 
-    function toggleBgSettingsVisibility() {
-      const enabled = document.getElementById('mf-auto-bg-checkbox').checked;
-      document.getElementById('bg-settings-box').style.display = enabled ? 'flex' : 'none';
-    }
-
-    function updateToleranceLabel(val) {
-      document.getElementById('bg-tolerance-val').textContent = val;
-      localStorage.setItem(BG_TOLERANCE_KEY, val);
-    }
-
-    function getToleranceValue() {
-      const saved = localStorage.getItem(BG_TOLERANCE_KEY);
-      return saved !== null ? parseInt(saved, 10) : 4;
-    }
-
     function parseUnrealPath(rawInput) {
       let trimmed = rawInput.trim();
       let fullPath = trimmed;
@@ -2269,8 +2191,8 @@
 
     function onMeshPathInput() {}
 
-    // Inteligentny algorytm usuwania tła z wykrywaniem krawędzi (Edge Protection) i regulowaną czułością
-    async function smartProcessImage(blob, toleranceLevel = 4) {
+    // Bezpieczny Smart Crop: przycina marginesy (paski narzędzi edytora UE, boki), nie niszcząc kolorów budynku
+    async function smartProcessImage(blob) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(blob);
@@ -2286,13 +2208,13 @@
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(img, 0, 0);
 
-          // Bezpieczny przycisk marginesu wokół shota z Unreal Engine
+          // Delikatne usunięcie zbędnych ramek okna edytora UE (np. z góry i po bokach)
           let cropX = 0, cropY = 0, cropW = origW, cropH = origH;
           if (origW > 800 && origH > 600) {
-            const startX = Math.round(origW * 0.05);
-            const endX = Math.round(origW * 0.95);
-            const startY = Math.round(origH * 0.05);
-            const endY = Math.round(origH * 0.95);
+            const startX = Math.round(origW * 0.02);
+            const endX = Math.round(origW * 0.98);
+            const startY = Math.round(origH * 0.04);
+            const endY = Math.round(origH * 0.98);
             cropX = startX;
             cropY = startY;
             cropW = endX - startX;
@@ -2305,106 +2227,6 @@
           const cCtx = croppedCanvas.getContext('2d', { willReadFrequently: true });
           cCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
-          const imgData = cCtx.getImageData(0, 0, cropW, cropH);
-          const data = imgData.data;
-
-          // Pobieranie palety krawędziowej tła (narożniki i krawędzie obrazka)
-          const bgPalette = [];
-          const addSample = (x, y) => {
-            const idx = (y * cropW + x) * 4;
-            const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
-            if (a < 20) return;
-            for (const c of bgPalette) {
-              if (Math.abs(c[0] - r) + Math.abs(c[1] - g) + Math.abs(c[2] - b) < 25) return;
-            }
-            bgPalette.push([r, g, b]);
-          };
-
-          const stepX = Math.max(1, Math.floor(cropW / 40));
-          const stepY = Math.max(1, Math.floor(cropH / 40));
-          for (let x = 0; x < cropW; x += stepX) {
-            addSample(x, 0);
-            addSample(x, cropH - 1);
-          }
-          for (let y = 0; y < cropH; y += stepY) {
-            addSample(0, y);
-            addSample(cropW - 1, y);
-          }
-
-          // Dynamiczna czułość oparta na suwaku (tolerancia color distance)
-          // Im wyższa wartość suwaka, tym szerszy zakres odcieni nieba/chmur usunie
-          const baseColorThreshold = 1500 + (toleranceLevel * 450); 
-
-          const isBackgroundPixel = (idx) => {
-            const a = data[idx + 3];
-            if (a < 20) return true;
-            const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-
-            // Ochrona krawędzi (Edge Protection): jeśli piksel ma dużą kontrastowość/nasycenie, chronimy go przed wycięciem
-            const maxCh = Math.max(r, g, b);
-            const minCh = Math.min(r, g, b);
-            const chroma = maxCh - minCh;
-            if (chroma > 35 && maxCh < 235) {
-              // Silny kolor / tekstura budynku - nie tnij
-              return false;
-            }
-
-            for (let i = 0; i < bgPalette.length; i++) {
-              const c = bgPalette[i];
-              const dr = r - c[0];
-              const dg = g - c[1];
-              const db = b - c[2];
-              if (dr * dr + dg * dg + db * db <= baseColorThreshold) {
-                return true;
-              }
-            }
-
-            // Jasne niebo / jednorodne chmury
-            if (maxCh > 200 && chroma < (15 + toleranceLevel * 3)) {
-              return true;
-            }
-
-            return false;
-          };
-
-          const visited = new Uint8Array(cropW * cropH);
-          const queue = new Int32Array(cropW * cropH);
-          let head = 0;
-          let tail = 0;
-
-          const enqueue = (x, y) => {
-            const pos = y * cropW + x;
-            if (visited[pos]) return;
-            visited[pos] = 1;
-            if (isBackgroundPixel(pos * 4)) {
-              queue[tail++] = pos;
-            }
-          };
-
-          for (let x = 0; x < cropW; x++) {
-            enqueue(x, 0);
-            enqueue(x, cropH - 1);
-          }
-          for (let y = 1; y < cropH - 1; y++) {
-            enqueue(0, y);
-            enqueue(cropW - 1, y);
-          }
-
-          while (head < tail) {
-            const pos = queue[head++];
-            const pxIdx = pos * 4;
-            data[pxIdx + 3] = 0;
-
-            const x = pos % cropW;
-            const y = (pos - x) / cropW;
-
-            if (x > 0) enqueue(x - 1, y);
-            if (x < cropW - 1) enqueue(x + 1, y);
-            if (y > 0) enqueue(x, y - 1);
-            if (y < cropH - 1) enqueue(x, y + 1);
-          }
-
-          cCtx.putImageData(imgData, 0, 0);
           croppedCanvas.toBlob((outBlob) => {
             resolve(outBlob || blob);
           }, 'image/png');
@@ -2417,14 +2239,6 @@
 
         img.src = objectUrl;
       });
-    }
-
-    async function reloadBackgroundRemoval() {
-      if (!originalRawBlob) {
-        alert('Brak wczytanego oryginalnego obrazka do przetworzenia.');
-        return;
-      }
-      await uploadImageBlobToGithub(originalRawBlob);
     }
 
     function getNextMeshId() {
@@ -2499,13 +2313,23 @@
 
     function sanitizeFileName(rawName) {
       const cleaned = rawName.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-      return cleaned || `mesh_${Date.now()}`;
+      return cleaned || `mesh`;
+    }
+
+    // Generuje unikalny losowy sufiks (np. a8f2c), żeby nigdy nie nadpisać ani nie zduplikować zdjęć
+    function generateUniqueFileSuffix() {
+      return Math.random().toString(36).substring(2, 7);
     }
 
     async function uploadImageBlobToGithub(rawBlob) {
       clearFieldError('mf-image', 'err-mf-image');
-      if (!originalRawBlob) {
-        originalRawBlob = rawBlob;
+      clearFieldError('mf-name', 'err-mf-name');
+
+      const rawPathVal = document.getElementById('mf-name').value.trim();
+      if (!rawPathVal) {
+        showFieldError('mf-name', 'err-mf-name', 'Najpierw wklej ścieżkę mesha powyżej, aby wygenerować unikalną nazwę pliku!');
+        document.getElementById('mf-name').focus();
+        return;
       }
 
       const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
@@ -2527,10 +2351,9 @@
       const shouldProcess = document.getElementById('mf-auto-bg-checkbox').checked;
 
       if (shouldProcess) {
-        const currentTolerance = getToleranceValue();
-        statusText.innerHTML = `✂️ Czyszczenie tła (intensywność ${currentTolerance})...`;
+        statusText.innerHTML = '✂️ Przetwarzanie Smart Crop...';
         try {
-          finalBlob = await smartProcessImage(rawBlob, currentTolerance);
+          finalBlob = await smartProcessImage(rawBlob);
         } catch (err) {
           finalBlob = rawBlob;
         }
@@ -2540,10 +2363,10 @@
       previewEl.src = URL.createObjectURL(finalBlob);
       previewEl.classList.add('visible');
 
-      const rawPathVal = document.getElementById('mf-name').value.trim();
       const { fullName } = parseUnrealPath(rawPathVal);
+      const uniqueSuffix = generateUniqueFileSuffix();
       const ext = finalBlob.type === 'image/jpeg' ? 'jpg' : (finalBlob.type === 'image/webp' ? 'webp' : 'png');
-      const fileName = `${sanitizeFileName(fullName || 'mesh')}.${ext}`;
+      const fileName = `${sanitizeFileName(fullName)}_${uniqueSuffix}.${ext}`;
       const repoFilePath = `images/${fileName}`;
 
       statusText.innerHTML = `⏳ Wysyłanie <code>${repoFilePath}</code> na GitHub...`;
@@ -2568,18 +2391,10 @@
           'Content-Type': 'application/json'
         };
 
-        let existingSha = null;
-        const checkResp = await fetch(apiUrl, { headers });
-        if (checkResp.ok) {
-          const existingData = await checkResp.json();
-          existingSha = existingData.sha;
-        }
-
         const payload = {
-          message: `Dodano zdjęcie ${repoFilePath} przez panel admina`,
+          message: `Dodano unikalne zdjęcie ${repoFilePath} przez panel admina`,
           content: base64Content
         };
-        if (existingSha) payload.sha = existingSha;
 
         const putResp = await fetch(apiUrl, {
           method: 'PUT',
@@ -2608,7 +2423,6 @@
     function handleManualFileSelect(e) {
       const file = e.target.files?.[0];
       if (file && file.type.startsWith('image/')) {
-        originalRawBlob = file;
         uploadImageBlobToGithub(file);
       }
       e.target.value = '';
@@ -2617,7 +2431,6 @@
     function onManualImageUrlInput() {
       clearFieldError('mf-image', 'err-mf-image');
       lastPastedBlob = null;
-      originalRawBlob = null;
       const val = document.getElementById('mf-image').value.trim();
       const previewEl = document.getElementById('mf-paste-preview');
       if (val) {
@@ -2639,10 +2452,7 @@
         if (item.type.startsWith('image/')) {
           e.preventDefault();
           const blob = item.getAsFile();
-          if (blob) {
-            originalRawBlob = blob;
-            uploadImageBlobToGithub(blob);
-          }
+          if (blob) uploadImageBlobToGithub(blob);
           break;
         }
       }
@@ -2661,7 +2471,6 @@
       pasteZone.classList.remove('dragover');
       const file = e.dataTransfer?.files?.[0];
       if (file && file.type.startsWith('image/')) {
-        originalRawBlob = file;
         uploadImageBlobToGithub(file);
       }
     });
@@ -3031,20 +2840,13 @@
       refreshAdminActivity();
       editingMeshIndex = index;
       lastPastedBlob = null;
-      originalRawBlob = null;
       aiSuggestedNewTags.clear();
       document.getElementById('ai-tags-hint').classList.remove('visible');
       document.getElementById('ai-target-wrapper').classList.remove('ai-loading');
       document.getElementById('mf-tag-search').value = '';
 
-      const autoBgActive = isAutoBgEnabled();
       document.getElementById('mf-auto-ai-checkbox').checked = isAutoAiEnabled();
-      document.getElementById('mf-auto-bg-checkbox').checked = autoBgActive;
-      toggleBgSettingsVisibility();
-
-      const currentTolerance = getToleranceValue();
-      document.getElementById('bg-tolerance-range').value = currentTolerance;
-      document.getElementById('bg-tolerance-val').textContent = currentTolerance;
+      document.getElementById('mf-auto-bg-checkbox').checked = isAutoBgEnabled();
 
       clearFieldError('mf-name', 'err-mf-name');
       clearFieldError('mf-image', 'err-mf-image');
