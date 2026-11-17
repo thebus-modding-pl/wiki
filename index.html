@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Bus Modding Wiki — Polska Społeczność</title>
-  <!-- Ikona strony pobierana z Twojego pliku logo.png -->
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -690,6 +689,13 @@
       gap: 10px;
     }
 
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .card-title {
       font-family: 'JetBrains Mono', monospace;
       font-size: 15px;
@@ -704,6 +710,21 @@
       font-weight: 700;
       color: var(--text-primary);
       line-height: 1.35;
+    }
+
+    /* Plakietka NOWOŚĆ (< 3 dni) */
+    .badge-new {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.55);
+      color: #34d399;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .card-header-actions {
@@ -1164,7 +1185,7 @@
 </head>
 <body>
 
-  <!-- Nawigacja z Twoim plikiem logo.png -->
+  <!-- Nawigacja -->
   <nav class="navbar">
     <div class="nav-left">
       <div class="brand-logo" onclick="switchTab('start')" title="Strona główna — The Bus Modding Wiki">
@@ -1288,7 +1309,9 @@
               <input type="text" id="search-input" class="search-input" placeholder="Szukaj po nazwie mesha (np. SM_008), tagu lub opisie...">
             </div>
             <select id="sort-select" class="sort-select">
-              <option value="default">Domyślne</option>
+              <option value="default">Domyślne (po ID)</option>
+              <option value="newest">Najnowsze</option>
+              <option value="oldest">Najstarsze</option>
               <option value="az">Nazwa A–Z</option>
               <option value="za">Nazwa Z–A</option>
             </select>
@@ -1344,6 +1367,13 @@
               </svg>
               <input type="text" id="tutorial-search-input" class="search-input" placeholder="Szukaj poradnika po tytule, autorze lub opisie...">
             </div>
+            <select id="tutorial-sort-select" class="sort-select">
+              <option value="default">Domyślne</option>
+              <option value="newest">Najnowsze</option>
+              <option value="oldest">Najstarsze</option>
+              <option value="az">Tytuł A–Z</option>
+              <option value="za">Tytuł Z–A</option>
+            </select>
           </div>
 
           <div class="results-info" id="tutorials-results-info">
@@ -1480,7 +1510,7 @@
         <h2 class="modal-title" id="mesh-form-title">DODAJ NOWY MESH</h2>
 
         <div class="form-group">
-          <label class="form-label">Nazwa (ID obiektu)</label>
+          <label class="form-label">Nazwa (ID obiektu w grze)</label>
           <input type="text" id="mf-name" class="form-input" placeholder="np. SM_001_A" oninput="clearFieldError('mf-name', 'err-mf-name')">
           <div class="field-error-text" id="err-mf-name">To pole jest wymagane — wpisz nazwę mesha.</div>
         </div>
@@ -1557,6 +1587,7 @@
     const ADMIN_PASS = 'admin6767';
     const SESSION_KEY = 'thebus_admin_expires';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
+    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
     let availableTags = [];
     let allAssets = [];
@@ -1566,10 +1597,47 @@
     let searchQuery = '';
     let sortMode = 'default';
     let tutorialSearchQuery = '';
+    let tutorialSortMode = 'default';
 
     let editingMeshIndex = null;
     let modalSelectedTags = new Set();
     let editingTutorialIndex = null;
+
+    // ==================== AUTOMATYCZNE ID I DATY ====================
+    function getNextMeshId() {
+      let maxId = 0;
+      allAssets.forEach((asset, idx) => {
+        const numericId = typeof asset.id === 'number'
+          ? asset.id
+          : parseInt(asset.id, 10);
+        if (!isNaN(numericId) && numericId > maxId) {
+          maxId = numericId;
+        } else if (idx + 1 > maxId) {
+          maxId = idx + 1;
+        }
+      });
+      return maxId + 1;
+    }
+
+    function getNumericMeshId(asset, fallbackIndex) {
+      if (typeof asset.id === 'number') return asset.id;
+      const parsed = parseInt(asset.id, 10);
+      return !isNaN(parsed) ? parsed : fallbackIndex + 1;
+    }
+
+    function isNewItem(addedAt) {
+      if (!addedAt) return false;
+      const timestamp = new Date(addedAt).getTime();
+      if (isNaN(timestamp)) return false;
+      const age = Date.now() - timestamp;
+      return age >= 0 && age < THREE_DAYS_MS;
+    }
+
+    function getTimestamp(addedAt) {
+      if (!addedAt) return 0;
+      const t = new Date(addedAt).getTime();
+      return isNaN(t) ? 0 : t;
+    }
 
     // ==================== SESJA ADMINA (1H BEZCZYNNOŚCI) ====================
     function refreshAdminActivity() {
@@ -1819,13 +1887,17 @@
       card.onclick = () => openModal(asset);
 
       const tagsHtml = asset.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+      const newBadgeHtml = isNewItem(asset.addedAt) ? `<span class="badge-new">NOWOŚĆ</span>` : '';
       const imgContent = asset.image
         ? `<img src="${asset.image}" alt="${asset.name}" loading="lazy" onerror="handleImageError(this)">`
         : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
 
       card.innerHTML = `
         <div class="card-header">
-          <div class="card-title">${asset.name}</div>
+          <div class="card-title-group">
+            <div class="card-title">${asset.name}</div>
+            ${newBadgeHtml}
+          </div>
           <div class="card-header-actions">
             <div class="admin-card-actions">
               <button class="icon-btn edit" title="Edytuj mesh" onclick="openMeshFormModal(event, ${index})">✎</button>
@@ -1847,7 +1919,10 @@
     function renderMeshPreview() {
       const previewGrid = document.getElementById('preview-meshes-grid');
       previewGrid.innerHTML = '';
-      allAssets.slice(0, 3).forEach((asset, idx) => {
+      // Pokaż 3 najnowsze meshe (od końca tablicy / najwyższego ID)
+      const indexed = allAssets.map((asset, idx) => ({ asset, idx }));
+      const latestThree = indexed.slice(-3).reverse();
+      latestThree.forEach(({ asset, idx }) => {
         previewGrid.appendChild(createMeshCardElement(asset, idx));
       });
     }
@@ -1863,7 +1938,21 @@
         return true;
       });
 
-      if (sortMode === 'az') {
+      if (sortMode === 'default') {
+        filtered.sort((a, b) => getNumericMeshId(a.asset, a.index) - getNumericMeshId(b.asset, b.index));
+      } else if (sortMode === 'newest') {
+        filtered.sort((a, b) => {
+          const timeDiff = getTimestamp(b.asset.addedAt) - getTimestamp(a.asset.addedAt);
+          if (timeDiff !== 0) return timeDiff;
+          return getNumericMeshId(b.asset, b.index) - getNumericMeshId(a.asset, a.index);
+        });
+      } else if (sortMode === 'oldest') {
+        filtered.sort((a, b) => {
+          const timeDiff = getTimestamp(a.asset.addedAt) - getTimestamp(b.asset.addedAt);
+          if (timeDiff !== 0) return timeDiff;
+          return getNumericMeshId(a.asset, a.index) - getNumericMeshId(b.asset, b.index);
+        });
+      } else if (sortMode === 'az') {
         filtered.sort((a, b) => a.asset.name.localeCompare(b.asset.name));
       } else if (sortMode === 'za') {
         filtered.sort((a, b) => b.asset.name.localeCompare(a.asset.name));
@@ -1951,20 +2040,23 @@
         const current = allAssets[editingMeshIndex];
         allAssets[editingMeshIndex] = {
           ...current,
-          id: name,
+          id: current.id !== undefined ? current.id : getNumericMeshId(current, editingMeshIndex),
           name,
           image,
           tags,
           description,
+          addedAt: current.addedAt || new Date().toISOString(),
           _status: current._status === 'added' ? 'added' : 'edited'
         };
       } else {
-        allAssets.unshift({
-          id: name,
+        // Automatyczne nadanie kolejnego numeru ID w tle i dodanie na sam koniec JSON
+        allAssets.push({
+          id: getNextMeshId(),
           name,
           image,
           tags,
           description,
+          addedAt: new Date().toISOString(),
           _status: 'added'
         });
       }
@@ -2089,6 +2181,7 @@
       };
 
       const thumbUrl = tut.thumbnail || getYoutubeThumbnail(tut.youtubeUrl);
+      const newBadgeHtml = isNewItem(tut.addedAt) ? `<span class="badge-new">NOWOŚĆ</span>` : '';
       const imgHtml = thumbUrl
         ? `<img src="${thumbUrl}" alt="${tut.title}" loading="lazy" onerror="handleImageError(this)">
            <div class="yt-play-badge">▶</div>`
@@ -2096,7 +2189,10 @@
 
       card.innerHTML = `
         <div class="card-header">
-          <div class="tutorial-card-title">${tut.title}</div>
+          <div class="card-title-group">
+            <div class="tutorial-card-title">${tut.title}</div>
+            ${newBadgeHtml}
+          </div>
           <div class="admin-card-actions">
             <button class="icon-btn edit" title="Edytuj poradnik" onclick="openTutorialFormModal(event, ${index})">✎</button>
             <button class="icon-btn delete" title="Oznacz do usunięcia / Cofnij" onclick="toggleDeleteTutorial(event, ${index})">🗑</button>
@@ -2126,7 +2222,7 @@
       const q = tutorialSearchQuery.toLowerCase().trim();
       const indexed = allTutorials.map((tut, index) => ({ tut, index }));
 
-      const filtered = indexed.filter(({ tut }) => {
+      let filtered = indexed.filter(({ tut }) => {
         if (!q) return true;
         return (
           tut.title.toLowerCase().includes(q) ||
@@ -2134,6 +2230,16 @@
           (tut.description && tut.description.toLowerCase().includes(q))
         );
       });
+
+      if (tutorialSortMode === 'newest') {
+        filtered.sort((a, b) => getTimestamp(b.tut.addedAt) - getTimestamp(a.tut.addedAt));
+      } else if (tutorialSortMode === 'oldest') {
+        filtered.sort((a, b) => getTimestamp(a.tut.addedAt) - getTimestamp(b.tut.addedAt));
+      } else if (tutorialSortMode === 'az') {
+        filtered.sort((a, b) => a.tut.title.localeCompare(b.tut.title));
+      } else if (tutorialSortMode === 'za') {
+        filtered.sort((a, b) => b.tut.title.localeCompare(a.tut.title));
+      }
 
       document.getElementById('tutorials-results-info').innerHTML =
         `Wyświetlono <strong>${filtered.length}</strong> z ${allTutorials.length} poradników`;
@@ -2203,14 +2309,17 @@
           author,
           youtubeUrl,
           description,
+          addedAt: current.addedAt || new Date().toISOString(),
           _status: current._status === 'added' ? 'added' : 'edited'
         };
       } else {
-        allTutorials.unshift({
+        // Dodawanie nowego poradnika na sam koniec JSON
+        allTutorials.push({
           title,
           author,
           youtubeUrl,
           description,
+          addedAt: new Date().toISOString(),
           _status: 'added'
         });
       }
@@ -2301,6 +2410,11 @@
 
     document.getElementById('tutorial-search-input').addEventListener('input', (e) => {
       tutorialSearchQuery = e.target.value;
+      renderTutorialsGrid();
+    });
+
+    document.getElementById('tutorial-sort-select').addEventListener('change', (e) => {
+      tutorialSortMode = e.target.value;
       renderTutorialsGrid();
     });
 
