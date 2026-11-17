@@ -123,19 +123,6 @@
       color: var(--text-primary);
     }
 
-    .btn-ai-soon {
-      background-color: #18181b;
-      color: var(--text-secondary);
-      border: 1px solid var(--border-color);
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      cursor: not-allowed;
-    }
-
     .main-wrapper {
       flex: 1;
     }
@@ -1668,10 +1655,10 @@
         <a id="nav-start" class="active" onclick="switchTab('start')">START</a>
         <a id="nav-meshes" onclick="switchTab('meshes')">BAZA MESHÓW</a>
         <a id="nav-tutorials" onclick="switchTab('tutorials')">PORADNIKI</a>
+        <a id="nav-streetview" onclick="switchTab('streetview')">AI STREET VIEW</a>
         <a id="nav-api" onclick="switchTab('api')">GOOGLE AI API</a>
       </div>
     </div>
-    <button class="btn-ai-soon" title="Wkrótce dodamy wyszukiwanie ze Street View">AI STREET VIEW (WKRÓTCE)</button>
   </nav>
 
   <div class="main-wrapper">
@@ -1684,7 +1671,7 @@
             <p>Centralna baza wiedzy, poradników wideo oraz katalog wygenerowanych obiektów 3D tworzona przez i dla polskiej społeczności moderów gry The Bus.</p>
             <div class="hero-actions">
               <button class="btn-white" onclick="switchTab('meshes')">PRZEGLĄDAJ BAZĘ MESHÓW</button>
-              <button class="btn-outline" onclick="switchTab('tutorials')">ZOBACZ PORADNIKI</button>
+              <button class="btn-outline" onclick="switchTab('streetview')">WYPRÓBUJ AI STREET VIEW</button>
             </div>
           </div>
           <div class="hero-stats">
@@ -1711,9 +1698,9 @@
             <p>Zbiór sprawdzonych materiałów wideo tworzonych przez społeczność — od podstaw pracy w edytorze map, po zaawansowaną optymalizację i konfigurację ruchu.</p>
           </div>
           <div class="info-card">
-            <div class="info-card-num">03 / ASYSTENT AI (WKRÓTCE)</div>
-            <h3>DOPASOWANIE ZE STREET VIEW</h3>
-            <p>Wkrótce uruchomimy moduł AI: wkleisz zrzut ekranu prawdziwego budynku z Google Street View, a system automatycznie wskaże najlepiej pasujące moduły z naszej bazy.</p>
+            <div class="info-card-num">03 / ASYSTENT AI STREET VIEW</div>
+            <h3>DOPASOWANIE ZE ZDJĘCIA 1:1</h3>
+            <p>Wklej zrzut ekranu prawdziwego budynku z Google Street View, a sztuczna inteligencja przeszuka bazę i wskaże najlepiej pasujące moduły 3D.</p>
           </div>
         </section>
 
@@ -1802,19 +1789,6 @@
 
     <div id="view-tutorials" class="view-section">
       <div class="container">
-        <div class="admin-toolbar">
-          <div class="admin-toolbar-left">
-            <span class="admin-badge">TRYB ADMINA</span>
-            <button class="btn-admin-add" onclick="openTutorialFormModal()">+ Dodaj poradnik</button>
-            <div class="admin-legend">
-              <span class="dot-green">■ Dodany</span>
-              <span class="dot-blue">■ Edytowany</span>
-              <span class="dot-red">■ Do usunięcia</span>
-            </div>
-          </div>
-          <button class="btn-admin-export" onclick="exportTutorialsJson(this)">Eksportuj poradniki.json</button>
-        </div>
-
         <header class="hero">
           <div>
             <div class="hero-eyebrow">BAZA WIEDZY SPOŁECZNOŚCI</div>
@@ -1853,6 +1827,55 @@
         </section>
 
         <main class="grid" id="tutorials-grid"></main>
+      </div>
+    </div>
+
+    <!-- NOWA ZAKŁADKA: AI STREET VIEW -->
+    <div id="view-streetview" class="view-section">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">INTELIGENTNY DOBÓR OBIEKTÓW 3D</div>
+            <h1>AI STREET VIEW (1:1)</h1>
+            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. Asystent AI przeanalizuje architekturę i wskaże najbardziej pasujące Static Meshe z naszej bazy.</p>
+          </div>
+        </header>
+
+        <section class="controls" style="max-width: 800px; margin: 0 auto 36px auto;">
+          <div class="form-group">
+            <label class="form-label">
+              <span>Zrzut ekranu budynku / fasady (wklej Ctrl + V lub wybierz plik)</span>
+              <button type="button" class="btn-admin-config" style="padding:4px 8px; font-size:10px;" onclick="changeGeminiApiKey()">🔑 Klucz AI</button>
+            </label>
+            <div class="paste-dropzone" id="sv-paste-zone" onclick="document.getElementById('sv-file-input').click()" style="padding: 24px;">
+              <div class="paste-dropzone-text" id="sv-paste-status">
+                Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>
+              </div>
+              <img id="sv-paste-preview" class="paste-preview-img" alt="Podgląd zdjęcia" style="max-height: 180px;">
+              <input type="file" id="sv-file-input" accept="image/*" style="display:none" onchange="handleStreetviewFileSelect(event)">
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 16px;">
+            <button type="button" class="btn-primary" id="btn-sv-search" onclick="searchStreetviewMatches()" style="padding: 14px 28px; font-size: 14px;" disabled>
+              🔍 Szukaj pasujących meshów 1:1 w bazie
+            </button>
+          </div>
+        </section>
+
+        <div class="ai-target-wrapper" id="sv-target-wrapper">
+          <div class="ai-loader-overlay">
+            <div class="discord-dots-pill" title="AI analizuje budynek i dopasowuje elementy...">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="ai-target-content">
+            <div class="results-info" id="sv-results-info" style="text-align: center; margin-bottom: 20px;"></div>
+            <main class="grid" id="sv-results-grid"></main>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2159,6 +2182,7 @@
     let aiSuggestedNewTags = new Set();
     let editingTutorialIndex = null;
     let pendingImageBlob = null;
+    let pendingStreetviewBlob = null;
 
     let previewZoomState = {
       isZoomed: false,
@@ -2258,7 +2282,6 @@
       };
     }
 
-    // KRÓTKIE I BEZPIECZNE NAZWY PLIKÓW (np. images/SM_001_A_a9f2.png)
     function generateUniqueImageFilename(shortName) {
       const cleanName = shortName.replace(/[^a-zA-Z0-9_-]/g, '_');
       const suffix = Math.random().toString(36).substring(2, 7);
@@ -2363,6 +2386,124 @@
       }
     }
 
+    function handleStreetviewImageSelected(rawBlob) {
+      pendingStreetviewBlob = rawBlob;
+      const statusText = document.getElementById('sv-paste-status');
+      const previewEl = document.getElementById('sv-paste-preview');
+      const searchBtn = document.getElementById('btn-sv-search');
+
+      previewEl.src = URL.createObjectURL(rawBlob);
+      previewEl.classList.add('visible');
+      statusText.innerHTML = '✅ Zrzut Street View gotowy do analizy!';
+      searchBtn.disabled = false;
+    }
+
+    function handleStreetviewFileSelect(e) {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        handleStreetviewImageSelected(file);
+      }
+      e.target.value = '';
+    }
+
+    async function searchStreetviewMatches() {
+      if (!pendingStreetviewBlob) return;
+
+      let apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+      if (!apiKey) {
+        apiKey = prompt('Wklej swój darmowy klucz Google AI API:');
+        if (!apiKey || !apiKey.trim()) return;
+        apiKey = apiKey.trim();
+        localStorage.setItem(GEMINI_KEY_STORAGE, apiKey);
+      }
+
+      const wrapper = document.getElementById('sv-target-wrapper');
+      const searchBtn = document.getElementById('btn-sv-search');
+      const resultsInfo = document.getElementById('sv-results-info');
+      const resultsGrid = document.getElementById('sv-results-grid');
+
+      searchBtn.disabled = true;
+      wrapper.classList.add('ai-loading');
+      resultsInfo.textContent = 'AI analizuje zdjęcie i dopasowuje meshe z bazy...';
+      resultsGrid.innerHTML = '';
+
+      try {
+        const base64Data = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(pendingStreetviewBlob);
+        });
+
+        // Przygotuj uproszczoną listę assetów do promptu AI
+        const assetsPayload = allAssets.map(a => ({
+          id: a.id,
+          name: a.name,
+          tags: a.tags,
+          description: a.description
+        }));
+
+        const promptText = `Jesteś zaawansowanym systemem dopasowywania assetów architektonicznych 3D do gry The Bus na podstawie rzeczywistych zdjęć (np. z Google Street View). 
+Przeanalizuj nadesłane zdjęcie budynku/elementu i porównaj je z poniższą listą dostępnych obiektów w bazie.
+Wybierz maksymalnie 6 najlepiej pasujących obiektów i zwróć WYŁĄCZNIE poprawny tablicowy JSON w formacie:
+[
+  {
+    "id": numer_id_assetu,
+    "similarityScore": liczba_od_0_do_100 (procent dopasowania),
+    "reason": "Krótkie wyjaśnienie po polsku, dlaczego ten element pasuje do budynku ze zdjęcia"
+  }
+]
+Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
+
+        const aiJson = await callGeminiWithFallback(apiKey, promptText, pendingStreetviewBlob.type || 'image/jpeg', base64Data);
+        const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        const matches = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+
+        if (!Array.isArray(matches) || matches.length === 0) {
+          resultsInfo.textContent = 'Nie znaleziono pasujących obiektów w bazie.';
+          return;
+        }
+
+        resultsInfo.innerHTML = `Znaleziono <strong>${matches.length}</strong> najlepiej pasujących obiektów w bazie:`;
+        
+        matches.forEach(matchItem => {
+          const assetObj = allAssets.find(a => Number(a.id) === Number(matchItem.id));
+          if (!assetObj) return;
+
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.onclick = () => openModal(assetObj);
+
+          const imgContent = assetObj.image
+            ? `<img src="${assetObj.image}" alt="${assetObj.name}" loading="lazy" onerror="handleImageError(this)">`
+            : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+
+          const tagsHtml = assetObj.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+
+          card.innerHTML = `
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-title">${assetObj.name}</div>
+                <span class="badge-new" style="background:rgba(59,130,246,0.18); border-color:rgba(59,130,246,0.55); color:#60a5fa;">${matchItem.similarityScore}% DOPASOWANIA</span>
+              </div>
+              <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
+            </div>
+            <div class="card-image-wrap">${imgContent}</div>
+            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>AI:</strong> ${matchItem.reason}</div>
+            <div class="card-footer">
+              <div class="card-tags-list">${tagsHtml}</div>
+            </div>
+          `;
+          resultsGrid.appendChild(card);
+        });
+
+      } catch (err) {
+        resultsInfo.innerHTML = `<span style="color:#ef4444">Błąd AI Street View: ${err.message}</span>`;
+      } finally {
+        wrapper.classList.remove('ai-loading');
+        searchBtn.disabled = false;
+      }
+    }
+
     async function uploadPendingImageToGithubInBackground(blob, targetRepoFilePath) {
       if (!blob) return targetRepoFilePath;
       const toast = showToast(`Wysyłanie ${targetRepoFilePath}...`);
@@ -2430,37 +2571,46 @@
     }
 
     document.addEventListener('paste', (e) => {
-      const modalOpen = document.getElementById('mesh-form-modal').classList.contains('open');
-      if (!modalOpen || !isAdminLoggedIn()) return;
-
       const items = e.clipboardData?.items;
       if (!items) return;
+
+      const isMeshModalOpen = document.getElementById('mesh-form-modal').classList.contains('open') && isAdminLoggedIn();
+      const isStreetViewActive = document.getElementById('view-streetview').classList.contains('active');
 
       for (const item of items) {
         if (item.type.startsWith('image/')) {
           e.preventDefault();
           const blob = item.getAsFile();
-          if (blob) handleLocalImageSelected(blob);
+          if (!blob) break;
+
+          if (isMeshModalOpen) {
+            handleLocalImageSelected(blob);
+          } else if (isStreetViewActive) {
+            handleStreetviewImageSelected(blob);
+          }
           break;
         }
       }
     });
 
     const pasteZone = document.getElementById('mf-paste-zone');
-    pasteZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      pasteZone.classList.add('dragover');
-    });
-    pasteZone.addEventListener('dragleave', () => {
-      pasteZone.classList.remove('dragover');
-    });
+    pasteZone.addEventListener('dragover', (e) => { e.preventDefault(); pasteZone.classList.add('dragover'); });
+    pasteZone.addEventListener('dragleave', () => { pasteZone.classList.remove('dragover'); });
     pasteZone.addEventListener('drop', (e) => {
       e.preventDefault();
       pasteZone.classList.remove('dragover');
       const file = e.dataTransfer?.files?.[0];
-      if (file && file.type.startsWith('image/')) {
-        handleLocalImageSelected(file);
-      }
+      if (file && file.type.startsWith('image/')) handleLocalImageSelected(file);
+    });
+
+    const svPasteZone = document.getElementById('sv-paste-zone');
+    svPasteZone.addEventListener('dragover', (e) => { e.preventDefault(); svPasteZone.classList.add('dragover'); });
+    svPasteZone.addEventListener('dragleave', () => { svPasteZone.classList.remove('dragover'); });
+    svPasteZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      svPasteZone.classList.remove('dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file && file.type.startsWith('image/')) handleStreetviewImageSelected(file);
     });
 
     function refreshAdminActivity() {
@@ -2538,7 +2688,7 @@
     }
 
     function switchTab(tab) {
-      ['start', 'meshes', 'tutorials', 'api'].forEach(name => {
+      ['start', 'meshes', 'tutorials', 'streetview', 'api'].forEach(name => {
         document.getElementById(`view-${name}`).classList.toggle('active', name === tab);
         document.getElementById(`nav-${name}`).classList.toggle('active', name === tab);
       });
