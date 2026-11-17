@@ -1895,7 +1895,7 @@
     </div>
   </footer>
 
-  <!-- ==================== MODAL 1: SZCZEGÓŁY MESHA (UKŁAD INSTAGRAM + LUPA) ==================== -->
+  <!-- ==================== MODAL 1: SZCZEGÓŁY MESHA (UKŁAD INSTAGRAM + LUPA + BLOKADA GRANIC) ==================== -->
   <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal('modal-backdrop')">
     <div class="modal modal-instagram" onclick="event.stopPropagation()">
       <!-- LEWA KOLUMNA: ZDJĘCIE + LUPA + PRZESUWANIE KAMERĄ -->
@@ -1971,7 +1971,7 @@
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
               <input type="checkbox" id="mf-auto-bg-checkbox" onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Automatycznie wytnij tło ze zdjęcia przed zapisem (PNG bez tła, lokalnie bez limitu AI)</span>
+              <span>✂️ Automatycznie wytnij tło i cień ze zdjęcia przed zapisem (PNG bez tła)</span>
             </label>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
@@ -2159,7 +2159,7 @@
       return saved === null ? true : saved === '1';
     }
 
-    // ==================== LOKALNE WYCINANIE TŁA (CANVAS FLOOD-FILL) ====================
+    // ==================== LOKALNE WYCINANIE TŁA + CIENI (CANVAS FLOOD-FILL) ====================
     async function removeImageBackgroundLocally(blob) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -2178,7 +2178,6 @@
           const imgData = ctx.getImageData(0, 0, w, h);
           const data = imgData.data;
 
-          // Zbierz paletę kolorów tła z obwodu obrazu (obsługuje też 2-kolorową szachownicę z edytora)
           const bgPalette = [];
           const addSample = (x, y) => {
             const idx = (y * w + x) * 4;
@@ -2203,29 +2202,35 @@
             addSample(w - 1, y);
           }
 
-          if (bgPalette.length === 0) {
-            resolve(blob);
-            return;
-          }
-
           const isBackgroundPixel = (idx) => {
             const a = data[idx + 3];
             if (a < 20) return true;
             const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+
             for (let i = 0; i < bgPalette.length; i++) {
               const c = bgPalette[i];
               const dr = r - c[0];
               const dg = g - c[1];
               const db = b - c[2];
-              // Dystans euklidesowy w przestrzeni RGB (tolerancja ~36)
-              if (dr * dr + dg * dg + db * db <= 1300) {
+              if (dr * dr + dg * dg + db * db <= 1450) {
                 return true;
               }
             }
-            return false;
+
+            const maxCh = Math.max(r, g, b);
+            const minCh = Math.min(r, g, b);
+            const chroma = maxCh - minCh;
+
+            const isNeutralOrCoolShadow = (
+              chroma <= 34 &&
+              b >= r - 4 &&
+              g >= r - 6 &&
+              maxCh < 215
+            );
+
+            return isNeutralOrCoolShadow;
           };
 
-          // Flood-fill od wszystkich 4 krawędzi obrazu (nie wycina środka budynku, nawet jeśli ma podobny kolor)
           const visited = new Uint8Array(w * h);
           const queue = new Int32Array(w * h);
           let head = 0;
@@ -2252,7 +2257,7 @@
           while (head < tail) {
             const pos = queue[head++];
             const pxIdx = pos * 4;
-            data[pxIdx + 3] = 0; // ustaw pełną przezroczystość
+            data[pxIdx + 3] = 0;
 
             const x = pos % w;
             const y = (pos - x) / w;
@@ -2263,7 +2268,6 @@
             if (y < h - 1) enqueue(x, y + 1);
           }
 
-          // Delikatne wygładzenie (antyaliasing) krawędzi styku z wyciętym tłem
           for (let y = 1; y < h - 1; y++) {
             for (let x = 1; x < w - 1; x++) {
               const pos = y * w + x;
@@ -2277,7 +2281,7 @@
               if (data[(pos + w) * 4 + 3] === 0) transparentNeighbors++;
 
               if (transparentNeighbors >= 2) {
-                data[idx + 3] = Math.round(data[idx + 3] * 0.55);
+                data[idx + 3] = Math.round(data[idx + 3] * 0.5);
               }
             }
           }
@@ -2402,7 +2406,7 @@
       const shouldRemoveBg = document.getElementById('mf-auto-bg-checkbox').checked;
 
       if (shouldRemoveBg) {
-        statusText.innerHTML = '✂️ Wycinanie tła ze zdjęcia...';
+        statusText.innerHTML = '✂️ Wycinanie tła i cieni ze zdjęcia...';
         try {
           finalBlob = await removeImageBackgroundLocally(rawBlob);
         } catch (bgErr) {
@@ -2421,7 +2425,6 @@
 
       statusText.innerHTML = `⏳ Wysyłanie <code>${repoFilePath}</code> na GitHub...`;
 
-      // Jeśli zaznaczony jest ptaszek automatycznego AI, uruchom generowanie równolegle z wysyłką na GitHub
       const shouldAutoRunAi = document.getElementById('mf-auto-ai-checkbox').checked;
       if (shouldAutoRunAi) {
         generateAiMeshDescription();
@@ -3435,7 +3438,7 @@ Format odpowiedzi JSON:
       }, 2000);
     }
 
-    // ==================== SZCZEGÓŁY MESHA (INSTAGRAM + LUPA + KAMERA LPM) ====================
+    // ==================== SZCZEGÓŁY MESHA (INSTAGRAM + LUPA + BLOKADA GRANIC) ====================
     function copyName(e, name, btn) {
       e.stopPropagation();
       navigator.clipboard.writeText(name);
@@ -3459,8 +3462,15 @@ Format odpowiedzi JSON:
 
       if (previewZoomState.isZoomed) {
         box.classList.add('is-zoomed');
+
+        // Inteligentne ograniczenie przesunięcia (clamping), żeby obraz nigdy nie uciekł poza ramkę podglądu
+        const maxPanX = (box.clientWidth * (previewZoomState.scale - 1)) / 2;
+        const maxPanY = (box.clientHeight * (previewZoomState.scale - 1)) / 2;
+        previewZoomState.panX = Math.max(-maxPanX, Math.min(maxPanX, previewZoomState.panX));
+        previewZoomState.panY = Math.max(-maxPanY, Math.min(maxPanY, previewZoomState.panY));
+
         img.style.transform = `translate(${previewZoomState.panX}px, ${previewZoomState.panY}px) scale(${previewZoomState.scale})`;
-        if (hint) hint.innerHTML = '✋ Przytrzymaj LPM i przeciągnij kamerę • Kliknij, aby oddalić';
+        if (hint) hint.innerHTML = '✋ Przeciągaj obiekt wewnątrz okna • Kliknij, aby oddalić';
         if (btn) btn.textContent = '−';
       } else {
         box.classList.remove('is-zoomed', 'is-dragging');
@@ -3527,7 +3537,7 @@ Format odpowiedzi JSON:
       }
 
       box.onmousedown = (e) => {
-        if (e.button !== 0) return; // tylko LPM
+        if (e.button !== 0) return;
         if (e.target === toggleBtn) return;
         e.preventDefault();
         previewZoomState.isDragging = true;
@@ -3539,6 +3549,8 @@ Format odpowiedzi JSON:
         }
       };
 
+      // Zamiast document.onmousemove używamy box.onmousemove, dzięki czemu kursor nie gubi obiektu,
+      // a nawet jeśli kursor minie krawędź kontenera, ruch pozostaje kontrolowany.
       box.onmousemove = (e) => {
         if (!previewZoomState.isDragging) return;
         const dx = e.clientX - previewZoomState.startX;
@@ -3547,20 +3559,17 @@ Format odpowiedzi JSON:
           previewZoomState.hasMoved = true;
         }
         if (previewZoomState.isZoomed) {
-          const maxPanX = box.clientWidth * 0.65;
-          const maxPanY = box.clientHeight * 0.65;
-          previewZoomState.panX = Math.max(-maxPanX, Math.min(maxPanX, dx));
-          previewZoomState.panY = Math.max(-maxPanY, Math.min(maxPanY, dy));
+          previewZoomState.panX = dx;
+          previewZoomState.panY = dy;
           applyPreviewTransform();
         }
       };
 
-      box.onmouseup = (e) => {
-        if (e.button !== 0 || !previewZoomState.isDragging) return;
+      const handleMouseUp = (e) => {
+        if (!previewZoomState.isDragging) return;
         previewZoomState.isDragging = false;
         box.classList.remove('is-dragging');
 
-        // Jeśli to było kliknięcie bez przeciągania — przełącz lupę w miejsce kliknięcia
         if (!previewZoomState.hasMoved) {
           if (!previewZoomState.isZoomed) {
             const rect = box.getBoundingClientRect();
@@ -3576,6 +3585,7 @@ Format odpowiedzi JSON:
         }
       };
 
+      box.onmouseup = handleMouseUp;
       box.onmouseleave = () => {
         if (previewZoomState.isDragging) {
           previewZoomState.isDragging = false;
