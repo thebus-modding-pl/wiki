@@ -1175,6 +1175,76 @@
       cursor: wait;
     }
 
+    /* Sekcja Opis + Tagi z nakładką ładowania AI (3 kropki jak z Discorda) */
+    .ai-target-wrapper {
+      position: relative;
+      border-radius: 10px;
+      transition: opacity 0.2s ease;
+    }
+
+    .ai-target-wrapper.ai-loading .ai-target-content {
+      opacity: 0.35;
+      filter: grayscale(0.6);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .ai-loader-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 15;
+    }
+
+    .ai-target-wrapper.ai-loading .ai-loader-overlay {
+      display: flex;
+    }
+
+    .discord-dots-pill {
+      background: rgba(17, 17, 22, 0.92);
+      border: 1px solid #32323d;
+      padding: 12px 22px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+    }
+
+    .discord-dots-pill span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      display: inline-block;
+      animation: discordPulse 1.4s infinite ease-in-out both;
+    }
+
+    .discord-dots-pill span:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    .discord-dots-pill span:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    .discord-dots-pill span:nth-child(3) {
+      animation-delay: 0s;
+    }
+
+    @keyframes discordPulse {
+      0%, 80%, 100% {
+        transform: scale(0.55);
+        opacity: 0.35;
+      }
+      40% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+    }
+
     .tag-selector-box {
       background-color: #09090b;
       border: 1px solid var(--border-color);
@@ -1198,7 +1268,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      max-height: 140px;
+      max-height: 150px;
       overflow-y: auto;
     }
 
@@ -1212,12 +1282,62 @@
       border-radius: 6px;
       cursor: pointer;
       user-select: none;
+      transition: all 0.15s;
     }
 
     .tag-option.selected {
       background: #ffffff;
       color: #09090b;
       border-color: #ffffff;
+    }
+
+    /* Sugerowane nowe tagi przez AI (na niebiesko) */
+    .tag-option.ai-suggested {
+      background: rgba(59, 130, 246, 0.16);
+      border-color: rgba(59, 130, 246, 0.55);
+      color: #93c5fd;
+    }
+
+    .tag-option.ai-suggested.selected {
+      background: #2563eb;
+      border-color: #60a5fa;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.35);
+    }
+
+    .ai-tags-hint {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.38);
+      border-radius: 7px;
+      color: #93c5fd;
+      font-size: 12px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ai-tags-hint.visible {
+      display: flex;
+    }
+
+    .btn-dismiss-ai-tags {
+      background: rgba(59, 130, 246, 0.25);
+      border: 1px solid rgba(96, 165, 250, 0.5);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-dismiss-ai-tags:hover {
+      background: #2563eb;
     }
 
     .modal-actions {
@@ -1608,20 +1728,37 @@
           <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link, aby wygenerować opis AI.</div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">
-            <span>Opis obiektu <span class="form-label-opt">(opcjonalnie)</span></span>
-            <button type="button" class="btn-ai-gen" id="btn-ai-desc" onclick="generateAiMeshDescription()">✨ Generuj opis AI ze zdjęcia</button>
-          </label>
-          <textarea id="mf-desc" class="form-textarea" placeholder="Krótki opis wyglądu budynku (niewymagany)..." oninput="clearFieldError('mf-desc', 'err-mf-desc')"></textarea>
-          <div class="field-error-text" id="err-mf-desc"></div>
-        </div>
+        <!-- Kontener objęty nakładką ładowania AI (wyszarzenie + 3 kropki jak w Discordzie) -->
+        <div class="ai-target-wrapper" id="ai-target-wrapper">
+          <div class="ai-loader-overlay">
+            <div class="discord-dots-pill" title="AI analizuje obiekt i dobiera tagi...">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">Wybierz tagi</label>
-          <div class="tag-selector-box">
-            <input type="text" id="mf-tag-search" class="tag-search-mini" placeholder="Szukaj tagu..." oninput="renderModalTagSelector()">
-            <div class="tag-selector-list" id="mf-tag-list"></div>
+          <div class="ai-target-content">
+            <div class="form-group">
+              <label class="form-label">
+                <span>Opis obiektu <span class="form-label-opt">(opcjonalnie)</span></span>
+                <button type="button" class="btn-ai-gen" id="btn-ai-desc" onclick="generateAiMeshDescription()">✨ Generuj opis i tagi AI</button>
+              </label>
+              <textarea id="mf-desc" class="form-textarea" placeholder="Krótki opis wyglądu budynku (niewymagany)..." oninput="clearFieldError('mf-desc', 'err-mf-desc')"></textarea>
+              <div class="field-error-text" id="err-mf-desc"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Wybierz tagi</label>
+              <div class="tag-selector-box">
+                <input type="text" id="mf-tag-search" class="tag-search-mini" placeholder="Szukaj tagu..." oninput="renderModalTagSelector()">
+                <div class="tag-selector-list" id="mf-tag-list"></div>
+              </div>
+              <div class="ai-tags-hint" id="ai-tags-hint">
+                <span>✨ <strong>AI zasugerowało nowe tagi</strong> (na niebiesko). Kliknij tag powyżej, aby go odznaczyć, lub odrzuć wszystkie:</span>
+                <button type="button" class="btn-dismiss-ai-tags" onclick="rejectAllAiSuggestedTags()">Odrzuć sugestie</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1720,6 +1857,7 @@
 
     let editingMeshIndex = null;
     let modalSelectedTags = new Set();
+    let aiSuggestedNewTags = new Set();
     let editingTutorialIndex = null;
     let lastPastedBlob = null;
 
@@ -1810,7 +1948,6 @@
       clearFieldError('mf-image', 'err-mf-image');
       lastPastedBlob = blob;
 
-      // Natychmiastowy podgląd lokalny
       const previewEl = document.getElementById('mf-paste-preview');
       previewEl.src = URL.createObjectURL(blob);
       previewEl.classList.add('visible');
@@ -1850,7 +1987,6 @@
           'Content-Type': 'application/json'
         };
 
-        // Sprawdź czy plik już istnieje w repo (żeby pobrać SHA i móc go nadpisać)
         let existingSha = null;
         const checkResp = await fetch(apiUrl, { headers });
         if (checkResp.ok) {
@@ -1911,7 +2047,6 @@
       }
     }
 
-    // Globalne przechwytywanie Ctrl+V gdy otwarty jest modal dodawania/edycji mesha
     document.addEventListener('paste', (e) => {
       const modalOpen = document.getElementById('mesh-form-modal').classList.contains('open');
       if (!modalOpen || !isAdminLoggedIn()) return;
@@ -1929,7 +2064,6 @@
       }
     });
 
-    // Obsługa przeciągania pliku (Drag & Drop)
     const pasteZone = document.getElementById('mf-paste-zone');
     pasteZone.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -2102,7 +2236,7 @@
 
     function updateMeshStats() {
       const activeCount = allAssets.filter(a => a._status !== 'deleted').length;
-      const uniqueTags = new Set(allAssets.flatMap(a => a.tags)).size;
+      const uniqueTags = new Set([...availableTags, ...allAssets.flatMap(a => a.tags)]).size;
 
       document.getElementById('total-count').textContent = activeCount;
       document.getElementById('tags-count').textContent = uniqueTags;
@@ -2282,6 +2416,9 @@
       refreshAdminActivity();
       editingMeshIndex = index;
       lastPastedBlob = null;
+      aiSuggestedNewTags.clear();
+      document.getElementById('ai-tags-hint').classList.remove('visible');
+      document.getElementById('ai-target-wrapper').classList.remove('ai-loading');
       document.getElementById('mf-tag-search').value = '';
       clearFieldError('mf-name', 'err-mf-name');
       clearFieldError('mf-image', 'err-mf-image');
@@ -2322,20 +2459,49 @@
       document.getElementById('mesh-form-modal').classList.add('open');
     }
 
+    function updateAiTagsHintVisibility() {
+      const hint = document.getElementById('ai-tags-hint');
+      const hasAnySuggested = Array.from(aiSuggestedNewTags).some(t => modalSelectedTags.has(t));
+      hint.classList.toggle('visible', hasAnySuggested);
+    }
+
+    function rejectAllAiSuggestedTags() {
+      for (const tag of aiSuggestedNewTags) {
+        modalSelectedTags.delete(tag);
+      }
+      aiSuggestedNewTags.clear();
+      updateAiTagsHintVisibility();
+      renderModalTagSelector();
+    }
+
     function renderModalTagSelector() {
       const q = document.getElementById('mf-tag-search').value.toLowerCase().trim();
       const list = document.getElementById('mf-tag-list');
       list.innerHTML = '';
 
-      const tagsToShow = availableTags.filter(t => t.toLowerCase().includes(q));
+      // Połącz bazowe tagi z nowymi sugestiami AI (sugestie AI na początku dla widoczności)
+      const combinedTags = Array.from(new Set([...aiSuggestedNewTags, ...availableTags]));
+      const tagsToShow = combinedTags.filter(t => t.toLowerCase().includes(q));
+
       tagsToShow.forEach(tag => {
+        const isSuggested = aiSuggestedNewTags.has(tag);
+        const isSelected = modalSelectedTags.has(tag);
         const el = document.createElement('div');
-        el.className = `tag-option ${modalSelectedTags.has(tag) ? 'selected' : ''}`;
-        el.textContent = tag;
+        el.className = `tag-option ${isSuggested ? 'ai-suggested' : ''} ${isSelected ? 'selected' : ''}`;
+        el.textContent = isSuggested ? `✨ ${tag}` : tag;
+        el.title = isSuggested ? 'Nowy tag zasugerowany przez AI — kliknij, aby odznaczyć' : '';
+
         el.onclick = () => {
           refreshAdminActivity();
-          if (modalSelectedTags.has(tag)) modalSelectedTags.delete(tag);
-          else modalSelectedTags.add(tag);
+          if (modalSelectedTags.has(tag)) {
+            modalSelectedTags.delete(tag);
+            if (isSuggested) {
+              aiSuggestedNewTags.delete(tag);
+            }
+          } else {
+            modalSelectedTags.add(tag);
+          }
+          updateAiTagsHintVisibility();
           renderModalTagSelector();
         };
         list.appendChild(el);
@@ -2355,6 +2521,13 @@
       }
 
       refreshAdminActivity();
+
+      // Dopisz zaakceptowane sugestie AI do globalnej listy dostępnych tagów
+      tags.forEach(tag => {
+        if (!availableTags.includes(tag)) {
+          availableTags.push(tag);
+        }
+      });
 
       if (editingMeshIndex !== null) {
         const current = allAssets[editingMeshIndex];
@@ -2445,9 +2618,12 @@
 
       refreshAdminActivity();
       const btn = document.getElementById('btn-ai-desc');
+      const wrapper = document.getElementById('ai-target-wrapper');
       const origText = btn.textContent;
+
       btn.disabled = true;
-      btn.textContent = 'Analizowanie obrazu...';
+      btn.textContent = 'Generowanie...';
+      wrapper.classList.add('ai-loading');
 
       try {
         let blob = lastPastedBlob;
@@ -2463,7 +2639,20 @@
           reader.readAsDataURL(blob);
         });
 
-        const promptText = `Jesteś asystentem bazy assetów 3D do gry The Bus. Na obrazku znajduje się moduł architektoniczny (Static Mesh) budynku — kolorowe maski (różowy, zielony, czerwony) oznaczają ściany, drzwi i okna. Opisz po polsku w 1-2 zwięzłych zdaniach kształt i typ tego elementu (np. czy to łukowe drzwi, witryna sklepowa, podwójne okna ze szprosami, nowoczesne czy stare), aby ułatwić wyszukiwanie po opisie. Nie wspominaj o różowych i zielonych kolorach maski.`;
+        const existingTagsJson = JSON.stringify(availableTags);
+        const promptText = `Jesteś asystentem bazy assetów 3D do gry The Bus. Na obrazku znajduje się moduł architektoniczny (Static Mesh) budynku — kolorowe maski (różowy, zielony, czerwony) oznaczają ściany, drzwi i okna.
+
+Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON (bez znaczników markdown \`\`\`json):
+1. "description": Opisz po polsku w 1-2 zwięzłych zdaniach kształt i typ tego elementu (np. czy to łukowe drzwi, witryna sklepowa, podwójne okna ze szprosami, nowoczesne czy stare), aby ułatwić wyszukiwanie po opisie. Nie wspominaj o różowych i zielonych kolorach maski.
+2. "matchedTags": Wybierz z poniższej listy istniejących tagów WSZYSTKIE, które pasują do tego obiektu (używaj dokładnie tej samej pisowni co na liście): ${existingTagsJson}
+3. "suggestedNewTags": TYLKO JEŚLI na istniejącej liście wyraźnie brakuje jakiejś bardzo ważnej, ogólnej kategorii architektonicznej widocznej na obrazku (np. "Balkon", "Dach", "Schody", "Witryna", "Filar", "Brama"), zaproponuj maksymalnie 1-2 krótkie, ogólne polskie nazwy (1-2 słowa, zaczynające się wielką literą). NIE wymyślaj tagów na siłę — jeśli istniejące tagi dobrze opisują obiekt, zwróć pustą tablicę [].
+
+Format odpowiedzi JSON:
+{
+  "description": "...",
+  "matchedTags": ["..."],
+  "suggestedNewTags": []
+}`;
 
         const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
@@ -2474,7 +2663,10 @@
                 { text: promptText },
                 { inlineData: { mimeType: blob.type || 'image/jpeg', data: base64Data } }
               ]
-            }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
           })
         });
 
@@ -2484,11 +2676,52 @@
           throw new Error(aiJson.error.message);
         }
 
-        const generatedText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        document.getElementById('mf-desc').value = generatedText.trim();
+        const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const cleanedJsonText = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+        const parsed = JSON.parse(cleanedJsonText);
+
+        if (parsed.description) {
+          document.getElementById('mf-desc').value = parsed.description.trim();
+        }
+
+        // Wyczyść poprzednie sugestie AI
+        for (const oldSug of aiSuggestedNewTags) {
+          modalSelectedTags.delete(oldSug);
+        }
+        aiSuggestedNewTags.clear();
+
+        // Zaznacz dopasowane istniejące tagi
+        if (Array.isArray(parsed.matchedTags)) {
+          parsed.matchedTags.forEach(tag => {
+            const exactMatch = availableTags.find(t => t.toLowerCase() === String(tag).toLowerCase().trim());
+            if (exactMatch) {
+              modalSelectedTags.add(exactMatch);
+            }
+          });
+        }
+
+        // Dodaj i zaznacz na niebiesko nowe ogólne tagi zaproponowane przez AI
+        if (Array.isArray(parsed.suggestedNewTags)) {
+          parsed.suggestedNewTags.slice(0, 2).forEach(rawTag => {
+            const cleanTag = String(rawTag).trim();
+            if (!cleanTag) return;
+            const alreadyExists = availableTags.find(t => t.toLowerCase() === cleanTag.toLowerCase());
+            if (alreadyExists) {
+              modalSelectedTags.add(alreadyExists);
+            } else {
+              const formattedTag = cleanTag.charAt(0).toUpperCase() + cleanTag.slice(1);
+              aiSuggestedNewTags.add(formattedTag);
+              modalSelectedTags.add(formattedTag);
+            }
+          });
+        }
+
+        updateAiTagsHintVisibility();
+        renderModalTagSelector();
       } catch (err) {
         showFieldError('mf-desc', 'err-mf-desc', 'Błąd AI: ' + err.message);
       } finally {
+        wrapper.classList.remove('ai-loading');
         btn.disabled = false;
         btn.textContent = origText;
       }
