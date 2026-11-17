@@ -843,6 +843,13 @@
       overflow: hidden;
       aspect-ratio: 16 / 9;
       background-color: var(--bg-surface);
+      background-image:
+        linear-gradient(45deg, #16161a 25%, transparent 25%),
+        linear-gradient(-45deg, #16161a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #16161a 75%),
+        linear-gradient(-45deg, transparent 75%, #16161a 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
       border: 1px solid #1c1c21;
       position: relative;
       display: flex;
@@ -852,13 +859,13 @@
     }
 
     .card:hover .card-image-wrap {
-      background-color: var(--bg-surface-hover);
+      border-color: var(--border-hover);
     }
 
     .card-image-wrap img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
     }
 
@@ -1037,10 +1044,10 @@
     .modal-ig-left {
       background-color: #060608;
       background-image:
-        linear-gradient(45deg, #0d0d11 25%, transparent 25%),
-        linear-gradient(-45deg, #0d0d11 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #0d0d11 75%),
-        linear-gradient(-45deg, transparent 75%, #0d0d11 75%);
+        linear-gradient(45deg, #131317 25%, transparent 25%),
+        linear-gradient(-45deg, #131317 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #131317 75%),
+        linear-gradient(-45deg, transparent 75%, #131317 75%);
       background-size: 24px 24px;
       background-position: 0 0, 0 12px, 12px -12px, -12px 0;
       border-right: 1px solid var(--border-color);
@@ -1302,6 +1309,13 @@
       margin-right: auto;
       border: 1px solid #27272f;
       background: #09090b;
+      background-image:
+        linear-gradient(45deg, #16161a 25%, transparent 25%),
+        linear-gradient(-45deg, #16161a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #16161a 75%),
+        linear-gradient(-45deg, transparent 75%, #16161a 75%);
+      background-size: 12px 12px;
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
     }
 
     .paste-preview-img.visible {
@@ -1956,7 +1970,7 @@
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
               <input type="checkbox" id="mf-auto-bg-checkbox" checked onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Auto-Crop UE (idealne docięcie okna widoku bez pasków edytora)</span>
+              <span>✂️ Auto-Crop + Usuwanie tła świata (przycięcie edytora i wycięcie tła/nieba wokół obiektu)</span>
             </label>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
@@ -2185,7 +2199,7 @@
 
     function onMeshPathInput() {}
 
-    // Precyzyjne docięcie okna edytora UE (wycina paski narzędzi, górne menu i boczne panele details)
+    // Dwustopniowy procesor: 1. Precyzyjne docięcie okna UE, 2. Usunięcie tła świata i nieba wokół budynku
     async function smartProcessImage(blob) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -2196,26 +2210,81 @@
           const origW = img.naturalWidth;
           const origH = img.naturalHeight;
 
-          const canvas = document.createElement('canvas');
-          canvas.width = origW;
-          canvas.height = origH;
-          const ctx = canvas.getContext('2d', { willReadFrequently: true });
-          ctx.drawImage(img, 0, 0);
-
-          // Marginesy przycięcia idealnie dopasowane do okna widoku Unreal Engine 5 ze zrzutu ekranu
-          // Odcinamy górny pasek menu/narzędzi oraz prawy panel Details
+          // Krok 1: Przycięcie ramki okna widoku Unreal Engine
           const cropX = Math.round(origW * 0.015);
           const cropY = Math.round(origH * 0.08);
-          const cropW = Math.round(origW * 0.73); // Zostawiamy przestrzeń bez panelu Details po prawej
+          const cropW = Math.round(origW * 0.73);
           const cropH = Math.round(origH * 0.89);
 
-          const croppedCanvas = document.createElement('canvas');
-          croppedCanvas.width = cropW;
-          croppedCanvas.height = cropH;
-          const cCtx = croppedCanvas.getContext('2d', { willReadFrequently: true });
-          cCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+          const canvas = document.createElement('canvas');
+          canvas.width = cropW;
+          canvas.height = cropH;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
-          croppedCanvas.toBlob((outBlob) => {
+          // Krok 2: Usuwanie tła świata wokół obiektu (Flood-fill / Chroma key z krawędzi)
+          const imgData = ctx.getImageData(0, 0, cropW, cropH);
+          const data = imgData.data;
+
+          // Pobierz bazowe kolory tła z rogów przyciętego widoku
+          const samplePoints = [
+            0, // lewy górny
+            (cropW - 1) * 4, // prawy górny
+            ((cropH - 1) * cropW) * 4, // lewy dolny
+            (((cropH - 1) * cropW) + (cropW - 1)) * 4 // prawy dolny
+          ];
+
+          let bgR = 0, bgG = 0, bgB = 0;
+          samplePoints.forEach(idx => {
+            bgR += data[idx];
+            bgG += data[idx + 1];
+            bgB += data[idx + 2];
+          });
+          bgR = Math.round(bgR / samplePoints.length);
+          bgG = Math.round(bgG / samplePoints.length);
+          bgB = Math.round(bgB / samplePoints.length);
+
+          const tolerance = 55; // Tolerancja dla gradientów nieba i cieni świata w UE
+
+          // Algorytm zalewania tła od krawędzi (Flood Fill)
+          const visited = new Uint8Array(cropW * cropH);
+          const queue = [];
+
+          // Dodaj wszystkie piksele z krawędzi obrazka do kolejki tła
+          for (let x = 0; x < cropW; x++) {
+            queue.push(x, 0); // górna krawędź
+            queue.push(x, cropH - 1); // dolna krawędź
+          }
+          for (let y = 0; y < cropH; y++) {
+            queue.push(0, y); // lewa krawędź
+            queue.push(cropW - 1, y); // prawa krawędź
+          }
+
+          for (let i = 0; i < queue.length; i += 2) {
+            const x = queue[i];
+            const y = queue[i+1];
+            if (x < 0 || x >= cropW || y < 0 || y >= cropH) continue;
+            
+            const vIdx = y * cropW + x;
+            if (visited[vIdx]) continue;
+            visited[vIdx] = 1;
+
+            const pIdx = vIdx * 4;
+            const r = data[pIdx], g = data[pIdx+1], b = data[pIdx+2];
+
+            // Jeśli piksel jest podobny do koloru tła świata, usuń go (ustaw przezroczystość alfa na 0)
+            const diff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+            if (diff <= tolerance) {
+              data[pIdx + 3] = 0; // Przezroczyste
+
+              // Dodaj sąsiadów do kolejki
+              queue.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
+            }
+          }
+
+          ctx.putImageData(imgData, 0, 0);
+
+          canvas.toBlob((outBlob) => {
             resolve(outBlob || blob);
           }, 'image/png');
         };
@@ -2310,7 +2379,7 @@
 
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
-      statusText.innerHTML = '✂️ Przycinanie okna Unreal Engine...';
+      statusText.innerHTML = '✂️ Przycinanie edytora i usuwanie tła świata...';
 
       let finalBlob = rawBlob;
       if (document.getElementById('mf-auto-bg-checkbox').checked) {
@@ -2322,7 +2391,7 @@
 
       previewEl.src = URL.createObjectURL(finalBlob);
       previewEl.classList.add('visible');
-      statusText.innerHTML = '✅ Przycięto pysznie! (plik wyśle się na GitHub po kliknięciu Zapisz)';
+      statusText.innerHTML = '✅ Wycięto tło i przycięto kadr! (zapis na GitHub po kliknięciu Zapisz)';
 
       const rawPathVal = document.getElementById('mf-name').value.trim();
       if (rawPathVal) {
