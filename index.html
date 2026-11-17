@@ -804,18 +804,23 @@
       border-color: var(--accent-red);
     }
 
-    /* Kontener obrazu i fallback */
+    /* Kontener obrazu i tło kafla dla przezroczystych PNG */
     .card-image-wrap {
       margin: 0 16px;
       border-radius: 8px;
       overflow: hidden;
       aspect-ratio: 16 / 9;
-      background-color: #070709;
+      background-color: var(--bg-surface);
       border: 1px solid #1c1c21;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background-color 0.2s ease;
+    }
+
+    .card:hover .card-image-wrap {
+      background-color: var(--bg-surface-hover);
     }
 
     .card-image-wrap img {
@@ -838,13 +843,7 @@
       padding: 16px;
       width: 100%;
       height: 100%;
-      background: repeating-linear-gradient(
-        -45deg,
-        #0a0a0d,
-        #0a0a0d 10px,
-        #0e0e12 10px,
-        #0e0e12 20px
-      );
+      background: var(--bg-surface);
     }
 
     .yt-play-badge {
@@ -1281,20 +1280,14 @@
       margin-left: auto;
       margin-right: auto;
       border: 1px solid #27272f;
-      background-image:
-        linear-gradient(45deg, #16161c 25%, transparent 25%),
-        linear-gradient(-45deg, #16161c 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #16161c 75%),
-        linear-gradient(-45deg, transparent 75%, #16161c 75%);
-      background-size: 12px 12px;
-      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+      background: #09090b;
     }
 
     .paste-preview-img.visible {
       display: block;
     }
 
-    /* Checkboxy automatyzacji (Wycinanie tła + Auto AI) */
+    /* Checkboxy automatyzacji (Wycinanie tła + Smart Crop + Auto AI) */
     .automation-checks-group {
       display: flex;
       flex-direction: column;
@@ -1895,7 +1888,7 @@
     </div>
   </footer>
 
-  <!-- ==================== MODAL 1: SZCZEGÓŁY MESHA (UKŁAD INSTAGRAM + LUPA + BLOKADA GRANIC) ==================== -->
+  <!-- ==================== MODAL 1: SZCZEGÓŁY MESHA (UKŁAD INSTAGRAM + LUPA) ==================== -->
   <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal('modal-backdrop')">
     <div class="modal modal-instagram" onclick="event.stopPropagation()">
       <!-- LEWA KOLUMNA: ZDJĘCIE + LUPA + PRZESUWANIE KAMERĄ -->
@@ -1960,7 +1953,7 @@
           </label>
           <div class="paste-dropzone" id="mf-paste-zone" onclick="document.getElementById('mf-file-input').click()">
             <div class="paste-dropzone-text" id="mf-paste-status">
-              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>
+              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut pełnego ekranu, przeciągnij plik lub <u>wybierz z dysku</u>
             </div>
             <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
             <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
@@ -1971,7 +1964,7 @@
           <div class="automation-checks-group">
             <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
               <input type="checkbox" id="mf-auto-bg-checkbox" onchange="saveAutoBgPreference(this.checked)">
-              <span>✂️ Automatycznie wytnij tło i cień ze zdjęcia przed zapisem (PNG bez tła)</span>
+              <span>✂️ Automatycznie przytnij pełny ekran (Smart Crop) + usuń tło i cień</span>
             </label>
 
             <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
@@ -2129,7 +2122,6 @@
     let editingTutorialIndex = null;
     let lastPastedBlob = null;
 
-    // Stan lupy i kamery w podglądzie mesha
     let previewZoomState = {
       isZoomed: false,
       scale: 2.4,
@@ -2141,7 +2133,6 @@
       startY: 0
     };
 
-    // ==================== PREFERENCJE AUTOMATYZACJI ====================
     function saveAutoAiPreference(isChecked) {
       localStorage.setItem(AUTO_AI_PREF_KEY, isChecked ? '1' : '0');
     }
@@ -2159,28 +2150,49 @@
       return saved === null ? true : saved === '1';
     }
 
-    // ==================== LOKALNE WYCINANIE TŁA + CIENI (CANVAS FLOOD-FILL) ====================
-    async function removeImageBackgroundLocally(blob) {
+    // ==================== SMART CROP + WYCINANIE TŁA I CIENI ====================
+    async function smartProcessImage(blob) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(blob);
 
         img.onload = () => {
           URL.revokeObjectURL(objectUrl);
-          const w = img.naturalWidth;
-          const h = img.naturalHeight;
+          const origW = img.naturalWidth;
+          const origH = img.naturalHeight;
+
           const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
+          canvas.width = origW;
+          canvas.height = origH;
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(img, 0, 0);
 
-          const imgData = ctx.getImageData(0, 0, w, h);
+          let cropX = 0, cropY = 0, cropW = origW, cropH = origH;
+
+          // Jeśli to pełny zrzut ekranu z Unreal Engine (duża rozdzielczość, np. 16:9), przytnij do okna widoku 3D
+          if (origW > 1200 && origH > 700) {
+            const startX = Math.round(origW * 0.15);
+            const endX = Math.round(origW * 0.72);
+            const startY = Math.round(origH * 0.12);
+            const endY = Math.round(origH * 0.88);
+            cropX = startX;
+            cropY = startY;
+            cropW = endX - startX;
+            cropH = endY - startY;
+          }
+
+          const croppedCanvas = document.createElement('canvas');
+          croppedCanvas.width = cropW;
+          croppedCanvas.height = cropH;
+          const cCtx = croppedCanvas.getContext('2d', { willReadFrequently: true });
+          cCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+          const imgData = cCtx.getImageData(0, 0, cropW, cropH);
           const data = imgData.data;
 
           const bgPalette = [];
           const addSample = (x, y) => {
-            const idx = (y * w + x) * 4;
+            const idx = (y * cropW + x) * 4;
             const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
             if (a < 20) return;
             for (const c of bgPalette) {
@@ -2191,15 +2203,15 @@
             bgPalette.push([r, g, b]);
           };
 
-          const stepX = Math.max(1, Math.floor(w / 40));
-          const stepY = Math.max(1, Math.floor(h / 40));
-          for (let x = 0; x < w; x += stepX) {
+          const stepX = Math.max(1, Math.floor(cropW / 40));
+          const stepY = Math.max(1, Math.floor(cropH / 40));
+          for (let x = 0; x < cropW; x += stepX) {
             addSample(x, 0);
-            addSample(x, h - 1);
+            addSample(x, cropH - 1);
           }
-          for (let y = 0; y < h; y += stepY) {
+          for (let y = 0; y < cropH; y += stepY) {
             addSample(0, y);
-            addSample(w - 1, y);
+            addSample(cropW - 1, y);
           }
 
           const isBackgroundPixel = (idx) => {
@@ -2231,13 +2243,13 @@
             return isNeutralOrCoolShadow;
           };
 
-          const visited = new Uint8Array(w * h);
-          const queue = new Int32Array(w * h);
+          const visited = new Uint8Array(cropW * cropH);
+          const queue = new Int32Array(cropW * cropH);
           let head = 0;
           let tail = 0;
 
           const enqueue = (x, y) => {
-            const pos = y * w + x;
+            const pos = y * cropW + x;
             if (visited[pos]) return;
             visited[pos] = 1;
             if (isBackgroundPixel(pos * 4)) {
@@ -2245,13 +2257,13 @@
             }
           };
 
-          for (let x = 0; x < w; x++) {
+          for (let x = 0; x < cropW; x++) {
             enqueue(x, 0);
-            enqueue(x, h - 1);
+            enqueue(x, cropH - 1);
           }
-          for (let y = 1; y < h - 1; y++) {
+          for (let y = 1; y < cropH - 1; y++) {
             enqueue(0, y);
-            enqueue(w - 1, y);
+            enqueue(cropW - 1, y);
           }
 
           while (head < tail) {
@@ -2259,26 +2271,27 @@
             const pxIdx = pos * 4;
             data[pxIdx + 3] = 0;
 
-            const x = pos % w;
-            const y = (pos - x) / w;
+            const x = pos % cropW;
+            const y = (pos - x) / cropW;
 
             if (x > 0) enqueue(x - 1, y);
-            if (x < w - 1) enqueue(x + 1, y);
+            if (x < cropW - 1) enqueue(x + 1, y);
             if (y > 0) enqueue(x, y - 1);
-            if (y < h - 1) enqueue(x, y + 1);
+            if (y < cropH - 1) enqueue(x, y + 1);
           }
 
-          for (let y = 1; y < h - 1; y++) {
-            for (let x = 1; x < w - 1; x++) {
-              const pos = y * w + x;
+          // Wygładzenie krawędzi
+          for (let y = 1; y < cropH - 1; y++) {
+            for (let x = 1; x < cropW - 1; x++) {
+              const pos = y * cropW + x;
               const idx = pos * 4;
               if (data[idx + 3] === 0) continue;
 
               let transparentNeighbors = 0;
               if (data[(pos - 1) * 4 + 3] === 0) transparentNeighbors++;
               if (data[(pos + 1) * 4 + 3] === 0) transparentNeighbors++;
-              if (data[(pos - w) * 4 + 3] === 0) transparentNeighbors++;
-              if (data[(pos + w) * 4 + 3] === 0) transparentNeighbors++;
+              if (data[(pos - cropW) * 4 + 3] === 0) transparentNeighbors++;
+              if (data[(pos + cropW) * 4 + 3] === 0) transparentNeighbors++;
 
               if (transparentNeighbors >= 2) {
                 data[idx + 3] = Math.round(data[idx + 3] * 0.5);
@@ -2286,22 +2299,21 @@
             }
           }
 
-          ctx.putImageData(imgData, 0, 0);
-          canvas.toBlob((outBlob) => {
+          cCtx.putImageData(imgData, 0, 0);
+          croppedCanvas.toBlob((outBlob) => {
             resolve(outBlob || blob);
           }, 'image/png');
         };
 
         img.onerror = () => {
           URL.revokeObjectURL(objectUrl);
-          reject(new Error('Nie udało się przetworzyć obrazu do wycięcia tła.'));
+          reject(new Error('Nie udało się przetworzyć obrazu.'));
         };
 
         img.src = objectUrl;
       });
     }
 
-    // ==================== AUTOMATYCZNE ID I DATY ====================
     function getNextMeshId() {
       let maxId = 0;
       allAssets.forEach((asset, idx) => {
@@ -2337,7 +2349,6 @@
       return isNaN(t) ? 0 : t;
     }
 
-    // ==================== KONFIGURACJA GITHUB ====================
     function detectDefaultGithubRepo() {
       const saved = localStorage.getItem(GH_REPO_KEY);
       if (saved) return saved;
@@ -2378,7 +2389,6 @@
       }
     }
 
-    // ==================== UPLOAD ZE SCHOWKA NA GITHUB (/images) ====================
     function sanitizeFileName(rawName) {
       const cleaned = rawName.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
       return cleaned || `mesh_${Date.now()}`;
@@ -2403,13 +2413,13 @@
       zone.classList.add('uploading');
 
       let finalBlob = rawBlob;
-      const shouldRemoveBg = document.getElementById('mf-auto-bg-checkbox').checked;
+      const shouldProcess = document.getElementById('mf-auto-bg-checkbox').checked;
 
-      if (shouldRemoveBg) {
-        statusText.innerHTML = '✂️ Wycinanie tła i cieni ze zdjęcia...';
+      if (shouldProcess) {
+        statusText.innerHTML = '✂️ Przycinanie ekranu i usuwanie tła...';
         try {
-          finalBlob = await removeImageBackgroundLocally(rawBlob);
-        } catch (bgErr) {
+          finalBlob = await smartProcessImage(rawBlob);
+        } catch (err) {
           finalBlob = rawBlob;
         }
       }
@@ -2475,9 +2485,9 @@
         }
 
         document.getElementById('mf-image').value = repoFilePath;
-        statusText.innerHTML = `✅ Zapisano w repozytorium jako <code>${repoFilePath}</code>${shouldRemoveBg ? ' (wycięte tło)' : ''}`;
+        statusText.innerHTML = `✅ Zapisano w repozytorium jako <code>${repoFilePath}</code>`;
       } catch (err) {
-        statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>';
+        statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut pełnego ekranu, przeciągnij plik lub <u>wybierz z dysku</u>';
         showFieldError('mf-image', 'err-mf-image', 'Błąd zapisu na GitHub: ' + err.message);
       } finally {
         zone.classList.remove('uploading');
@@ -2539,7 +2549,6 @@
       }
     });
 
-    // ==================== SESJA ADMINA (1H BEZCZYNNOŚCI) ====================
     function refreshAdminActivity() {
       if (localStorage.getItem(SESSION_KEY)) {
         localStorage.setItem(SESSION_KEY, (Date.now() + IDLE_TIMEOUT_MS).toString());
@@ -2597,7 +2606,6 @@
 
     setInterval(updateAdminUI, 30000);
 
-    // ==================== WALIDACJA INLINE ====================
     function showFieldError(inputId, errorId, message) {
       const inputEl = document.getElementById(inputId);
       const errEl = document.getElementById(errorId);
@@ -2615,7 +2623,6 @@
       if (errEl) errEl.classList.remove('visible');
     }
 
-    // ==================== NAWIGACJA I POMOCNICZE ====================
     function switchTab(tab) {
       ['start', 'meshes', 'tutorials', 'api'].forEach(name => {
         document.getElementById(`view-${name}`).classList.toggle('active', name === tab);
@@ -2655,7 +2662,6 @@
       `;
     }
 
-    // ==================== INICJALIZACJA DANYCH ====================
     async function init() {
       updateAdminUI();
 
@@ -2677,7 +2683,7 @@
         renderMeshPreview();
       } catch (err) {
         document.getElementById('results-info').innerHTML =
-          '<span style="color:#ef4444">Błąd wczytywania assets.json. Sprawdź poprawność składni pliku JSON.</span>';
+          '<span style="color:#ef4444">Błąd wczytywania assets.json.</span>';
       }
 
       try {
@@ -2688,7 +2694,7 @@
         renderTutorialsPreview();
       } catch (err) {
         document.getElementById('tutorials-results-info').innerHTML =
-          '<span style="color:#ef4444">Brak pliku poradniki.json lub błąd jego składni.</span>';
+          '<span style="color:#ef4444">Brak pliku poradniki.json.</span>';
       }
     }
 
@@ -2707,7 +2713,6 @@
       document.getElementById('start-tutorials-count').textContent = activeCount;
     }
 
-    // ==================== BAZA MESHÓW ====================
     function matchesSearchText(asset) {
       const q = searchQuery.toLowerCase().trim();
       if (!q) return true;
@@ -2735,7 +2740,6 @@
 
       allUniqueTags.forEach(tag => {
         const isSelected = selectedTags.has(tag);
-
         const matchingCount = allAssets.filter(asset => {
           if (!matchesSearchText(asset)) return false;
           for (const activeTag of selectedTags) {
@@ -2761,7 +2765,6 @@
             renderGrid();
           };
         }
-
         tagsBar.appendChild(btn);
       });
 
@@ -2868,7 +2871,6 @@
       });
     }
 
-    // ==================== PANEL ADMINA: MESHE ====================
     function openMeshFormModal(e, index = null) {
       if (e) e.stopPropagation();
       refreshAdminActivity();
@@ -2887,7 +2889,7 @@
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
       const submitNextBtn = document.getElementById('mf-submit-next-btn');
-      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>';
+      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut pełnego ekranu, przeciągnij plik lub <u>wybierz z dysku</u>';
 
       if (index !== null) {
         const asset = allAssets[index];
@@ -2954,15 +2956,12 @@
         const el = document.createElement('div');
         el.className = `tag-option ${isSuggested ? 'ai-suggested' : ''} ${isSelected ? 'selected' : ''}`;
         el.textContent = isSuggested ? `✨ ${tag}` : tag;
-        el.title = isSuggested ? 'Nowy tag zasugerowany przez AI — kliknij, aby odznaczyć' : '';
 
         el.onclick = () => {
           refreshAdminActivity();
           if (modalSelectedTags.has(tag)) {
             modalSelectedTags.delete(tag);
-            if (isSuggested) {
-              aiSuggestedNewTags.delete(tag);
-            }
+            if (isSuggested) aiSuggestedNewTags.delete(tag);
           } else {
             modalSelectedTags.add(tag);
           }
@@ -2988,9 +2987,7 @@
       refreshAdminActivity();
 
       tags.forEach(tag => {
-        if (!availableTags.includes(tag)) {
-          availableTags.push(tag);
-        }
+        if (!availableTags.includes(tag)) availableTags.push(tag);
       });
 
       if (editingMeshIndex !== null) {
@@ -3051,11 +3048,7 @@
         .filter(a => a._status !== 'deleted')
         .map(({ _status, _prevStatus, ...rest }) => rest);
 
-      const output = {
-        tags: availableTags,
-        assets: cleanAssets
-      };
-
+      const output = { tags: availableTags, assets: cleanAssets };
       navigator.clipboard.writeText(JSON.stringify(output, null, 2));
       const orig = btn.textContent;
       btn.textContent = '✓ Skopiowano JSON do schowka!';
@@ -3079,7 +3072,6 @@
 
     async function callGeminiWithFallback(apiKey, promptText, mimeType, base64Data) {
       let lastError = null;
-
       for (const modelName of GEMINI_MODELS_FALLBACK) {
         const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
           method: 'POST',
@@ -3091,48 +3083,27 @@
                 { inlineData: { mimeType, data: base64Data } }
               ]
             }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
+            generationConfig: { responseMimeType: "application/json" }
           })
         });
 
         const data = await resp.json();
-
-        if (!data.error) {
-          return data;
-        }
+        if (!data.error) return data;
 
         lastError = data.error;
         const msg = (data.error.message || '').toLowerCase();
         const status = data.error.code || resp.status;
 
-        const isInvalidKey =
-          msg.includes('api key not valid') ||
-          msg.includes('api_key_invalid') ||
-          msg.includes('permission denied') ||
-          status === 400 ||
-          status === 403;
-
-        if (isInvalidKey) {
+        if (status === 400 || status === 403 || msg.includes('api key not valid')) {
           localStorage.removeItem(GEMINI_KEY_STORAGE);
-          throw new Error('Nieprawidłowy klucz Google AI API. Kliknij ponownie „Generuj”, aby wkleić poprawny klucz.');
+          throw new Error('Nieprawidłowy klucz Google AI API.');
         }
 
-        const isTransientOverload =
-          status === 503 ||
-          status === 429 ||
-          msg.includes('high demand') ||
-          msg.includes('overloaded') ||
-          msg.includes('unavailable') ||
-          msg.includes('resource exhausted');
-
-        if (!isTransientOverload) {
+        if (status !== 503 && status !== 429 && !msg.includes('overloaded')) {
           throw new Error(data.error.message || 'Błąd komunikacji z Google AI.');
         }
       }
-
-      throw new Error((lastError?.message || 'Serwery Google AI są chwilowo przeciążone') + ' (Twój klucz pozostał zapisany — spróbuj ponownie za kilka sekund).');
+      throw new Error(lastError?.message || 'Serwery Google AI są chwilowo przeciążone.');
     }
 
     async function generateAiMeshDescription() {
@@ -3141,14 +3112,14 @@
       clearFieldError('mf-desc', 'err-mf-desc');
 
       if (!imgUrl && !lastPastedBlob) {
-        showFieldError('mf-image', 'err-mf-image', 'Wklej najpierw zdjęcie ze schowka lub link, aby AI mogło je przeanalizować.');
+        showFieldError('mf-image', 'err-mf-image', 'Wklej najpierw zdjęcie ze schowka lub link.');
         document.getElementById('mf-image').focus();
         return;
       }
 
       let apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
       if (!apiKey) {
-        apiKey = prompt('Wklej swój darmowy klucz Google AI API (zapisze się w Twojej przeglądarce):');
+        apiKey = prompt('Wklej swój darmowy klucz Google AI API:');
         if (!apiKey || !apiKey.trim()) return;
         apiKey = apiKey.trim();
         localStorage.setItem(GEMINI_KEY_STORAGE, apiKey);
@@ -3167,7 +3138,7 @@
         let blob = lastPastedBlob;
         if (!blob) {
           const imgResp = await fetch(imgUrl);
-          if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka z podanego linku (jeśli dopiero wysłałeś plik na GitHub, odczekaj chwilę lub wklej obrazek bezpośrednio przez Ctrl+V).');
+          if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka.');
           blob = await imgResp.blob();
         }
 
@@ -3178,46 +3149,25 @@
         });
 
         const existingTagsJson = JSON.stringify(availableTags);
-        const promptText = `Jesteś asystentem bazy assetów 3D do gry The Bus. Na obrazku znajduje się moduł architektoniczny (Static Mesh) budynku — kolorowe maski (różowy, zielony, czerwony) oznaczają ściany, drzwi i okna.
+        const promptText = `Jesteś asystentem bazy assetów 3D do gry The Bus. Na obrazku znajduje się moduł architektoniczny (Static Mesh) budynku. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
+1. "description": Opisz po polsku w 1-2 zwięzłych zdaniach kształt i typ tego elementu.
+2. "matchedTags": Wybierz z poniższej listy istniejących tagów pasujące: ${existingTagsJson}
+3. "suggestedNewTags": Zaproponuj maksymalnie 1-2 nowe tagi jeśli brakuje (lub tablica []).
+Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags": [] }`;
 
-Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON (bez znaczników markdown \`\`\`json):
-1. "description": Opisz po polsku w 1-2 zwięzłych zdaniach kształt i typ tego elementu (np. czy to łukowe drzwi, witryna sklepowa, podwójne okna ze szprosami, nowoczesne czy stare), aby ułatwić wyszukiwanie po opisie. Nie wspominaj o różowych i zielonych kolorach maski.
-2. "matchedTags": Wybierz z poniższej listy istniejących tagów WSZYSTKIE, które pasują do tego obiektu (używaj dokładnie tej samej pisowni co na liście): ${existingTagsJson}
-3. "suggestedNewTags": TYLKO JEŚLI na istniejącej liście wyraźnie brakuje jakiejś bardzo ważnej, ogólnej kategorii architektonicznej widocznej na obrazku (np. "Balkon", "Dach", "Schody", "Witryna", "Filar", "Brama"), zaproponuj maksymalnie 1-2 krótkie, ogólne polskie nazwy (1-2 słowa, zaczynające się wielką literą). NIE wymyślaj tagów na siłę — jeśli istniejące tagi dobrze opisują obiekt, zwróć pustą tablicę [].
-
-Format odpowiedzi JSON:
-{
-  "description": "...",
-  "matchedTags": ["..."],
-  "suggestedNewTags": []
-}`;
-
-        const aiJson = await callGeminiWithFallback(
-          apiKey,
-          promptText,
-          blob.type || 'image/jpeg',
-          base64Data
-        );
-
+        const aiJson = await callGeminiWithFallback(apiKey, promptText, blob.type || 'image/jpeg', base64Data);
         const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        const cleanedJsonText = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
-        const parsed = JSON.parse(cleanedJsonText);
+        const parsed = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
 
-        if (parsed.description) {
-          document.getElementById('mf-desc').value = parsed.description.trim();
-        }
+        if (parsed.description) document.getElementById('mf-desc').value = parsed.description.trim();
 
-        for (const oldSug of aiSuggestedNewTags) {
-          modalSelectedTags.delete(oldSug);
-        }
+        for (const oldSug of aiSuggestedNewTags) modalSelectedTags.delete(oldSug);
         aiSuggestedNewTags.clear();
 
         if (Array.isArray(parsed.matchedTags)) {
           parsed.matchedTags.forEach(tag => {
             const exactMatch = availableTags.find(t => t.toLowerCase() === String(tag).toLowerCase().trim());
-            if (exactMatch) {
-              modalSelectedTags.add(exactMatch);
-            }
+            if (exactMatch) modalSelectedTags.add(exactMatch);
           });
         }
 
@@ -3247,7 +3197,6 @@ Format odpowiedzi JSON:
       }
     }
 
-    // ==================== PORADNIKI ====================
     function createTutorialCardElement(tut, index) {
       const card = document.createElement('div');
       const statusClass = tut._status ? `status-${tut._status}` : '';
@@ -3322,13 +3271,11 @@ Format odpowiedzi JSON:
 
       const grid = document.getElementById('tutorials-grid');
       grid.innerHTML = '';
-
       filtered.forEach(({ tut, index }) => {
         grid.appendChild(createTutorialCardElement(tut, index));
       });
     }
 
-    // ==================== PANEL ADMINA: PORADNIKI ====================
     function openTutorialFormModal(e, index = null) {
       if (e) e.stopPropagation();
       refreshAdminActivity();
@@ -3366,11 +3313,11 @@ Format odpowiedzi JSON:
 
       let hasError = false;
       if (!title) {
-        showFieldError('tf-title', 'err-tf-title', 'To pole jest wymagane — podaj tytuł poradnika.');
+        showFieldError('tf-title', 'err-tf-title', 'Podaj tytuł poradnika.');
         hasError = true;
       }
       if (!youtubeUrl) {
-        showFieldError('tf-url', 'err-tf-url', 'To pole jest wymagane — wklej link do filmu na YouTube.');
+        showFieldError('tf-url', 'err-tf-url', 'Wklej link do filmu na YouTube.');
         hasError = true;
       }
       if (hasError) return;
@@ -3381,19 +3328,13 @@ Format odpowiedzi JSON:
         const current = allTutorials[editingTutorialIndex];
         allTutorials[editingTutorialIndex] = {
           ...current,
-          title,
-          author,
-          youtubeUrl,
-          description,
+          title, author, youtubeUrl, description,
           addedAt: current.addedAt || new Date().toISOString(),
           _status: current._status === 'added' ? 'added' : 'edited'
         };
       } else {
         allTutorials.push({
-          title,
-          author,
-          youtubeUrl,
-          description,
+          title, author, youtubeUrl, description,
           addedAt: new Date().toISOString(),
           _status: 'added'
         });
@@ -3438,7 +3379,6 @@ Format odpowiedzi JSON:
       }, 2000);
     }
 
-    // ==================== SZCZEGÓŁY MESHA (INSTAGRAM + LUPA + BLOKADA GRANIC) ====================
     function copyName(e, name, btn) {
       e.stopPropagation();
       navigator.clipboard.writeText(name);
@@ -3463,7 +3403,6 @@ Format odpowiedzi JSON:
       if (previewZoomState.isZoomed) {
         box.classList.add('is-zoomed');
 
-        // Inteligentne ograniczenie przesunięcia (clamping), żeby obraz nigdy nie uciekł poza ramkę podglądu
         const maxPanX = (box.clientWidth * (previewZoomState.scale - 1)) / 2;
         const maxPanY = (box.clientHeight * (previewZoomState.scale - 1)) / 2;
         previewZoomState.panX = Math.max(-maxPanX, Math.min(maxPanX, previewZoomState.panX));
@@ -3547,54 +3486,50 @@ Format odpowiedzi JSON:
         if (previewZoomState.isZoomed) {
           box.classList.add('is-dragging');
         }
-      };
 
-      // Zamiast document.onmousemove używamy box.onmousemove, dzięki czemu kursor nie gubi obiektu,
-      // a nawet jeśli kursor minie krawędź kontenera, ruch pozostaje kontrolowany.
-      box.onmousemove = (e) => {
-        if (!previewZoomState.isDragging) return;
-        const dx = e.clientX - previewZoomState.startX;
-        const dy = e.clientY - previewZoomState.startY;
-        if (Math.abs(dx - previewZoomState.panX) > 3 || Math.abs(dy - previewZoomState.panY) > 3) {
-          previewZoomState.hasMoved = true;
-        }
-        if (previewZoomState.isZoomed) {
-          previewZoomState.panX = dx;
-          previewZoomState.panY = dy;
-          applyPreviewTransform();
-        }
-      };
-
-      const handleMouseUp = (e) => {
-        if (!previewZoomState.isDragging) return;
-        previewZoomState.isDragging = false;
-        box.classList.remove('is-dragging');
-
-        if (!previewZoomState.hasMoved) {
-          if (!previewZoomState.isZoomed) {
-            const rect = box.getBoundingClientRect();
-            const offsetX = (rect.width / 2 - (e.clientX - rect.left)) * 0.85;
-            const offsetY = (rect.height / 2 - (e.clientY - rect.top)) * 0.85;
-            previewZoomState.isZoomed = true;
-            previewZoomState.panX = offsetX;
-            previewZoomState.panY = offsetY;
-            applyPreviewTransform();
-          } else {
-            resetPreviewZoom();
+        // Globalne śledzenie ruchu i puszczenia myszy na całym dokumencie (zapobiega gubieniu kursora poza ramką)
+        const onDocumentMouseMove = (moveEvent) => {
+          if (!previewZoomState.isDragging) return;
+          const dx = moveEvent.clientX - previewZoomState.startX;
+          const dy = moveEvent.clientY - previewZoomState.startY;
+          if (Math.abs(dx - previewZoomState.panX) > 3 || Math.abs(dy - previewZoomState.panY) > 3) {
+            previewZoomState.hasMoved = true;
           }
-        }
-      };
+          if (previewZoomState.isZoomed) {
+            previewZoomState.panX = dx;
+            previewZoomState.panY = dy;
+            applyPreviewTransform();
+          }
+        };
 
-      box.onmouseup = handleMouseUp;
-      box.onmouseleave = () => {
-        if (previewZoomState.isDragging) {
+        const onDocumentMouseUp = (upEvent) => {
+          if (!previewZoomState.isDragging) return;
           previewZoomState.isDragging = false;
           box.classList.remove('is-dragging');
-        }
+
+          document.removeEventListener('mousemove', onDocumentMouseMove);
+          document.removeEventListener('mouseup', onDocumentMouseUp);
+
+          if (!previewZoomState.hasMoved) {
+            if (!previewZoomState.isZoomed) {
+              const rect = box.getBoundingClientRect();
+              const offsetX = (rect.width / 2 - (upEvent.clientX - rect.left)) * 0.85;
+              const offsetY = (rect.height / 2 - (upEvent.clientY - rect.top)) * 0.85;
+              previewZoomState.isZoomed = true;
+              previewZoomState.panX = offsetX;
+              previewZoomState.panY = offsetY;
+              applyPreviewTransform();
+            } else {
+              resetPreviewZoom();
+            }
+          }
+        };
+
+        document.addEventListener('mousemove', onDocumentMouseMove);
+        document.addEventListener('mouseup', onDocumentMouseUp);
       };
     }
 
-    // Nasłuchiwanie wyszukiwarek i sortowania
     document.getElementById('search-input').addEventListener('input', (e) => {
       searchQuery = e.target.value;
       renderTags();
