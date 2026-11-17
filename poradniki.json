@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Jak stworzyć własną mapę do The Bus — Podstawy edytora",
+    "author": "Piotrullo978",
+    "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "description": "Kompletny poradnik dla początkujących: konfiguracja projektu, import terenu i pierwsze drogi."
+  },
+  {
+    "title": "Optymalizacja budynków i ustawianie LOD w Unreal Engine",
+    "author": "PolskiModer",
+    "youtubeUrl": "https://youtu.be/dQw4w9WgXcQ",
+    "description": "Jak poprawnie przygotować Static Meshe budynków, aby mapa działała płynnie bez spadków FPS."
+  },
+  {
+    "title": "Tworzenie realistycznych skrzyżowań i sygnalizacji świetlnej",
+    "author": "TheBusPolska",
+    "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "description": "Krok po kroku jak łączyć splajny dróg i konfigurować ruch AI na skrzyżowaniach."
+  }
+]
