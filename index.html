@@ -968,8 +968,8 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.84);
-      backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.86);
+      backdrop-filter: blur(6px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -996,25 +996,130 @@
       max-width: 440px;
     }
 
-    .modal-media-box {
-      width: 100%;
-      height: 360px;
-      background: #050507;
-      border-bottom: 1px solid var(--border-color);
+    /* Duży modal podglądu Static Mesha w układzie Instagrama (Lewo obraz / Prawo szczegóły) */
+    .modal.modal-instagram {
+      max-width: 1120px;
+      width: 96vw;
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      min-height: 540px;
+      max-height: 88vh;
+    }
+
+    .modal-ig-left {
+      background-color: #060608;
+      background-image:
+        linear-gradient(45deg, #0d0d11 25%, transparent 25%),
+        linear-gradient(-45deg, #0d0d11 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #0d0d11 75%),
+        linear-gradient(-45deg, transparent 75%, #0d0d11 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      border-right: 1px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+      user-select: none;
+      min-height: 360px;
+      cursor: zoom-in;
     }
 
-    .modal-img {
+    .modal-ig-left.is-zoomed {
+      cursor: grab;
+    }
+
+    .modal-ig-left.is-dragging {
+      cursor: grabbing;
+    }
+
+    .modal-ig-left img {
       width: 100%;
       height: 100%;
+      max-height: 88vh;
       object-fit: contain;
       display: block;
+      transform-origin: center center;
+      transition: transform 0.14s ease-out;
+      pointer-events: none;
+      -webkit-user-drag: none;
     }
 
-    .modal-body {
-      padding: 24px;
+    .modal-ig-left.is-dragging img {
+      transition: none;
+    }
+
+    .zoom-hint-badge {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .zoom-toggle-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s;
+      z-index: 5;
+    }
+
+    .zoom-toggle-btn:hover {
+      background: #ffffff;
+      color: #09090b;
+    }
+
+    .modal-ig-right {
+      display: flex;
+      flex-direction: column;
+      padding: 28px;
+      overflow-y: auto;
+      background-color: var(--bg-surface);
+    }
+
+    .modal-ig-header {
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 18px;
+    }
+
+    .modal-ig-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .modal-ig-desc-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
     .modal-eyebrow {
@@ -1023,20 +1128,37 @@
       letter-spacing: 0.1em;
       color: var(--text-muted);
       text-transform: uppercase;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .modal-title {
       font-family: 'JetBrains Mono', monospace;
       font-size: 22px;
       font-weight: 800;
-      margin-bottom: 14px;
+      word-break: break-word;
     }
 
     .modal-desc {
       color: var(--text-secondary);
       font-size: 14px;
-      margin-bottom: 20px;
+      line-height: 1.65;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+
+    .modal-ig-footer {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .modal-body {
+      padding: 24px;
     }
 
     /* Pola formularzy i inline błędy */
@@ -1159,10 +1281,68 @@
       margin-left: auto;
       margin-right: auto;
       border: 1px solid #27272f;
+      background-image:
+        linear-gradient(45deg, #16161c 25%, transparent 25%),
+        linear-gradient(-45deg, #16161c 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #16161c 75%),
+        linear-gradient(-45deg, transparent 75%, #16161c 75%);
+      background-size: 12px 12px;
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
     }
 
     .paste-preview-img.visible {
       display: block;
+    }
+
+    /* Checkboxy automatyzacji (Wycinanie tła + Auto AI) */
+    .automation-checks-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .auto-ai-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.28);
+      border-radius: 7px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: #d1d5db;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .auto-ai-checkbox-row.bg-cut {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.28);
+    }
+
+    .auto-ai-checkbox-row.bg-cut:hover {
+      border-color: rgba(52, 211, 153, 0.55);
+      background: rgba(16, 185, 129, 0.13);
+    }
+
+    .auto-ai-checkbox-row:hover {
+      border-color: rgba(96, 165, 250, 0.55);
+      background: rgba(59, 130, 246, 0.13);
+    }
+
+    .auto-ai-checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .auto-ai-checkbox-row.bg-cut input[type="checkbox"] {
+      accent-color: #10b981;
     }
 
     .btn-ai-gen {
@@ -1354,6 +1534,14 @@
       align-items: center;
       margin-top: 20px;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .modal-actions-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .btn-primary {
@@ -1365,6 +1553,29 @@
       font-weight: 700;
       font-size: 13px;
       cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary-save {
+      background: rgba(16, 185, 129, 0.16);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary-save:hover {
+      background: #10b981;
+      color: #09090b;
+      border-color: #10b981;
     }
 
     .btn-close {
@@ -1376,6 +1587,18 @@
       font-weight: 600;
       font-size: 13px;
       cursor: pointer;
+    }
+
+    @media (max-width: 860px) {
+      .modal.modal-instagram {
+        grid-template-columns: 1fr;
+        max-height: none;
+      }
+      .modal-ig-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        min-height: 280px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -1672,15 +1895,25 @@
     </div>
   </footer>
 
-  <!-- ==================== MODAL 1: SZCZEGÓŁY MESHA ==================== -->
+  <!-- ==================== MODAL 1: SZCZEGÓŁY MESHA (UKŁAD INSTAGRAM + LUPA) ==================== -->
   <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal('modal-backdrop')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-media-box" id="modal-media-box"></div>
-      <div class="modal-body">
-        <div class="modal-eyebrow" id="modal-tags-text"></div>
-        <h2 class="modal-title" id="modal-title"></h2>
+    <div class="modal modal-instagram" onclick="event.stopPropagation()">
+      <!-- LEWA KOLUMNA: ZDJĘCIE + LUPA + PRZESUWANIE KAMERĄ -->
+      <div class="modal-ig-left" id="modal-media-box"></div>
+
+      <!-- PRAWA KOLUMNA: TAGI, NAZWA, OPIS, PRZYCISKI -->
+      <div class="modal-ig-right">
+        <div class="modal-ig-header">
+          <div class="modal-eyebrow">STATIC MESH • PODGLĄD OBIEKTU</div>
+          <h2 class="modal-title" id="modal-title"></h2>
+        </div>
+
+        <div class="modal-ig-tags" id="modal-tags-list"></div>
+
+        <div class="modal-ig-desc-label">Opis obiektu</div>
         <p class="modal-desc" id="modal-desc"></p>
-        <div class="modal-actions">
+
+        <div class="modal-ig-footer">
           <button class="btn-primary" id="modal-copy-btn">Kopiuj nazwę mesha</button>
           <button class="btn-close" onclick="closeModal('modal-backdrop')">Zamknij</button>
         </div>
@@ -1734,6 +1967,18 @@
           </div>
           <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001_A.png (wypełni się samo po wklejeniu)" oninput="onManualImageUrlInput()">
           <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link, aby wygenerować opis AI.</div>
+
+          <div class="automation-checks-group">
+            <label class="auto-ai-checkbox-row bg-cut" for="mf-auto-bg-checkbox">
+              <input type="checkbox" id="mf-auto-bg-checkbox" onchange="saveAutoBgPreference(this.checked)">
+              <span>✂️ Automatycznie wytnij tło ze zdjęcia przed zapisem (PNG bez tła, lokalnie bez limitu AI)</span>
+            </label>
+
+            <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
+              <input type="checkbox" id="mf-auto-ai-checkbox" onchange="saveAutoAiPreference(this.checked)">
+              <span>✨ Automatycznie twórz opis i dobieraj tagi AI po wrzuceniu zdjęcia</span>
+            </label>
+          </div>
         </div>
 
         <!-- Kontener objęty nakładką ładowania AI (wyszarzenie + 3 kropki jak w Discordzie) -->
@@ -1774,7 +2019,10 @@
         </div>
 
         <div class="modal-actions">
-          <button class="btn-primary" id="mf-submit-btn" onclick="saveMeshForm()">Zapisz mesh</button>
+          <div class="modal-actions-left">
+            <button class="btn-primary" id="mf-submit-btn" onclick="saveMeshForm(false)">Zapisz mesh</button>
+            <button class="btn-secondary-save" id="mf-submit-next-btn" onclick="saveMeshForm(true)">Dodaj i kolejny +</button>
+          </div>
           <button class="btn-close" onclick="closeModal('mesh-form-modal')">Anuluj</button>
         </div>
       </div>
@@ -1854,10 +2102,11 @@
     const GH_REPO_KEY = 'thebus_gh_repo';
     const GH_TOKEN_KEY = 'thebus_gh_token';
     const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
+    const AUTO_AI_PREF_KEY = 'thebus_auto_ai_on_upload';
+    const AUTO_BG_PREF_KEY = 'thebus_auto_bg_remove';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
-    // Lista modeli od najlżejszego do zapasowych (na wypadek chwilowego przeciążenia 503)
     const GEMINI_MODELS_FALLBACK = [
       'gemini-3.5-flash-lite',
       'gemini-2.5-flash-lite',
@@ -1879,6 +2128,174 @@
     let aiSuggestedNewTags = new Set();
     let editingTutorialIndex = null;
     let lastPastedBlob = null;
+
+    // Stan lupy i kamery w podglądzie mesha
+    let previewZoomState = {
+      isZoomed: false,
+      scale: 2.4,
+      panX: 0,
+      panY: 0,
+      isDragging: false,
+      hasMoved: false,
+      startX: 0,
+      startY: 0
+    };
+
+    // ==================== PREFERENCJE AUTOMATYZACJI ====================
+    function saveAutoAiPreference(isChecked) {
+      localStorage.setItem(AUTO_AI_PREF_KEY, isChecked ? '1' : '0');
+    }
+
+    function isAutoAiEnabled() {
+      return localStorage.getItem(AUTO_AI_PREF_KEY) === '1';
+    }
+
+    function saveAutoBgPreference(isChecked) {
+      localStorage.setItem(AUTO_BG_PREF_KEY, isChecked ? '1' : '0');
+    }
+
+    function isAutoBgEnabled() {
+      const saved = localStorage.getItem(AUTO_BG_PREF_KEY);
+      return saved === null ? true : saved === '1';
+    }
+
+    // ==================== LOKALNE WYCINANIE TŁA (CANVAS FLOOD-FILL) ====================
+    async function removeImageBackgroundLocally(blob) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(blob);
+
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          const w = img.naturalWidth;
+          const h = img.naturalHeight;
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0);
+
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const data = imgData.data;
+
+          // Zbierz paletę kolorów tła z obwodu obrazu (obsługuje też 2-kolorową szachownicę z edytora)
+          const bgPalette = [];
+          const addSample = (x, y) => {
+            const idx = (y * w + x) * 4;
+            const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
+            if (a < 20) return;
+            for (const c of bgPalette) {
+              if (Math.abs(c[0] - r) + Math.abs(c[1] - g) + Math.abs(c[2] - b) < 22) {
+                return;
+              }
+            }
+            bgPalette.push([r, g, b]);
+          };
+
+          const stepX = Math.max(1, Math.floor(w / 40));
+          const stepY = Math.max(1, Math.floor(h / 40));
+          for (let x = 0; x < w; x += stepX) {
+            addSample(x, 0);
+            addSample(x, h - 1);
+          }
+          for (let y = 0; y < h; y += stepY) {
+            addSample(0, y);
+            addSample(w - 1, y);
+          }
+
+          if (bgPalette.length === 0) {
+            resolve(blob);
+            return;
+          }
+
+          const isBackgroundPixel = (idx) => {
+            const a = data[idx + 3];
+            if (a < 20) return true;
+            const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+            for (let i = 0; i < bgPalette.length; i++) {
+              const c = bgPalette[i];
+              const dr = r - c[0];
+              const dg = g - c[1];
+              const db = b - c[2];
+              // Dystans euklidesowy w przestrzeni RGB (tolerancja ~36)
+              if (dr * dr + dg * dg + db * db <= 1300) {
+                return true;
+              }
+            }
+            return false;
+          };
+
+          // Flood-fill od wszystkich 4 krawędzi obrazu (nie wycina środka budynku, nawet jeśli ma podobny kolor)
+          const visited = new Uint8Array(w * h);
+          const queue = new Int32Array(w * h);
+          let head = 0;
+          let tail = 0;
+
+          const enqueue = (x, y) => {
+            const pos = y * w + x;
+            if (visited[pos]) return;
+            visited[pos] = 1;
+            if (isBackgroundPixel(pos * 4)) {
+              queue[tail++] = pos;
+            }
+          };
+
+          for (let x = 0; x < w; x++) {
+            enqueue(x, 0);
+            enqueue(x, h - 1);
+          }
+          for (let y = 1; y < h - 1; y++) {
+            enqueue(0, y);
+            enqueue(w - 1, y);
+          }
+
+          while (head < tail) {
+            const pos = queue[head++];
+            const pxIdx = pos * 4;
+            data[pxIdx + 3] = 0; // ustaw pełną przezroczystość
+
+            const x = pos % w;
+            const y = (pos - x) / w;
+
+            if (x > 0) enqueue(x - 1, y);
+            if (x < w - 1) enqueue(x + 1, y);
+            if (y > 0) enqueue(x, y - 1);
+            if (y < h - 1) enqueue(x, y + 1);
+          }
+
+          // Delikatne wygładzenie (antyaliasing) krawędzi styku z wyciętym tłem
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const pos = y * w + x;
+              const idx = pos * 4;
+              if (data[idx + 3] === 0) continue;
+
+              let transparentNeighbors = 0;
+              if (data[(pos - 1) * 4 + 3] === 0) transparentNeighbors++;
+              if (data[(pos + 1) * 4 + 3] === 0) transparentNeighbors++;
+              if (data[(pos - w) * 4 + 3] === 0) transparentNeighbors++;
+              if (data[(pos + w) * 4 + 3] === 0) transparentNeighbors++;
+
+              if (transparentNeighbors >= 2) {
+                data[idx + 3] = Math.round(data[idx + 3] * 0.55);
+              }
+            }
+          }
+
+          ctx.putImageData(imgData, 0, 0);
+          canvas.toBlob((outBlob) => {
+            resolve(outBlob || blob);
+          }, 'image/png');
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Nie udało się przetworzyć obrazu do wycięcia tła.'));
+        };
+
+        img.src = objectUrl;
+      });
+    }
 
     // ==================== AUTOMATYCZNE ID I DATY ====================
     function getNextMeshId() {
@@ -1963,18 +2380,14 @@
       return cleaned || `mesh_${Date.now()}`;
     }
 
-    async function uploadImageBlobToGithub(blob) {
+    async function uploadImageBlobToGithub(rawBlob) {
       clearFieldError('mf-image', 'err-mf-image');
-      lastPastedBlob = blob;
-
-      const previewEl = document.getElementById('mf-paste-preview');
-      previewEl.src = URL.createObjectURL(blob);
-      previewEl.classList.add('visible');
 
       const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
       const token = localStorage.getItem(GH_TOKEN_KEY);
 
       if (!repo || !token) {
+        lastPastedBlob = rawBlob;
         openGithubConfigModal();
         return;
       }
@@ -1982,21 +2395,44 @@
       refreshAdminActivity();
       const zone = document.getElementById('mf-paste-zone');
       const statusText = document.getElementById('mf-paste-status');
+      const previewEl = document.getElementById('mf-paste-preview');
       zone.classList.add('uploading');
 
+      let finalBlob = rawBlob;
+      const shouldRemoveBg = document.getElementById('mf-auto-bg-checkbox').checked;
+
+      if (shouldRemoveBg) {
+        statusText.innerHTML = '✂️ Wycinanie tła ze zdjęcia...';
+        try {
+          finalBlob = await removeImageBackgroundLocally(rawBlob);
+        } catch (bgErr) {
+          finalBlob = rawBlob;
+        }
+      }
+
+      lastPastedBlob = finalBlob;
+      previewEl.src = URL.createObjectURL(finalBlob);
+      previewEl.classList.add('visible');
+
       const meshNameInput = document.getElementById('mf-name').value.trim();
-      const ext = blob.type === 'image/jpeg' ? 'jpg' : (blob.type === 'image/webp' ? 'webp' : 'png');
+      const ext = finalBlob.type === 'image/jpeg' ? 'jpg' : (finalBlob.type === 'image/webp' ? 'webp' : 'png');
       const fileName = `${sanitizeFileName(meshNameInput)}.${ext}`;
       const repoFilePath = `images/${fileName}`;
 
       statusText.innerHTML = `⏳ Wysyłanie <code>${repoFilePath}</code> na GitHub...`;
+
+      // Jeśli zaznaczony jest ptaszek automatycznego AI, uruchom generowanie równolegle z wysyłką na GitHub
+      const shouldAutoRunAi = document.getElementById('mf-auto-ai-checkbox').checked;
+      if (shouldAutoRunAi) {
+        generateAiMeshDescription();
+      }
 
       try {
         const base64Content = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result.split(',')[1]);
           reader.onerror = reject;
-          reader.readAsDataURL(blob);
+          reader.readAsDataURL(finalBlob);
         });
 
         const apiUrl = `https://api.github.com/repos/${repo}/contents/${repoFilePath}`;
@@ -2036,7 +2472,7 @@
         }
 
         document.getElementById('mf-image').value = repoFilePath;
-        statusText.innerHTML = `✅ Zapisano w repozytorium jako <code>${repoFilePath}</code> (możesz wkleić kolejny <kbd>Ctrl + V</kbd>)`;
+        statusText.innerHTML = `✅ Zapisano w repozytorium jako <code>${repoFilePath}</code>${shouldRemoveBg ? ' (wycięte tło)' : ''}`;
       } catch (err) {
         statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>';
         showFieldError('mf-image', 'err-mf-image', 'Błąd zapisu na GitHub: ' + err.message);
@@ -2439,12 +2875,15 @@
       document.getElementById('ai-tags-hint').classList.remove('visible');
       document.getElementById('ai-target-wrapper').classList.remove('ai-loading');
       document.getElementById('mf-tag-search').value = '';
+      document.getElementById('mf-auto-ai-checkbox').checked = isAutoAiEnabled();
+      document.getElementById('mf-auto-bg-checkbox').checked = isAutoBgEnabled();
       clearFieldError('mf-name', 'err-mf-name');
       clearFieldError('mf-image', 'err-mf-image');
       clearFieldError('mf-desc', 'err-mf-desc');
 
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
+      const submitNextBtn = document.getElementById('mf-submit-next-btn');
       statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>';
 
       if (index !== null) {
@@ -2452,6 +2891,7 @@
         document.getElementById('mesh-form-eyebrow').textContent = 'EDYCJA OBIEKTU';
         document.getElementById('mesh-form-title').textContent = 'EDYTUJ MESH';
         document.getElementById('mf-submit-btn').textContent = 'Zapisz zmiany';
+        submitNextBtn.style.display = 'none';
         document.getElementById('mf-name').value = asset.name;
         document.getElementById('mf-image').value = asset.image || '';
         document.getElementById('mf-desc').value = asset.description || '';
@@ -2467,6 +2907,7 @@
         document.getElementById('mesh-form-eyebrow').textContent = 'NOWY WPIS';
         document.getElementById('mesh-form-title').textContent = 'DODAJ MESH';
         document.getElementById('mf-submit-btn').textContent = 'Dodaj do listy';
+        submitNextBtn.style.display = 'inline-block';
         document.getElementById('mf-name').value = '';
         document.getElementById('mf-image').value = '';
         document.getElementById('mf-desc').value = '';
@@ -2476,6 +2917,9 @@
 
       renderModalTagSelector();
       document.getElementById('mesh-form-modal').classList.add('open');
+      if (index === null) {
+        setTimeout(() => document.getElementById('mf-name').focus(), 40);
+      }
     }
 
     function updateAiTagsHintVisibility() {
@@ -2526,7 +2970,7 @@
       });
     }
 
-    function saveMeshForm() {
+    function saveMeshForm(addAnother = false) {
       const name = document.getElementById('mf-name').value.trim();
       const image = document.getElementById('mf-image').value.trim();
       const description = document.getElementById('mf-desc').value.trim();
@@ -2570,11 +3014,17 @@
         });
       }
 
-      closeModal('mesh-form-modal');
       updateMeshStats();
       renderTags();
       renderGrid();
       renderMeshPreview();
+
+      if (addAnother) {
+        openMeshFormModal(null, null);
+        document.getElementById('mesh-form-eyebrow').textContent = `DODANO POPRZEDNI (${name}) • KOLEJNY WPIS`;
+      } else {
+        closeModal('mesh-form-modal');
+      }
     }
 
     function toggleDeleteMesh(e, index) {
@@ -2654,7 +3104,6 @@
         const msg = (data.error.message || '').toLowerCase();
         const status = data.error.code || resp.status;
 
-        // Usuwaj klucz TYLKO gdy rzeczywiście jest nieprawidłowy / zablokowany
         const isInvalidKey =
           msg.includes('api key not valid') ||
           msg.includes('api_key_invalid') ||
@@ -2667,7 +3116,6 @@
           throw new Error('Nieprawidłowy klucz Google AI API. Kliknij ponownie „Generuj”, aby wkleić poprawny klucz.');
         }
 
-        // Jeśli to chwilowe przeciążenie (503 / high demand / overloaded / 429) — spróbuj następnego modelu z listy
         const isTransientOverload =
           status === 503 ||
           status === 429 ||
@@ -2987,7 +3435,7 @@ Format odpowiedzi JSON:
       }, 2000);
     }
 
-    // ==================== SZCZEGÓŁY I KOPIOWANIE ====================
+    // ==================== SZCZEGÓŁY MESHA (INSTAGRAM + LUPA + KAMERA LPM) ====================
     function copyName(e, name, btn) {
       e.stopPropagation();
       navigator.clipboard.writeText(name);
@@ -3002,22 +3450,138 @@ Format odpowiedzi JSON:
       }, 1200);
     }
 
+    function applyPreviewTransform() {
+      const box = document.getElementById('modal-media-box');
+      const img = document.getElementById('modal-preview-img');
+      const hint = document.getElementById('zoom-hint-badge');
+      const btn = document.getElementById('zoom-toggle-btn');
+      if (!img) return;
+
+      if (previewZoomState.isZoomed) {
+        box.classList.add('is-zoomed');
+        img.style.transform = `translate(${previewZoomState.panX}px, ${previewZoomState.panY}px) scale(${previewZoomState.scale})`;
+        if (hint) hint.innerHTML = '✋ Przytrzymaj LPM i przeciągnij kamerę • Kliknij, aby oddalić';
+        if (btn) btn.textContent = '−';
+      } else {
+        box.classList.remove('is-zoomed', 'is-dragging');
+        img.style.transform = 'translate(0px, 0px) scale(1)';
+        if (hint) hint.innerHTML = '🔍 Kliknij obraz, aby przybliżyć';
+        if (btn) btn.textContent = '+';
+      }
+    }
+
+    function resetPreviewZoom() {
+      previewZoomState.isZoomed = false;
+      previewZoomState.panX = 0;
+      previewZoomState.panY = 0;
+      previewZoomState.isDragging = false;
+      previewZoomState.hasMoved = false;
+      applyPreviewTransform();
+    }
+
     function openModal(asset) {
+      resetPreviewZoom();
       const mediaBox = document.getElementById('modal-media-box');
+
       if (asset.image) {
-        mediaBox.innerHTML = `<img class="modal-img" src="${asset.image}" alt="${asset.name}" onerror="handleImageError(this)">`;
+        mediaBox.innerHTML = `
+          <button type="button" class="zoom-toggle-btn" id="zoom-toggle-btn" title="Przybliż / Oddal">+</button>
+          <img id="modal-preview-img" src="${asset.image}" alt="${asset.name}" draggable="false" onerror="handleImageError(this)">
+          <div class="zoom-hint-badge" id="zoom-hint-badge">🔍 Kliknij obraz, aby przybliżyć</div>
+        `;
+        setupPreviewZoomControls();
       } else {
         mediaBox.innerHTML = `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
       }
 
-      document.getElementById('modal-tags-text').textContent = asset.tags.join(' • ');
+      const tagsListEl = document.getElementById('modal-tags-list');
+      tagsListEl.innerHTML = (asset.tags && asset.tags.length > 0)
+        ? asset.tags.map(t => `<span class="card-tag">${t}</span>`).join('')
+        : '<span style="font-size:12px; color:var(--text-muted);">Brak przypisanych tagów</span>';
+
       document.getElementById('modal-title').textContent = asset.name;
-      document.getElementById('modal-desc').textContent = asset.description || '';
+      document.getElementById('modal-desc').textContent = asset.description || 'Brak dodatkowego opisu dla tego obiektu.';
 
       const copyBtn = document.getElementById('modal-copy-btn');
       copyBtn.onclick = (e) => copyName(e, asset.name, copyBtn);
 
       document.getElementById('modal-backdrop').classList.add('open');
+    }
+
+    function setupPreviewZoomControls() {
+      const box = document.getElementById('modal-media-box');
+      const toggleBtn = document.getElementById('zoom-toggle-btn');
+
+      if (toggleBtn) {
+        toggleBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (previewZoomState.isZoomed) {
+            resetPreviewZoom();
+          } else {
+            previewZoomState.isZoomed = true;
+            previewZoomState.panX = 0;
+            previewZoomState.panY = 0;
+            applyPreviewTransform();
+          }
+        };
+      }
+
+      box.onmousedown = (e) => {
+        if (e.button !== 0) return; // tylko LPM
+        if (e.target === toggleBtn) return;
+        e.preventDefault();
+        previewZoomState.isDragging = true;
+        previewZoomState.hasMoved = false;
+        previewZoomState.startX = e.clientX - previewZoomState.panX;
+        previewZoomState.startY = e.clientY - previewZoomState.panY;
+        if (previewZoomState.isZoomed) {
+          box.classList.add('is-dragging');
+        }
+      };
+
+      box.onmousemove = (e) => {
+        if (!previewZoomState.isDragging) return;
+        const dx = e.clientX - previewZoomState.startX;
+        const dy = e.clientY - previewZoomState.startY;
+        if (Math.abs(dx - previewZoomState.panX) > 3 || Math.abs(dy - previewZoomState.panY) > 3) {
+          previewZoomState.hasMoved = true;
+        }
+        if (previewZoomState.isZoomed) {
+          const maxPanX = box.clientWidth * 0.65;
+          const maxPanY = box.clientHeight * 0.65;
+          previewZoomState.panX = Math.max(-maxPanX, Math.min(maxPanX, dx));
+          previewZoomState.panY = Math.max(-maxPanY, Math.min(maxPanY, dy));
+          applyPreviewTransform();
+        }
+      };
+
+      box.onmouseup = (e) => {
+        if (e.button !== 0 || !previewZoomState.isDragging) return;
+        previewZoomState.isDragging = false;
+        box.classList.remove('is-dragging');
+
+        // Jeśli to było kliknięcie bez przeciągania — przełącz lupę w miejsce kliknięcia
+        if (!previewZoomState.hasMoved) {
+          if (!previewZoomState.isZoomed) {
+            const rect = box.getBoundingClientRect();
+            const offsetX = (rect.width / 2 - (e.clientX - rect.left)) * 0.85;
+            const offsetY = (rect.height / 2 - (e.clientY - rect.top)) * 0.85;
+            previewZoomState.isZoomed = true;
+            previewZoomState.panX = offsetX;
+            previewZoomState.panY = offsetY;
+            applyPreviewTransform();
+          } else {
+            resetPreviewZoom();
+          }
+        }
+      };
+
+      box.onmouseleave = () => {
+        if (previewZoomState.isDragging) {
+          previewZoomState.isDragging = false;
+          box.classList.remove('is-dragging');
+        }
+      };
     }
 
     // Nasłuchiwanie wyszukiwarek i sortowania
