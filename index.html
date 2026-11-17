@@ -1083,6 +1083,62 @@
       min-height: 84px;
     }
 
+    /* Strefa wklejania obrazu ze schowka (Ctrl+V / Drag & Drop) */
+    .paste-dropzone {
+      border: 1px dashed #3a3a45;
+      background-color: #09090b;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .paste-dropzone:hover,
+    .paste-dropzone.dragover {
+      border-color: #ffffff;
+      background-color: #131318;
+    }
+
+    .paste-dropzone.uploading {
+      border-color: var(--accent-blue);
+      background-color: rgba(59, 130, 246, 0.08);
+      pointer-events: none;
+    }
+
+    .paste-dropzone-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .paste-dropzone-text kbd {
+      background: #1f1f26;
+      border: 1px solid #353540;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #ffffff;
+    }
+
+    .paste-preview-img {
+      max-height: 110px;
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: none;
+      margin-left: auto;
+      margin-right: auto;
+      border: 1px solid #27272f;
+    }
+
+    .paste-preview-img.visible {
+      display: block;
+    }
+
     .btn-ai-gen {
       background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: #ffffff;
@@ -1516,9 +1572,16 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Zdjęcie (bezpośredni URL)</label>
-          <input type="text" id="mf-image" class="form-input" placeholder="https://i.imgur.com/...png" oninput="clearFieldError('mf-image', 'err-mf-image')">
-          <div class="field-error-text" id="err-mf-image">Wklej najpierw link do zdjęcia, aby wygenerować opis AI.</div>
+          <label class="form-label">Zdjęcie obiektu (schowek lub URL)</label>
+          <div class="paste-dropzone" id="mf-paste-zone" onclick="document.getElementById('mf-file-input').click()">
+            <div class="paste-dropzone-text" id="mf-paste-status">
+              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>
+            </div>
+            <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
+            <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
+          </div>
+          <input type="text" id="mf-image" class="form-input" placeholder="https://i.ibb.co/...png (wypełni się samo po wklejeniu)" oninput="onManualImageUrlInput()">
+          <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link, aby wygenerować opis AI.</div>
         </div>
 
         <div class="form-group">
@@ -1586,6 +1649,7 @@
   <script>
     const ADMIN_PASS = 'admin6767';
     const SESSION_KEY = 'thebus_admin_expires';
+    const IMGBB_KEY_STORAGE = 'thebus_imgbb_api_key';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -1602,6 +1666,7 @@
     let editingMeshIndex = null;
     let modalSelectedTags = new Set();
     let editingTutorialIndex = null;
+    let lastPastedBlob = null;
 
     // ==================== AUTOMATYCZNE ID I DATY ====================
     function getNextMeshId() {
@@ -1638,6 +1703,124 @@
       const t = new Date(addedAt).getTime();
       return isNaN(t) ? 0 : t;
     }
+
+    // ==================== UPLOAD ZE SCHOWKA (IMGBB) ====================
+    async function uploadImageBlobToImgbb(blob) {
+      clearFieldError('mf-image', 'err-mf-image');
+      lastPastedBlob = blob;
+
+      // Pokaż lokalny podgląd natychmiast
+      const previewEl = document.getElementById('mf-paste-preview');
+      previewEl.src = URL.createObjectURL(blob);
+      previewEl.classList.add('visible');
+
+      let imgbbKey = localStorage.getItem(IMGBB_KEY_STORAGE);
+      if (!imgbbKey) {
+        imgbbKey = prompt('Wklej swój darmowy klucz ImgBB API (zdobędziesz go w 15 sekund na api.imgbb.com — zapisze się w przeglądarce):');
+        if (!imgbbKey) {
+          showFieldError('mf-image', 'err-mf-image', 'Anulowano — bez klucza ImgBB API nie można automatycznie wysłać obrazka ze schowka.');
+          return;
+        }
+        localStorage.setItem(IMGBB_KEY_STORAGE, imgbbKey.trim());
+      }
+
+      refreshAdminActivity();
+      const zone = document.getElementById('mf-paste-zone');
+      const statusText = document.getElementById('mf-paste-status');
+      zone.classList.add('uploading');
+      statusText.innerHTML = '⏳ Wysyłanie zrzutu na serwer i generowanie linku...';
+
+      try {
+        const base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        const formData = new FormData();
+        formData.append('image', base64Data);
+
+        const resp = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(imgbbKey.trim())}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await resp.json();
+        if (!result.success) {
+          if (result.error && result.error.code === 100) {
+            localStorage.removeItem(IMGBB_KEY_STORAGE);
+          }
+          throw new Error(result.error?.message || 'Błąd wysyłania na ImgBB.');
+        }
+
+        const directUrl = result.data.url;
+        document.getElementById('mf-image').value = directUrl;
+        statusText.innerHTML = '✅ Wysłano! Link wygenerowany automatycznie (możesz wkleić kolejny <kbd>Ctrl + V</kbd>)';
+      } catch (err) {
+        statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>';
+        showFieldError('mf-image', 'err-mf-image', 'Błąd ImgBB: ' + err.message);
+      } finally {
+        zone.classList.remove('uploading');
+      }
+    }
+
+    function handleManualFileSelect(e) {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        uploadImageBlobToImgbb(file);
+      }
+      e.target.value = '';
+    }
+
+    function onManualImageUrlInput() {
+      clearFieldError('mf-image', 'err-mf-image');
+      lastPastedBlob = null;
+      const val = document.getElementById('mf-image').value.trim();
+      const previewEl = document.getElementById('mf-paste-preview');
+      if (val) {
+        previewEl.src = val;
+        previewEl.classList.add('visible');
+      } else {
+        previewEl.classList.remove('visible');
+      }
+    }
+
+    // Globalne przechwytywanie Ctrl+V gdy otwarty jest modal dodawania/edycji mesha
+    document.addEventListener('paste', (e) => {
+      const modalOpen = document.getElementById('mesh-form-modal').classList.contains('open');
+      if (!modalOpen || !isAdminLoggedIn()) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          if (blob) uploadImageBlobToImgbb(blob);
+          break;
+        }
+      }
+    });
+
+    // Obsługa przeciągania pliku (Drag & Drop)
+    const pasteZone = document.getElementById('mf-paste-zone');
+    pasteZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      pasteZone.classList.add('dragover');
+    });
+    pasteZone.addEventListener('dragleave', () => {
+      pasteZone.classList.remove('dragover');
+    });
+    pasteZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      pasteZone.classList.remove('dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        uploadImageBlobToImgbb(file);
+      }
+    });
 
     // ==================== SESJA ADMINA (1H BEZCZYNNOŚCI) ====================
     function refreshAdminActivity() {
@@ -1919,7 +2102,6 @@
     function renderMeshPreview() {
       const previewGrid = document.getElementById('preview-meshes-grid');
       previewGrid.innerHTML = '';
-      // Pokaż 3 najnowsze meshe (od końca tablicy / najwyższego ID)
       const indexed = allAssets.map((asset, idx) => ({ asset, idx }));
       const latestThree = indexed.slice(-3).reverse();
       latestThree.forEach(({ asset, idx }) => {
@@ -1974,10 +2156,15 @@
       if (e) e.stopPropagation();
       refreshAdminActivity();
       editingMeshIndex = index;
+      lastPastedBlob = null;
       document.getElementById('mf-tag-search').value = '';
       clearFieldError('mf-name', 'err-mf-name');
       clearFieldError('mf-image', 'err-mf-image');
       clearFieldError('mf-desc', 'err-mf-desc');
+
+      const statusText = document.getElementById('mf-paste-status');
+      const previewEl = document.getElementById('mf-paste-preview');
+      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>';
 
       if (index !== null) {
         const asset = allAssets[index];
@@ -1988,6 +2175,13 @@
         document.getElementById('mf-image').value = asset.image || '';
         document.getElementById('mf-desc').value = asset.description || '';
         modalSelectedTags = new Set(asset.tags);
+
+        if (asset.image) {
+          previewEl.src = asset.image;
+          previewEl.classList.add('visible');
+        } else {
+          previewEl.classList.remove('visible');
+        }
       } else {
         document.getElementById('mesh-form-eyebrow').textContent = 'NOWY WPIS';
         document.getElementById('mesh-form-title').textContent = 'DODAJ MESH';
@@ -1996,6 +2190,7 @@
         document.getElementById('mf-image').value = '';
         document.getElementById('mf-desc').value = '';
         modalSelectedTags = new Set();
+        previewEl.classList.remove('visible');
       }
 
       renderModalTagSelector();
@@ -2049,7 +2244,6 @@
           _status: current._status === 'added' ? 'added' : 'edited'
         };
       } else {
-        // Automatyczne nadanie kolejnego numeru ID w tle i dodanie na sam koniec JSON
         allAssets.push({
           id: getNextMeshId(),
           name,
@@ -2111,8 +2305,8 @@
       clearFieldError('mf-image', 'err-mf-image');
       clearFieldError('mf-desc', 'err-mf-desc');
 
-      if (!imgUrl) {
-        showFieldError('mf-image', 'err-mf-image', 'Wklej najpierw link do zdjęcia, aby AI mogło je przeanalizować.');
+      if (!imgUrl && !lastPastedBlob) {
+        showFieldError('mf-image', 'err-mf-image', 'Wklej najpierw zdjęcie ze schowka lub link, aby AI mogło je przeanalizować.');
         document.getElementById('mf-image').focus();
         return;
       }
@@ -2131,9 +2325,13 @@
       btn.textContent = 'Analizowanie obrazu...';
 
       try {
-        const imgResp = await fetch(imgUrl);
-        if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka z podanego linku.');
-        const blob = await imgResp.blob();
+        let blob = lastPastedBlob;
+        if (!blob) {
+          const imgResp = await fetch(imgUrl);
+          if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka z podanego linku.');
+          blob = await imgResp.blob();
+        }
+
         const base64Data = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result.split(',')[1]);
@@ -2313,7 +2511,6 @@
           _status: current._status === 'added' ? 'added' : 'edited'
         };
       } else {
-        // Dodawanie nowego poradnika na sam koniec JSON
         allTutorials.push({
           title,
           author,
