@@ -1,20 +1,37 @@
 [
   {
-    "title": "Jak stworzyć własną mapę do The Bus — Podstawy edytora",
-    "author": "Piotrullo978",
-    "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "description": "Kompletny poradnik dla początkujących: konfiguracja projektu, import terenu i pierwsze drogi."
+    "title": "Ruch AI, Przystanki autobusowe, Pierwsze odpalenie mapy",
+    "author": "PiterBiscuit",
+    "youtubeUrl": "https://youtu.be/3q2bzHc8uec?si=NxxWOr5RAb2fOOF8",
+    "description": "W piątym spotkaniu z poradnika pokazuję jak zrobić:\n2:40  -  Tekstura asfaltu i ruch AI,\n29:10  -  Przystanki autobusowe,\n42:00  -  Wypiekamy mapę i pierwszy raz odpalamy w grze",
+    "addedAt": "2026-11-01T14:00:00.000Z"
   },
   {
-    "title": "Optymalizacja budynków i ustawianie LOD w Unreal Engine",
-    "author": "PolskiModer",
-    "youtubeUrl": "https://youtu.be/dQw4w9WgXcQ",
-    "description": "Jak poprawnie przygotować Static Meshe budynków, aby mapa działała płynnie bez spadków FPS."
+    "title": "Landscape, Procedural Grass, Roślinność na mapie",
+    "author": "PiterBiscuit",
+    "youtubeUrl": "https://youtu.be/nKwoGFds5jg?si=NCgd_suc32pB1w7S",
+    "description": "W czwartym spotkaniu z poradnika pokazuję jak zrobić:\n00:20  -  Landscape i \"malowanie\" teksturami,\n36:20  -  Procedural Grass (trawniki z automatu),\n50:30  -  Roślinność na mapie",
+    "addedAt": "2026-11-01T13:00:00.000Z"
   },
   {
-    "title": "Tworzenie realistycznych skrzyżowań i sygnalizacji świetlnej",
-    "author": "TheBusPolska",
-    "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "description": "Krok po kroku jak łączyć splajny dróg i konfigurować ruch AI na skrzyżowaniach."
+    "title": "Spline, obniżanie krawężnika, kształtowanie terenu, BP_Road",
+    "author": "PiterBiscuit",
+    "youtubeUrl": "https://youtu.be/lfjFAqkrsAY?si=rT82wpBtr5RVZJdc",
+    "description": "W trzecim spotkaniu z poradnika pokazuję jak zrobić:\n5:00  -  własny spline chodnika,\n40:00  -  jak obniżyć bezkolizyjnie krawężnik,\n1:03:00  -  ukształtować teren,\n1:10:20  -  zrobić ulicę z generatora BP_Road",
+    "addedAt": "2026-11-01T12:00:00.000Z"
+  },
+  {
+    "title": "Jak zrobić zapowiedzi przystankowe",
+    "author": "PiterBiscuit",
+    "youtubeUrl": "https://youtu.be/xRMZXSefexU?si=3qXzxWSufFzZWsJ0",
+    "description": "",
+    "addedAt": "2026-11-01T11:00:00.000Z"
+  },
+  {
+    "title": "Podkład Cesium i pierwsze krawężniki",
+    "author": "PiterBiscuit",
+    "youtubeUrl": "https://youtu.be/Ks3oK2Oej74?si=rGjDAq_fWVxaumLA",
+    "description": "W pierwszym spotkaniu z poradnika:\n00:00  Wstępniak jak zainstalować\n06:05  Jak zrobić podkład mapowy w Cesium\n17:45  Kładziemy krawężnik i budujemy wysepkę",
+    "addedAt": "2026-11-01T10:00:00.000Z"
   }
 ]
