@@ -20,6 +20,7 @@
       --pill-active-bg: #ffffff;
       --pill-active-text: #09090b;
       --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
       --accent-red: #ef4444;
       --accent-blue: #3b82f6;
     }
@@ -399,12 +400,6 @@
       color: var(--text-secondary);
       font-size: 14px;
       line-height: 1.6;
-    }
-
-    .info-card a {
-      color: #ffffff;
-      font-weight: 600;
-      text-decoration: underline;
     }
 
     .home-section {
@@ -981,7 +976,7 @@
       color: var(--text-primary);
     }
 
-    /* System powiadomień w rogu (Toast Container) */
+    /* System powiadomień w rogu */
     .toast-container {
       position: fixed;
       bottom: 24px;
@@ -1413,6 +1408,7 @@
       cursor: wait;
     }
 
+    /* Osobny wrapper ladowania dla edytora / formów */
     .ai-target-wrapper {
       position: relative;
       border-radius: 10px;
@@ -1439,15 +1435,30 @@
       display: flex;
     }
 
+    /* Specjalny kontener ladowania dla Street View (na cala sekcje wyników) */
+    .sv-loading-container {
+      position: relative;
+      min-height: 160px;
+    }
+
+    .sv-loading-container.ai-loading .sv-loading-content {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .sv-loading-container.ai-loading .ai-loader-overlay {
+      display: flex;
+    }
+
     .discord-dots-pill {
-      background: rgba(17, 17, 22, 0.92);
+      background: rgba(17, 17, 22, 0.95);
       border: 1px solid #32323d;
-      padding: 12px 22px;
+      padding: 14px 26px;
       border-radius: 999px;
       display: flex;
       align-items: center;
-      gap: 7px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
     }
 
     .discord-dots-pill span {
@@ -1700,7 +1711,7 @@
           <div class="info-card">
             <div class="info-card-num">03 / ASYSTENT AI STREET VIEW</div>
             <h3>DOPASOWANIE ZE ZDJĘCIA 1:1</h3>
-            <p>Wklej zrzut ekranu prawdziwego budynku z Google Street View, a sztuczna inteligencja przeszuka bazę i wskaże najlepiej pasujące moduły 3D.</p>
+            <p>Wklej zrzut ekranu prawdziwego budynku z Google Street View, a sztuczna inteligencja przeanalizuje architekturę i wskaże pasujące elementy 3D.</p>
           </div>
         </section>
 
@@ -1830,14 +1841,14 @@
       </div>
     </div>
 
-    <!-- NOWA ZAKŁADKA: AI STREET VIEW -->
+    <!-- ZAKŁADKA AI STREET VIEW -->
     <div id="view-streetview" class="view-section">
       <div class="container">
         <header class="hero">
           <div>
             <div class="hero-eyebrow">INTELIGENTNY DOBÓR OBIEKTÓW 3D</div>
             <h1>AI STREET VIEW (1:1)</h1>
-            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. Asystent AI przeanalizuje architekturę i wskaże najbardziej pasujące Static Meshe z naszej bazy.</p>
+            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. AI wyodrębni cechy i dopasuje obiekty na podstawie dokładnego systemu punktowego tagów.</p>
           </div>
         </header>
 
@@ -1863,7 +1874,8 @@
           </div>
         </section>
 
-        <div class="ai-target-wrapper" id="sv-target-wrapper">
+        <!-- Kontener ładowania oddzielony od zawartości -->
+        <div class="sv-loading-container" id="sv-target-wrapper">
           <div class="ai-loader-overlay">
             <div class="discord-dots-pill" title="AI analizuje budynek i dopasowuje elementy...">
               <span></span>
@@ -1871,7 +1883,7 @@
               <span></span>
             </div>
           </div>
-          <div class="ai-target-content">
+          <div class="sv-loading-content">
             <div class="results-info" id="sv-results-info" style="text-align: center; margin-bottom: 20px;"></div>
             <main class="grid" id="sv-results-grid"></main>
           </div>
@@ -1949,7 +1961,7 @@
     </div>
   </div>
 
-  <!-- Kontener na powiadomienia (Toasty w prawym dolnym rogu) -->
+  <!-- Powiadomienia w rogu -->
   <div class="toast-container" id="toast-container"></div>
 
   <footer class="site-footer">
@@ -2156,11 +2168,11 @@
     const GH_TOKEN_KEY = 'thebus_gh_token';
     const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
     const AUTO_AI_PREF_KEY = 'thebus_auto_ai_on_upload';
-    const FAVORITES_STORAGE_KEY = 'thebus_favorite_meshes';
+    const FAVORITES_STORAGE_KEY = 'thebus_favorite_mesh_ids'; // zmiana na ID
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
-const GEMINI_MODELS_FALLBACK = [
+    const GEMINI_MODELS_FALLBACK = [
       'gemini-3.5-flash-lite',
       'gemini-2.5-flash'
     ];
@@ -2231,6 +2243,7 @@ const GEMINI_MODELS_FALLBACK = [
       };
     }
 
+    // ULUBIONE PO ID ZAMIAST NAZWY
     function getFavoriteIds() {
       try {
         const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
@@ -2240,13 +2253,14 @@ const GEMINI_MODELS_FALLBACK = [
       }
     }
 
-    function toggleFavorite(e, assetName) {
+    function toggleFavorite(e, assetId) {
       e.stopPropagation();
       let favs = getFavoriteIds();
-      if (favs.includes(assetName)) {
-        favs = favs.filter(n => n !== assetName);
+      const numId = Number(assetId);
+      if (favs.includes(numId)) {
+        favs = favs.filter(id => id !== numId);
       } else {
-        favs.push(assetName);
+        favs.push(numId);
       }
       localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favs));
       renderTags();
@@ -2405,6 +2419,7 @@ const GEMINI_MODELS_FALLBACK = [
       e.target.value = '';
     }
 
+    // AI STREET VIEW Z PRECYZYJNYM SYSTEMEM PUNKTOWYM I KOLORAMI
     async function searchStreetviewMatches() {
       if (!pendingStreetviewBlob) return;
 
@@ -2423,7 +2438,7 @@ const GEMINI_MODELS_FALLBACK = [
 
       searchBtn.disabled = true;
       wrapper.classList.add('ai-loading');
-      resultsInfo.textContent = 'AI analizuje zdjęcie i dopasowuje meshe z bazy...';
+      resultsInfo.textContent = 'AI analizuje budynek i dopasowuje tagi z bazy...';
       resultsGrid.innerHTML = '';
 
       try {
@@ -2433,40 +2448,69 @@ const GEMINI_MODELS_FALLBACK = [
           reader.readAsDataURL(pendingStreetviewBlob);
         });
 
-        // Przygotuj uproszczoną listę assetów do promptu AI
-        const assetsPayload = allAssets.map(a => ({
-          id: a.id,
-          name: a.name,
-          tags: a.tags,
-          description: a.description
-        }));
-
-        const promptText = `Jesteś zaawansowanym systemem dopasowywania assetów architektonicznych 3D do gry The Bus na podstawie rzeczywistych zdjęć (np. z Google Street View). 
-Przeanalizuj nadesłane zdjęcie budynku/elementu i porównaj je z poniższą listą dostępnych obiektów w bazie.
-Wybierz maksymalnie 6 najlepiej pasujących obiektów i zwróć WYŁĄCZNIE poprawny tablicowy JSON w formacie:
-[
-  {
-    "id": numer_id_assetu,
-    "similarityScore": liczba_od_0_do_100 (procent dopasowania),
-    "reason": "Krótkie wyjaśnienie po polsku, dlaczego ten element pasuje do budynku ze zdjęcia"
-  }
-]
-Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
+        // Krok 1: Poproś AI o wyodrębnienie cech i tagów ze zdjęcia Street View
+        const allUniqueTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
+        const promptText = `Przeanalizuj zrzut ekranu budynku ze Street View i wyodrębnij jego cechy architektoniczne.
+Wybierz z poniższej listy dostępnych tagów te, które pasują do tego budynku: ${JSON.stringify(allUniqueTags)}.
+Zwróć WYŁĄCZNIE poprawny JSON:
+{
+  "detectedTags": ["tag1", "tag2"],
+  "description": "Krótkie uzasadnienie cech budynku po polsku"
+}`;
 
         const aiJson = await callGeminiWithFallback(apiKey, promptText, pendingStreetviewBlob.type || 'image/jpeg', base64Data);
-        const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-        const matches = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+        const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const parsedAnalysis = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
 
-        if (!Array.isArray(matches) || matches.length === 0) {
-          resultsInfo.textContent = 'Nie znaleziono pasujących obiektów w bazie.';
-          return;
-        }
+        const targetTags = (parsedAnalysis.detectedTags || []).map(t => t.toLowerCase());
 
-        resultsInfo.innerHTML = `Znaleziono <strong>${matches.length}</strong> najlepiej pasujących obiektów w bazie:`;
-        
-        matches.forEach(matchItem => {
-          const assetObj = allAssets.find(a => Number(a.id) === Number(matchItem.id));
-          if (!assetObj) return;
+        // Krok 2: Algorytm punktowy (odejmowanie za niezgodności tagów)
+        const scoredAssets = allAssets.map((asset, idx) => {
+          const assetTags = (asset.tags || []).map(t => t.toLowerCase());
+          let score = 100;
+          let matchedCount = 0;
+
+          // Za każdy tag ze Street View, którego nie ma w assetcie, odejmujemy 15%
+          targetTags.forEach(tTag => {
+            if (assetTags.includes(tTag)) {
+              matchedCount++;
+            } else {
+              score -= 15;
+            }
+          });
+
+          // Jeśli asset ma dodatkowe tagi niezgodne ze zdjęciem, też odejmujemy nieco punktów
+          const extraTags = assetTags.filter(aTag => !targetTags.includes(aTag)).length;
+          score -= (extraTags * 5);
+
+          if (score < 10) score = 10;
+          if (score > 100) score = 100;
+
+          return {
+            asset,
+            index: idx,
+            similarityScore: Math.round(score),
+            reason: parsedAnalysis.description || 'Dopasowanie na podstawie cech architektonicznych.'
+          };
+        });
+
+        // Posortuj od najwyższego dopasowania i weź top 6
+        scoredAssets.sort((a, b) => b.similarityScore - a.similarityScore);
+        const topMatches = scoredAssets.slice(0, 6);
+
+        resultsInfo.innerHTML = `Wyniki analizy Street View (wykryte cechy: <strong>${(parsedAnalysis.detectedTags || []).join(', ') || 'brak'}</strong>):`;
+
+        topMatches.forEach(item => {
+          const assetObj = item.asset;
+          const score = item.similarityScore;
+
+          // Określenie koloru pigułki dopasowania zgodnie z wytycznymi
+          let badgeColor = 'var(--accent-red)'; // 0-50% Czerwony
+          if (score >= 85) {
+            badgeColor = 'var(--accent-green)'; // >= 85% Zielony
+          } else if (score >= 50) {
+            badgeColor = 'var(--accent-yellow)'; // 50-85% Żółty
+          }
 
           const card = document.createElement('article');
           card.className = 'card';
@@ -2482,12 +2526,12 @@ Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
             <div class="card-header">
               <div class="card-title-group">
                 <div class="card-title">${assetObj.name}</div>
-                <span class="badge-new" style="background:rgba(59,130,246,0.18); border-color:rgba(59,130,246,0.55); color:#60a5fa;">${matchItem.similarityScore}% DOPASOWANIA</span>
+                <span class="badge-new" style="background:${badgeColor}25; border-color:${badgeColor}; color:${badgeColor};">${score}% DOPASOWANIA</span>
               </div>
               <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
             </div>
             <div class="card-image-wrap">${imgContent}</div>
-            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>AI:</strong> ${matchItem.reason}</div>
+            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza:</strong> ${item.reason}</div>
             <div class="card-footer">
               <div class="card-tags-list">${tagsHtml}</div>
             </div>
@@ -2802,7 +2846,7 @@ Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
       tagsBar.appendChild(allBtn);
 
       const favIds = getFavoriteIds();
-      const favCount = allAssets.filter(a => favIds.includes(a.name) && matchesSearchText(a)).length;
+      const favCount = allAssets.filter(a => favIds.includes(getNumericMeshId(a, 0)) && matchesSearchText(a)).length;
 
       const favBtn = document.createElement('button');
       favBtn.className = `tag-pill favorites-pill ${showFavoritesOnly ? 'active' : ''}`;
@@ -2818,7 +2862,7 @@ Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
         const isSelected = selectedTags.has(tag);
         const matchingCount = allAssets.filter(asset => {
           if (!matchesSearchText(asset)) return false;
-          if (showFavoritesOnly && !favIds.includes(asset.name)) return false;
+          if (showFavoritesOnly && !favIds.includes(getNumericMeshId(asset, 0))) return false;
           for (const activeTag of selectedTags) {
             if (!asset.tags.includes(activeTag)) return false;
           }
@@ -2884,8 +2928,9 @@ Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
       card.className = `card ${statusClass}`;
       card.onclick = () => openModal(asset);
 
+      const assetId = getNumericMeshId(asset, index);
       const favIds = getFavoriteIds();
-      const isFav = favIds.includes(asset.name);
+      const isFav = favIds.includes(assetId);
       const favBtnClass = isFav ? 'fav-btn is-favorite' : 'fav-btn';
       const favSymbol = isFav ? '❤️' : '♡';
 
@@ -2902,7 +2947,7 @@ Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
             ${newBadgeHtml}
           </div>
           <div class="card-header-actions">
-            <button class="${favBtnClass}" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}" onclick="toggleFavorite(event, '${asset.name}')">${favSymbol}</button>
+            <button class="${favBtnClass}" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}" onclick="toggleFavorite(event, ${assetId})">${favSymbol}</button>
             <div class="admin-card-actions">
               <button class="icon-btn edit" title="Edytuj mesh" onclick="openMeshFormModal(event, ${index})">✎</button>
               <button class="icon-btn delete" title="Oznacz do usunięcia / Cofnij" onclick="toggleDeleteMesh(event, ${index})">🗑</button>
@@ -2934,9 +2979,9 @@ Oto baza dostępnych obiektów: ${JSON.stringify(assetsPayload)}`;
       let indexedAssets = allAssets.map((asset, index) => ({ asset, index }));
       const favIds = getFavoriteIds();
 
-      let filtered = indexedAssets.filter(({ asset }) => {
+      let filtered = indexedAssets.filter(({ asset, index }) => {
         if (!matchesSearchText(asset)) return false;
-        if (showFavoritesOnly && !favIds.includes(asset.name)) return false;
+        if (showFavoritesOnly && !favIds.includes(getNumericMeshId(asset, index))) return false;
         for (const tag of selectedTags) {
           if (!asset.tags.includes(tag)) return false;
         }
