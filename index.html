@@ -633,6 +633,118 @@
       color: var(--text-primary);
     }
 
+    /* Styl paska podsumowania i dymka (tooltipa) Street View */
+    .sv-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 14px 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .sv-tooltip-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .sv-info-badge {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .sv-info-badge:hover {
+      background: rgba(59, 130, 246, 0.25);
+    }
+
+    .sv-tooltip-box {
+      visibility: hidden;
+      width: 300px;
+      background-color: #18181c;
+      color: #ffffff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 12px 14px;
+      position: absolute;
+      z-index: 30;
+      bottom: 130%;
+      right: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translateY(4px);
+      border: 1px solid var(--border-hover);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .sv-tooltip-wrap:hover .sv-tooltip-box {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Dymek szczegółów dopasowania na karcie */
+    .card-score-tooltip-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .card-score-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: help;
+    }
+
+    .card-score-tooltip-box {
+      visibility: hidden;
+      width: 260px;
+      background-color: #18181c;
+      color: #ffffff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 10px 12px;
+      position: absolute;
+      z-index: 40;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      border: 1px solid var(--border-hover);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.45;
+      pointer-events: none;
+    }
+
+    .card-score-tooltip-wrap:hover .card-score-tooltip-box {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -1408,7 +1520,6 @@
       cursor: wait;
     }
 
-    /* Osobny wrapper ladowania dla edytora / formów */
     .ai-target-wrapper {
       position: relative;
       border-radius: 10px;
@@ -1435,7 +1546,6 @@
       display: flex;
     }
 
-    /* Specjalny kontener ladowania dla Street View (na cala sekcje wyników) */
     .sv-loading-container {
       position: relative;
       min-height: 160px;
@@ -2168,7 +2278,7 @@
     const GH_TOKEN_KEY = 'thebus_gh_token';
     const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
     const AUTO_AI_PREF_KEY = 'thebus_auto_ai_on_upload';
-    const FAVORITES_STORAGE_KEY = 'thebus_favorite_mesh_ids'; // zmiana na ID
+    const FAVORITES_STORAGE_KEY = 'thebus_favorite_mesh_ids';
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -2243,7 +2353,6 @@
       };
     }
 
-    // ULUBIONE PO ID ZAMIAST NAZWY
     function getFavoriteIds() {
       try {
         const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
@@ -2419,7 +2528,7 @@
       e.target.value = '';
     }
 
-    // AI STREET VIEW Z PRECYZYJNYM SYSTEMEM PUNKTOWYM I KOLORAMI
+    // AI STREET VIEW Z DWEOMA DYMKAMI (NAGŁÓWEK + KARTA)
     async function searchStreetviewMatches() {
       if (!pendingStreetviewBlob) return;
 
@@ -2448,7 +2557,6 @@
           reader.readAsDataURL(pendingStreetviewBlob);
         });
 
-        // Krok 1: Poproś AI o wyodrębnienie cech i tagów ze zdjęcia Street View
         const allUniqueTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
         const promptText = `Przeanalizuj zrzut ekranu budynku ze Street View i wyodrębnij jego cechy architektoniczne.
 Wybierz z poniższej listy dostępnych tagów te, które pasują do tego budynku: ${JSON.stringify(allUniqueTags)}.
@@ -2464,13 +2572,11 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
         const targetTags = (parsedAnalysis.detectedTags || []).map(t => t.toLowerCase());
 
-        // Krok 2: Algorytm punktowy (odejmowanie za niezgodności tagów)
         const scoredAssets = allAssets.map((asset, idx) => {
           const assetTags = (asset.tags || []).map(t => t.toLowerCase());
           let score = 100;
           let matchedCount = 0;
 
-          // Za każdy tag ze Street View, którego nie ma w assetcie, odejmujemy 15%
           targetTags.forEach(tTag => {
             if (assetTags.includes(tTag)) {
               matchedCount++;
@@ -2479,7 +2585,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             }
           });
 
-          // Jeśli asset ma dodatkowe tagi niezgodne ze zdjęciem, też odejmujemy nieco punktów
           const extraTags = assetTags.filter(aTag => !targetTags.includes(aTag)).length;
           score -= (extraTags * 5);
 
@@ -2494,22 +2599,57 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           };
         });
 
-        // Posortuj od najwyższego dopasowania i weź top 6
         scoredAssets.sort((a, b) => b.similarityScore - a.similarityScore);
         const topMatches = scoredAssets.slice(0, 6);
+        const detectedTagsListStr = (parsedAnalysis.detectedTags || []).join(', ') || 'brak wykrytych cech';
 
-        resultsInfo.innerHTML = `Wyniki analizy Street View (wykryte cechy: <strong>${(parsedAnalysis.detectedTags || []).join(', ') || 'brak'}</strong>):`;
+        // Pasek podsumowania z głównym dymkiem (tooltipem)
+        resultsInfo.innerHTML = `
+          <div class="sv-summary-bar">
+            <span>Znaleziono <strong>${topMatches.length}</strong> najlepiej pasujących obiektów w bazie</span>
+            <div class="sv-tooltip-wrap">
+              <div class="sv-info-badge">
+                ℹ️ Uwzględnione cechy i tagi
+              </div>
+              <div class="sv-tooltip-box">
+                <strong>Uwzględniono następujące cechy:</strong><br>
+                <span style="color: #93c5fd; font-family: 'JetBrains Mono', monospace;">${detectedTagsListStr}</span>
+                <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                  ${parsedAnalysis.description || ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
 
         topMatches.forEach(item => {
           const assetObj = item.asset;
           const score = item.similarityScore;
 
-          // Określenie koloru pigułki dopasowania zgodnie z wytycznymi
-          let badgeColor = 'var(--accent-red)'; // 0-50% Czerwony
+          let badgeColor = 'var(--accent-red)';
           if (score >= 85) {
-            badgeColor = 'var(--accent-green)'; // >= 85% Zielony
+            badgeColor = 'var(--accent-green)';
           } else if (score >= 50) {
-            badgeColor = 'var(--accent-yellow)'; // 50-85% Żółty
+            badgeColor = 'var(--accent-yellow)';
+          }
+
+          const assetTags = (assetObj.tags || []).map(t => t.toLowerCase());
+          const matched = targetTags.filter(t => assetTags.includes(t));
+          const missing = targetTags.filter(t => !assetTags.includes(t));
+          const extra = assetTags.filter(t => !targetTags.includes(t));
+
+          let breakdownHtml = `<strong style="color:#ffffff;">Analiza punktowa (${score}%):</strong><br>`;
+          if (matched.length > 0) {
+            breakdownHtml += `<span style="color:#34d399;">✓ Zgodne tagi:</span> ${matched.join(', ')}<br>`;
+          }
+          if (missing.length > 0) {
+            breakdownHtml += `<span style="color:#f87171;">✗ Brakujące cechy (-${missing.length * 15}%):</span> ${missing.join(', ')}<br>`;
+          }
+          if (extra.length > 0) {
+            breakdownHtml += `<span style="color:#fbbf24;">⚠ Dodatkowe cechy (-${extra.length * 5}%):</span> ${extra.join(', ')}<br>`;
+          }
+          if (matched.length === 0 && missing.length === 0) {
+            breakdownHtml += `<span style="color:var(--text-muted);">Brak bezpośredniego pokrycia tagów.</span>`;
           }
 
           const card = document.createElement('article');
@@ -2526,12 +2666,17 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             <div class="card-header">
               <div class="card-title-group">
                 <div class="card-title">${assetObj.name}</div>
-                <span class="badge-new" style="background:${badgeColor}25; border-color:${badgeColor}; color:${badgeColor};">${score}% DOPASOWANIA</span>
+                <div class="card-score-tooltip-wrap">
+                  <span class="card-score-badge" style="background:${badgeColor}25; border:1px solid ${badgeColor}; color:${badgeColor};">${score}% DOPASOWANIA</span>
+                  <div class="card-score-tooltip-box">
+                    ${breakdownHtml}
+                  </div>
+                </div>
               </div>
               <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
             </div>
             <div class="card-image-wrap">${imgContent}</div>
-            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza:</strong> ${item.reason}</div>
+            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>AI:</strong> ${item.reason}</div>
             <div class="card-footer">
               <div class="card-tags-list">${tagsHtml}</div>
             </div>
