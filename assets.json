@@ -9,7 +9,6 @@
     "Stare",
     "Nowe",
     "Wewnątrz",
-    "Zaokrąglone",
     "Szachownica",
     "Dach",
     "Schody",
@@ -234,7 +233,6 @@
       "tags": [
         "Okna",
         "Ściana",
-        "Zaokrąglone",
         "Fasada"
       ],
       "description": "Moduł fasady budynku z trzema dużymi oknami i panelami poniżej. Całość ma lekko zaokrąglony kształt z bocznymi filarami.",
@@ -376,7 +374,8 @@
         "Ściana",
         "Zaokrąglone",
         "Parapet",
-        "Opaska okienna"
+        "Opaska okienna",
+        "Łukowe"
       ],
       "description": "Moduł ścienny z osadzonym oknem o zaokrąglonych górnych narożnikach i trójdzielnym podziale skrzydła. Pod otworem okiennym znajduje się profilowany parapet.",
       "addedAt": "2026-11-17T23:34:26.607Z"
