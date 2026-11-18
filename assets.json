@@ -467,7 +467,7 @@
       "id": 28,
       "name": "SM_001_D_LOD0",
       "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_D_LOD0.SM_001_D_LOD0",
-      "image": "images/SM_001_D_LOD0_e9qba.png",
+      "image": "images/SM_001_D_LOD0_bzdbi.png",
       "tags": [
         "Okna",
         "Balkon",
@@ -523,7 +523,7 @@
       "id": 31,
       "name": "SM_001_D_LOD0",
       "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Residential/SM_001_D_LOD0.SM_001_D_LOD0",
-      "image": "images/SM_001_D_LOD0_honzp.png",
+      "image": "images/SM_001_D_LOD0_bzdbi.png",
       "tags": [
         "Okna",
         "Ściana",
@@ -537,9 +537,12 @@
         "Opaska okienna",
         "Okno dwuskrzydłowe",
         "Przyczółek",
-        "Tralki"
+        "Tralki",
+        "Cokół",
+        "Przyczółek trójkątny",
+        "Gzyms nadokienny"
       ],
-      "description": "Fasada budynku zawiera duże okno dwuskrzydłowe osadzone w ozdobnej oprawie. Nad oknem znajduje się wydatny gzyms oraz klasyczny nadokiennik o formie trójkątnego przyczółka. Podokiennik ozdobiony jest balustradą z tralkami, a naroża ściany akcentowane są boniowaniem.",
+      "description": "Fasada budynku prezentuje okno dwuskrzydłowe osadzone w centralnej części ściany, otoczone dekoracyjnymi opaskami i boniowaniem narożnym. Nad stolarką okienną umieszczony jest wydatny gzyms nadokienny zwieńczony trójkątnym przyczółkiem. Pod oknem znajduje się ozdobna balustrada z tralkami.",
       "addedAt": "2026-11-18T19:07:02.799Z"
     },
     {
