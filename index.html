@@ -688,11 +688,12 @@
       padding: 12px 14px;
       position: absolute;
       z-index: 30;
-      bottom: 130%;
+      top: 100%;
+      margin-top: 6px;
       right: 0;
       opacity: 0;
       transition: opacity 0.2s ease, transform 0.2s ease;
-      transform: translateY(4px);
+      transform: translateY(-4px);
       border: 1px solid var(--border-hover);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
       font-size: 12px;
@@ -705,6 +706,7 @@
       transform: translateY(0);
     }
 
+    /* NAPRAWIONY DYMEK KARTY: Otwiera się automatycznie w dół, żeby nigdy się nie uciął */
     .card-score-tooltip-wrap {
       position: relative;
       display: inline-block;
@@ -724,21 +726,21 @@
 
     .card-score-tooltip-box {
       visibility: hidden;
-      width: 270px;
+      width: 280px;
       background-color: #18181c;
       color: #ffffff;
       text-align: left;
       border-radius: 8px;
       padding: 10px 12px;
       position: absolute;
-      z-index: 40;
-      bottom: 130%;
-      left: 50%;
-      transform: translateX(-50%) translateY(4px);
+      z-index: 99;
+      top: calc(100% + 6px);
+      left: 0;
       opacity: 0;
       transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translateY(-4px);
       border: 1px solid var(--border-hover);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
       font-size: 11px;
       font-weight: 400;
       line-height: 1.45;
@@ -748,7 +750,7 @@
     .card-score-tooltip-wrap:hover .card-score-tooltip-box {
       visibility: visible;
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
+      transform: translateY(0);
     }
 
     .grid {
@@ -2378,12 +2380,17 @@
       renderTags();
       renderGrid();
       renderMeshPreview();
-      // Odśwież też aktywne wyniki Street View, jeśli są widoczne
+
+      // Odświeżenie przycisków ulubionych w wynikach Street View jeśli są wyświetlone
       if (document.getElementById('view-streetview').classList.contains('active') && pendingStreetviewBlob) {
-        // Nie resetujemy wyszukiwania, tylko aktualizujemy serduszka
-        const activeFavs = getFavoriteIds();
-        document.querySelectorAll('#sv-results-grid .card').forEach(cardEl => {
-          // opcjonalnie odświeżenie ikony serduszka
+        document.querySelectorAll('.card').forEach(card => {
+          const btn = card.querySelector('.fav-btn');
+          if (btn && btn.getAttribute('onclick')?.includes(numId)) {
+            const isNowFav = favs.includes(numId);
+            btn.className = isNowFav ? 'fav-btn is-favorite' : 'fav-btn';
+            btn.title = isNowFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych';
+            btn.textContent = isNowFav ? '❤️' : '♡';
+          }
         });
       }
     }
@@ -2539,7 +2546,7 @@
       e.target.value = '';
     }
 
-    // AI STREET VIEW Z UNIKALNYMI OPISAMI DLA KAŻDEGO MESHA I SERDUSZKAMI
+    // AI STREET VIEW Z POPRAWIONĄ MATEMATYKĄ (SUROWY KARNY ZA RÓŻNE TYPY OBIEKTÓW)
     async function searchStreetviewMatches() {
       if (!pendingStreetviewBlob) return;
 
@@ -2585,13 +2592,30 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
         const scoredAssets = allAssets.map((asset, idx) => {
           const assetTags = (asset.tags || []).map(t => t.toLowerCase());
-          const assetDesc = (asset.description || '').toLowerCase();
+          const assetNameLower = asset.name.toLowerCase();
+          const assetDescLower = (asset.description || '').toLowerCase();
           let score = 100;
 
-          // Dopasowanie tagów
+          // Surowa weryfikacja kluczowych konfliktów typu balkon / łuk / itp.
+          const isTargetFrenchBalcony = targetTags.includes('balkon francuski');
+          const isAssetHasRegularBalcony = assetTags.includes('balkon') || assetNameLower.includes('balkon') || assetDescLower.includes('balkon');
+          const isAssetHasFrenchBalcony = assetTags.includes('balkon francuski') || assetNameLower.includes('balkon francuski');
+
+          // Jeśli użytkownik szuka balkonu francuskiego, a obiekt ma zwykły pełny balkon (lub na odwrót), z miejsca ucinamy ocenę!
+          if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
+            score -= 45; // Ogromna kara za pomylenie balkonu ze zwykłym
+          }
+
+          const isTargetArch = targetTags.includes('łukowe') || targetTags.includes('łuk');
+          const isAssetArch = assetTags.includes('łukowe') || assetTags.includes('łuk') || assetNameLower.includes('łuk');
+          if (isTargetArch !== isAssetArch) {
+            score -= 30; // Kara za niezgodność łuków (np. zwykłe okno vs łukowe)
+          }
+
+          // Dopasowanie standardowych tagów
           targetTags.forEach(tTag => {
             if (assetTags.includes(tTag)) {
-              // zgadza się
+              // OK
             } else {
               score -= 15;
             }
@@ -2603,23 +2627,22 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           if (score < 10) score = 10;
           if (score > 100) score = 100;
 
-          // Tworzenie unikalnego opisu dlaczego pasuje / nie pasuje dla TEGO mesha
           const matchedList = targetTags.filter(t => assetTags.includes(t));
           const missingList = targetTags.filter(t => !assetTags.includes(t));
           const extraList = assetTags.filter(t => !targetTags.includes(t));
 
           let customReason = `Element architektoniczny "${asset.name}". `;
+          if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
+            customReason += `⚠️ Konflikt typów: obiekt posiada pełny balkon zamiast francuskiego (-45%). `;
+          }
           if (matchedList.length > 0) {
-            customReason += `Pasuje pod kątem: ${matchedList.join(', ')}. `;
+            customReason += `Zgodne cechy: ${matchedList.join(', ')}. `;
           }
           if (missingList.length > 0) {
-            customReason += `Brakuje cech: ${missingList.join(', ')} (-15% za każdą). `;
+            customReason += `Brakujące cechy: ${missingList.join(', ')} (-15% każda). `;
           }
           if (extraList.length > 0) {
-            customReason += `Posiada dodatkowe elementy: ${extraList.join(', ')}.`;
-          }
-          if (matchedList.length === 0 && missingList.length > 0) {
-            customReason += `Słabe dopasowanie do bieżącej fasady.`;
+            customReason += `Dodatkowe elementy: ${extraList.join(', ')}.`;
           }
 
           return {
@@ -2637,11 +2660,10 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         const topMatches = scoredAssets.slice(0, 6);
         const detectedTagsListStr = (parsedAnalysis.detectedTags || []).join(', ') || 'brak wykrytych cech';
 
-        // Pasek podsumowania z analizą słowną na górze i dymkiem
         resultsInfo.innerHTML = `
           <div class="sv-summary-bar">
             <div class="sv-analysis-text">
-              ✨ <strong>Analiza słowna Street View:</strong> Na zdjęciu rozpoznano następujące cechy: <em>${detectedTagsListStr}</em>. ${parsedAnalysis.description || ''} Poniżej znajduje się zestawienie najlepiej dopasowanych obiektów 3D z bazy wraz z rozliczeniem punktowym.
+              ✨ <strong>Analiza słowna Street View:</strong> Rozpoznano cechy: <em>${detectedTagsListStr}</em>. ${parsedAnalysis.description || ''} Obiekty poniżej zostały zweryfikowane pod kątem ścisłych różnic konstrukcyjnych (np. balkon vs balkon francuski).
             </div>
             <div class="sv-tooltip-wrap">
               <div class="sv-info-badge">
@@ -2674,7 +2696,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             badgeColor = 'var(--accent-yellow)';
           }
 
-          // Matma w dymku po najechaniu na %
           let breakdownHtml = `<strong style="color:#ffffff;">Sztywne rozliczenie punktowe (${score}%):</strong><br>`;
           if (item.matchedList.length > 0) {
             breakdownHtml += `<span style="color:#34d399;">✓ Zgodne tagi:</span> ${item.matchedList.join(', ')}<br>`;
@@ -2684,9 +2705,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           }
           if (item.extraList.length > 0) {
             breakdownHtml += `<span style="color:#fbbf24;">⚠ Dodatkowe cechy (-${item.extraList.length * 5}%):</span> ${item.extraList.join(', ')}<br>`;
-          }
-          if (item.matchedList.length === 0 && item.missingList.length === 0) {
-            breakdownHtml += `<span style="color:var(--text-muted);">Brak bezpośredniego pokrycia tagów.</span>`;
           }
 
           const card = document.createElement('article');
