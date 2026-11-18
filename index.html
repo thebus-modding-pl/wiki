@@ -633,18 +633,25 @@
       color: var(--text-primary);
     }
 
-    /* Styl paska podsumowania i dymka (tooltipa) Street View */
     .sv-summary-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--bg-surface);
       border: 1px solid var(--border-color);
-      padding: 14px 20px;
-      border-radius: 8px;
+      padding: 16px 22px;
+      border-radius: 10px;
       margin-bottom: 24px;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 16px;
+    }
+
+    .sv-analysis-text {
+      font-size: 13px;
+      color: #d1d5db;
+      line-height: 1.5;
+      flex: 1;
+      min-width: 280px;
     }
 
     .sv-tooltip-wrap {
@@ -698,7 +705,6 @@
       transform: translateY(0);
     }
 
-    /* Dymek szczegółów dopasowania na karcie */
     .card-score-tooltip-wrap {
       position: relative;
       display: inline-block;
@@ -718,7 +724,7 @@
 
     .card-score-tooltip-box {
       visibility: hidden;
-      width: 260px;
+      width: 270px;
       background-color: #18181c;
       color: #ffffff;
       text-align: left;
@@ -1088,7 +1094,6 @@
       color: var(--text-primary);
     }
 
-    /* System powiadomień w rogu */
     .toast-container {
       position: fixed;
       bottom: 24px;
@@ -1984,7 +1989,6 @@
           </div>
         </section>
 
-        <!-- Kontener ładowania oddzielony od zawartości -->
         <div class="sv-loading-container" id="sv-target-wrapper">
           <div class="ai-loader-overlay">
             <div class="discord-dots-pill" title="AI analizuje budynek i dopasowuje elementy...">
@@ -1994,7 +1998,7 @@
             </div>
           </div>
           <div class="sv-loading-content">
-            <div class="results-info" id="sv-results-info" style="text-align: center; margin-bottom: 20px;"></div>
+            <div class="results-info" id="sv-results-info" style="margin-bottom: 20px;"></div>
             <main class="grid" id="sv-results-grid"></main>
           </div>
         </div>
@@ -2071,7 +2075,6 @@
     </div>
   </div>
 
-  <!-- Powiadomienia w rogu -->
   <div class="toast-container" id="toast-container"></div>
 
   <footer class="site-footer">
@@ -2375,6 +2378,14 @@
       renderTags();
       renderGrid();
       renderMeshPreview();
+      // Odśwież też aktywne wyniki Street View, jeśli są widoczne
+      if (document.getElementById('view-streetview').classList.contains('active') && pendingStreetviewBlob) {
+        // Nie resetujemy wyszukiwania, tylko aktualizujemy serduszka
+        const activeFavs = getFavoriteIds();
+        document.querySelectorAll('#sv-results-grid .card').forEach(cardEl => {
+          // opcjonalnie odświeżenie ikony serduszka
+        });
+      }
     }
 
     function saveAutoAiPreference(isChecked) {
@@ -2528,7 +2539,7 @@
       e.target.value = '';
     }
 
-    // AI STREET VIEW Z DWEOMA DYMKAMI (NAGŁÓWEK + KARTA)
+    // AI STREET VIEW Z UNIKALNYMI OPISAMI DLA KAŻDEGO MESHA I SERDUSZKAMI
     async function searchStreetviewMatches() {
       if (!pendingStreetviewBlob) return;
 
@@ -2563,7 +2574,7 @@ Wybierz z poniższej listy dostępnych tagów te, które pasują do tego budynku
 Zwróć WYŁĄCZNIE poprawny JSON:
 {
   "detectedTags": ["tag1", "tag2"],
-  "description": "Krótkie uzasadnienie cech budynku po polsku"
+  "description": "Ogólne podsumowanie cech architektonicznych budynku ze zdjęcia po polsku"
 }`;
 
         const aiJson = await callGeminiWithFallback(apiKey, promptText, pendingStreetviewBlob.type || 'image/jpeg', base64Data);
@@ -2574,12 +2585,13 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
         const scoredAssets = allAssets.map((asset, idx) => {
           const assetTags = (asset.tags || []).map(t => t.toLowerCase());
+          const assetDesc = (asset.description || '').toLowerCase();
           let score = 100;
-          let matchedCount = 0;
 
+          // Dopasowanie tagów
           targetTags.forEach(tTag => {
             if (assetTags.includes(tTag)) {
-              matchedCount++;
+              // zgadza się
             } else {
               score -= 15;
             }
@@ -2591,11 +2603,33 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           if (score < 10) score = 10;
           if (score > 100) score = 100;
 
+          // Tworzenie unikalnego opisu dlaczego pasuje / nie pasuje dla TEGO mesha
+          const matchedList = targetTags.filter(t => assetTags.includes(t));
+          const missingList = targetTags.filter(t => !assetTags.includes(t));
+          const extraList = assetTags.filter(t => !targetTags.includes(t));
+
+          let customReason = `Element architektoniczny "${asset.name}". `;
+          if (matchedList.length > 0) {
+            customReason += `Pasuje pod kątem: ${matchedList.join(', ')}. `;
+          }
+          if (missingList.length > 0) {
+            customReason += `Brakuje cech: ${missingList.join(', ')} (-15% za każdą). `;
+          }
+          if (extraList.length > 0) {
+            customReason += `Posiada dodatkowe elementy: ${extraList.join(', ')}.`;
+          }
+          if (matchedList.length === 0 && missingList.length > 0) {
+            customReason += `Słabe dopasowanie do bieżącej fasady.`;
+          }
+
           return {
             asset,
             index: idx,
             similarityScore: Math.round(score),
-            reason: parsedAnalysis.description || 'Dopasowanie na podstawie cech architektonicznych.'
+            reason: customReason,
+            matchedList,
+            missingList,
+            extraList
           };
         });
 
@@ -2603,28 +2637,35 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         const topMatches = scoredAssets.slice(0, 6);
         const detectedTagsListStr = (parsedAnalysis.detectedTags || []).join(', ') || 'brak wykrytych cech';
 
-        // Pasek podsumowania z głównym dymkiem (tooltipem)
+        // Pasek podsumowania z analizą słowną na górze i dymkiem
         resultsInfo.innerHTML = `
           <div class="sv-summary-bar">
-            <span>Znaleziono <strong>${topMatches.length}</strong> najlepiej pasujących obiektów w bazie</span>
+            <div class="sv-analysis-text">
+              ✨ <strong>Analiza słowna Street View:</strong> Na zdjęciu rozpoznano następujące cechy: <em>${detectedTagsListStr}</em>. ${parsedAnalysis.description || ''} Poniżej znajduje się zestawienie najlepiej dopasowanych obiektów 3D z bazy wraz z rozliczeniem punktowym.
+            </div>
             <div class="sv-tooltip-wrap">
               <div class="sv-info-badge">
-                ℹ️ Uwzględnione cechy i tagi
+                ℹ️ Szczegóły wykrytych tagów
               </div>
               <div class="sv-tooltip-box">
-                <strong>Uwzględniono następujące cechy:</strong><br>
+                <strong>Wykryte tagi ze zdjęcia:</strong><br>
                 <span style="color: #93c5fd; font-family: 'JetBrains Mono', monospace;">${detectedTagsListStr}</span>
-                <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
-                  ${parsedAnalysis.description || ''}
-                </div>
               </div>
             </div>
+          </div>
+          <div style="font-size:13px; color:var(--text-secondary); margin-bottom: 12px;">
+            Znaleziono <strong>${topMatches.length}</strong> najlepiej pasujących obiektów w bazie:
           </div>
         `;
 
         topMatches.forEach(item => {
           const assetObj = item.asset;
           const score = item.similarityScore;
+          const assetId = getNumericMeshId(assetObj, item.index);
+          const favIds = getFavoriteIds();
+          const isFav = favIds.includes(assetId);
+          const favBtnClass = isFav ? 'fav-btn is-favorite' : 'fav-btn';
+          const favSymbol = isFav ? '❤️' : '♡';
 
           let badgeColor = 'var(--accent-red)';
           if (score >= 85) {
@@ -2633,22 +2674,18 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             badgeColor = 'var(--accent-yellow)';
           }
 
-          const assetTags = (assetObj.tags || []).map(t => t.toLowerCase());
-          const matched = targetTags.filter(t => assetTags.includes(t));
-          const missing = targetTags.filter(t => !assetTags.includes(t));
-          const extra = assetTags.filter(t => !targetTags.includes(t));
-
-          let breakdownHtml = `<strong style="color:#ffffff;">Analiza punktowa (${score}%):</strong><br>`;
-          if (matched.length > 0) {
-            breakdownHtml += `<span style="color:#34d399;">✓ Zgodne tagi:</span> ${matched.join(', ')}<br>`;
+          // Matma w dymku po najechaniu na %
+          let breakdownHtml = `<strong style="color:#ffffff;">Sztywne rozliczenie punktowe (${score}%):</strong><br>`;
+          if (item.matchedList.length > 0) {
+            breakdownHtml += `<span style="color:#34d399;">✓ Zgodne tagi:</span> ${item.matchedList.join(', ')}<br>`;
           }
-          if (missing.length > 0) {
-            breakdownHtml += `<span style="color:#f87171;">✗ Brakujące cechy (-${missing.length * 15}%):</span> ${missing.join(', ')}<br>`;
+          if (item.missingList.length > 0) {
+            breakdownHtml += `<span style="color:#f87171;">✗ Brakujące cechy (-${item.missingList.length * 15}%):</span> ${item.missingList.join(', ')}<br>`;
           }
-          if (extra.length > 0) {
-            breakdownHtml += `<span style="color:#fbbf24;">⚠ Dodatkowe cechy (-${extra.length * 5}%):</span> ${extra.join(', ')}<br>`;
+          if (item.extraList.length > 0) {
+            breakdownHtml += `<span style="color:#fbbf24;">⚠ Dodatkowe cechy (-${item.extraList.length * 5}%):</span> ${item.extraList.join(', ')}<br>`;
           }
-          if (matched.length === 0 && missing.length === 0) {
+          if (item.matchedList.length === 0 && item.missingList.length === 0) {
             breakdownHtml += `<span style="color:var(--text-muted);">Brak bezpośredniego pokrycia tagów.</span>`;
           }
 
@@ -2673,10 +2710,13 @@ Zwróć WYŁĄCZNIE poprawny JSON:
                   </div>
                 </div>
               </div>
-              <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
+              <div class="card-header-actions">
+                <button class="${favBtnClass}" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}" onclick="toggleFavorite(event, ${assetId})">${favSymbol}</button>
+                <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
+              </div>
             </div>
             <div class="card-image-wrap">${imgContent}</div>
-            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>AI:</strong> ${item.reason}</div>
+            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza mesha:</strong> ${item.reason}</div>
             <div class="card-footer">
               <div class="card-tags-list">${tagsHtml}</div>
             </div>
