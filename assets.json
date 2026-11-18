@@ -62,7 +62,8 @@
         "Nadokiennik",
         "Ściana",
         "Klasyczny",
-        "Fasada"
+        "Fasada",
+        "Łukowe"
       ],
       "description": "Moduł ściany z dwoma prostokątnymi oknami ozdobionymi klasycznymi nadokiennikami i opaskami. Całość reprezentuje tradycyjny element architektoniczny fasady budynku.",
       "addedAt": "2026-11-17T23:02:27.475Z"
