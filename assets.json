@@ -24,7 +24,22 @@
     "Balustrada",
     "Cokół",
     "Parapet",
-    "Opaska okienna"
+    "Opaska okienna",
+    "Okno wielokwaterowe",
+    "Pilaster",
+    "Okno dwuskrzydłowe",
+    "Lufcik",
+    "Przyczółek",
+    "Tralki",
+    "Łukowe drzwi",
+    "Drzwi dwuskrzydłowe",
+    "Przyczółek trójkątny",
+    "Witryna sklepowa",
+    "Świetlik nadokienny",
+    "Okno poziome",
+    "Świetlik poziomy",
+    "Gzyms nadokienny",
+    "Okno łukowe"
   ],
   "assets": [
     {
@@ -447,6 +462,316 @@
       ],
       "description": "Moduł fasady budynku z dwoma prostokątnymi oknami i wystającą płytą balkonową zabezpieczoną metalową balustradą. Ściana posiada widoczny cokół w dolnej części.",
       "addedAt": "2026-11-17T23:39:56.186Z"
+    },
+    {
+      "id": 28,
+      "name": "SM_001_D_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/BeNeLux/SM_001_D_LOD0.SM_001_D_LOD0",
+      "image": "images/SM_001_D_LOD0_e9qba.png",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Kamienica",
+        "Balkon francuski",
+        "Gzyms",
+        "Fasada",
+        "Balustrada",
+        "Ściana",
+        "Klasyczny",
+        "Okno wielokwaterowe",
+        "Pilaster"
+      ],
+      "description": "Fasada budynku charakteryzuje się dwoma dużymi oknami o konstrukcji wielokwaterowej z ozdobnymi podziałami szyb. Pod każdym z okien znajduje się niewielki balkon francuski zabezpieczony dekoracyjną balustradą. Całość uzupełniają pionowe pilastry rozdzielające osie okienne oraz profilowane gzymsy.",
+      "addedAt": "2026-11-18T19:05:21.976Z"
+    },
+    {
+      "id": 29,
+      "name": "SM_001_D_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Berlin/SM_001_D_LOD0.SM_001_D_LOD0",
+      "image": "images/SM_001_D_LOD0_134gs.png",
+      "tags": [
+        "Okna",
+        "Drzwi",
+        "Balkon",
+        "Ściana",
+        "Fasada",
+        "Balustrada"
+      ],
+      "description": "Fasada budynku posiada duże, przeszklone drzwi balkonowe podzielone na cztery główne skrzydła oraz przylegające do nich węższe skrzydło boczne. Przed otworem drzwiowym znajduje się niewielki balkon zabezpieczony prostą metalową balustradą.",
+      "addedAt": "2026-11-18T19:05:55.967Z"
+    },
+    {
+      "id": 30,
+      "name": "SM_001_D_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Historical/SM_001_D_LOD0.SM_001_D_LOD0",
+      "image": "images/SM_001_D_LOD0_k4qib.png",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Ściana",
+        "Balustrada",
+        "Parapet",
+        "Fasada",
+        "Okno dwuskrzydłowe",
+        "Lufcik",
+        "Roleta"
+      ],
+      "description": "Fasada budynku posiada dwa duże okna dwuskrzydłowe, nad którymi umieszczone są mniejsze poziome okna typu lufcik. Całość uzupełnia wysunięty balkon z ozdobną balustradą oraz widocznymi wspornikami podtrzymującymi płytę balkonową.",
+      "addedAt": "2026-11-18T19:06:25.295Z"
+    },
+    {
+      "id": 31,
+      "name": "SM_001_D_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Residential/SM_001_D_LOD0.SM_001_D_LOD0",
+      "image": "images/SM_001_D_LOD0_honzp.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Kamienica",
+        "Klasyczny",
+        "Fasada",
+        "Gzyms",
+        "Nadokiennik",
+        "Balustrada",
+        "Parapet",
+        "Opaska okienna",
+        "Okno dwuskrzydłowe",
+        "Przyczółek",
+        "Tralki"
+      ],
+      "description": "Fasada budynku zawiera duże okno dwuskrzydłowe osadzone w ozdobnej oprawie. Nad oknem znajduje się wydatny gzyms oraz klasyczny nadokiennik o formie trójkątnego przyczółka. Podokiennik ozdobiony jest balustradą z tralkami, a naroża ściany akcentowane są boniowaniem.",
+      "addedAt": "2026-11-18T19:07:02.799Z"
+    },
+    {
+      "id": 32,
+      "name": "SM_001_D_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/France/SM_001_D_LOD0.SM_001_D_LOD0",
+      "image": "images/SM_001_D_LOD0_e9qba.png",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Kamienica",
+        "Balkon francuski",
+        "Gzyms",
+        "Fasada",
+        "Balustrada",
+        "Parapet",
+        "Okno dwuskrzydłowe",
+        "Okno wielokwaterowe"
+      ],
+      "description": "Fasada budynku zawiera dwa wysokie okna dwuskrzydłowe z podziałem szczeblinami na kwatery. Pod każdym z okien umieszczono ozdobne balustrady tworzące balkony francuskie oraz profilowany gzyms podokienny. Całość kompozycji dopełnia ciągły gzyms biegnący pod linią okien.",
+      "addedAt": "2026-11-18T19:07:23.446Z"
+    },
+    {
+      "id": 33,
+      "name": "SM_001_Door_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Door/BeNeLux/SM_001_Door_LOD0.SM_001_Door_LOD0",
+      "image": "images/SM_001_Door_LOD0_c4tmj.png",
+      "tags": [
+        "Okna",
+        "Drzwi",
+        "Ściana",
+        "Kamienica",
+        "Łukowe",
+        "Cokół",
+        "Opaska okienna",
+        "Okno wielokwaterowe",
+        "Nadokiennik",
+        "Fasada",
+        "Klasyczny",
+        "Łukowe drzwi"
+      ],
+      "description": "Fasada budynku posiada duże okno wielokwaterowe o łukowym zwieńczeniu oraz dwuskrzydłowe drzwi wejściowe z nadświetlem. Otwory ścienne ozdobione są profilowanymi opaskami i łukowymi nadokiennikami, a w dolnej części elewacji znajduje się wyraźnie wyodrębniony cokoł.",
+      "addedAt": "2026-11-18T19:08:09.902Z"
+    },
+    {
+      "id": 34,
+      "name": "SM_001_Door_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Door/CH_AUT/Residential/SM_001_Door_LOD0.SM_001_Door_LOD0",
+      "image": "images/SM_001_Door_LOD0_qqotv.png",
+      "tags": [
+        "Drzwi",
+        "Ściana",
+        "Klasyczny",
+        "Gzyms",
+        "Przyczółek",
+        "Fasada",
+        "Schody",
+        "Drzwi dwuskrzydłowe",
+        "Przyczółek trójkątny"
+      ],
+      "description": "Fasada budynku charakteryzuje się centralnie umieszczonym wejściem z drzwiami dwuskrzydłowymi, do których prowadzą półkoliste schody. Nad drzwiami znajduje się nadokiennik zwieńczony trójkątnym przyczółkiem oraz ozdobne gzymsy biegnące wzdłuż górnej krawędzi ściany.",
+      "addedAt": "2026-11-18T19:08:43.725Z"
+    },
+    {
+      "id": 35,
+      "name": "SM_001_Door_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Door/Residential/SM_001_Door_LOD0.SM_001_Door_LOD0",
+      "image": "images/SM_001_Door_LOD0_c4tmj.png",
+      "tags": [
+        "Sklep",
+        "Witryna",
+        "Ściana",
+        "Fasada",
+        "Cokół",
+        "Dach",
+        "Schody",
+        "Witryna sklepowa",
+        "Świetlik nadokienny"
+      ],
+      "description": "Fasada budynku posiada przeszkloną witrynę oraz centralnie umieszczone jednoskrzydłowe drzwi wejściowe. Nad drzwiami oraz po bokach witryny znajdują się mniejsze kwatery okienne iświetliki. Całość zwieńczona jest prostym gzymsem dachowym oraz osadzona na cokole z wejściem poprzedzonym stopniami.",
+      "addedAt": "2026-11-18T19:09:10.853Z"
+    },
+    {
+      "id": 36,
+      "name": "SM_001_E_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Berlin/SM_001_E_LOD0.SM_001_E_LOD0",
+      "image": "images/SM_001_E_LOD0_qaq90.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Cokół",
+        "Parapet",
+        "Gzyms",
+        "Fasada",
+        "Świetlik nadokienny",
+        "Nowe",
+        "Okno poziome",
+        "Świetlik poziomy"
+      ],
+      "description": "Prezentowany element przedstawia fragment ściany z umieszczonym w górnej części podłużnym oknem jednoskrzydłowym o charakterze świetlika. Konstrukcja posiada wyraźnie wyodrębniony pas cokołowy w dolnej partii oraz prostą oprawę okienną z parapetem. Całość dopełnia płaski gzyms wieńczący umieszczony na górnej krawędzi ściany.",
+      "addedAt": "2026-11-18T19:09:29.861Z"
+    },
+    {
+      "id": 37,
+      "name": "SM_001_E_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/CH_AUT/Residential/SM_001_E_LOD0.SM_001_E_LOD0",
+      "image": "images/SM_001_E_LOD0_qaq90.png",
+      "tags": [
+        "Okna",
+        "Ściana",
+        "Kamienica",
+        "Gzyms",
+        "Nadokiennik",
+        "Fasada",
+        "Parapet",
+        "Opaska okienna",
+        "Pilaster",
+        "Okno dwuskrzydłowe",
+        "Gzyms nadokienny"
+      ],
+      "description": "Prezentowany element przedstawia fragment fasady budynku z centralnie umieszczonym oknem dwuskrzydłowym. Stolarka okienna osadzona jest w ozdobnej oprawie, nad którą znajduje się wydatny gzyms nadokienny. Naroża ściany wykończone są rustykowanymi pilastrami nadającymi konstrukcji klasyczny charakter.",
+      "addedAt": "2026-11-18T19:10:16.998Z"
+    },
+    {
+      "id": 38,
+      "name": "SM_001_Extra_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Extras/CH_AUT/Historical/SM_001_Extra_LOD0.SM_001_Extra_LOD0",
+      "image": "images/SM_001_Extra_LOD0_yr7n7.png",
+      "tags": [
+        "Okna",
+        "Balkon",
+        "Kamienica",
+        "Łukowe",
+        "Balustrada",
+        "Parapet",
+        "Opaska okienna",
+        "Okno dwuskrzydłowe",
+        "Przyczółek",
+        "Fasada",
+        "Okno łukowe"
+      ],
+      "description": "Fasada budynku charakteryzuje się łukowym oknem dwuskrzydłowym osadzonym w ozdobnej oprawie. Nad otworem okiennym znajduje się dekoracyjny szczyt o falistym kształcie, a w dolnej części elementu umieszczono niewielki balkon z pełną balustradą.",
+      "addedAt": "2026-11-18T19:11:01.292Z"
+    },
+    {
+      "id": 39,
+      "name": "SM_001_F_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Berlin/SM_001_F_LOD0.SM_001_F_LOD0",
+      "image": "images/SM_001_F_LOD0_1c9e9.png",
+      "tags": [
+        "Garaż",
+        "Roleta",
+        "Ściana",
+        "Fasada",
+        "Cokół",
+        "Okno poziome",
+        "Świetlik poziomy",
+        "Wewnątrz"
+      ],
+      "description": "Fasada budynku posiada dwa szerokie otwory garażowe zamykane roletami. Nad każdym z otworów wjazdowych umieszczone jest podłużne, poziome okno pełniące funkcję świetlika. Całość konstrukcji wieńczy prosta, płaska linia dachu.",
+      "addedAt": "2026-11-18T19:11:55.476Z"
+    },
+    {
+      "id": 40,
+      "name": "SM_001_Shop_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Shop/CH_AUT/Residential/SM_001_Shop_LOD0.SM_001_Shop_LOD0",
+      "image": "images/SM_001_Shop_LOD0_i7v03.png",
+      "tags": [
+        "Sklep",
+        "Witryna",
+        "Ściana",
+        "Fasada",
+        "Gzyms",
+        "Witryna sklepowa",
+        "Okno wielokwaterowe",
+        "Świetlik poziomy"
+      ],
+      "description": "Fasada budynku posiada duże okno wielokwaterowe oraz witrynę sklepową z drzwiami dwuskrzydłowymi. Nad głównymi przeszkleniami umieszczono mniejsze świetliki poziome. Całość wieńczy prosty gzyms oraz płaski dach.",
+      "addedAt": "2026-11-18T19:12:24.860Z"
+    },
+    {
+      "id": 41,
+      "name": "SM_001_ShopA_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Shop/France/SM_001_ShopA_LOD0.SM_001_ShopA_LOD0",
+      "image": "images/SM_001_ShopA_LOD0_4xjdg.png",
+      "tags": [
+        "Okna",
+        "Sklep",
+        "Witryna",
+        "Ściana",
+        "Fasada",
+        "Witryna sklepowa"
+      ],
+      "description": "Prezentowany element budynku przedstawia szeroką witrynę sklepową osadzoną w masywnej fasadzie. Konstrukcja nie posiada wyraźnego podziału na skrzydła ani dodatkowego świetlika nad głównego przeszkleniem. Całość uzupełniają proste, geometryczne profile wokół otworu okiennego.",
+      "addedAt": "2026-11-18T19:12:48.323Z"
+    },
+    {
+      "id": 42,
+      "name": "SM_001_ShopA_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Shop/SM_001_ShopA_LOD0.SM_001_ShopA_LOD0",
+      "image": "images/SM_001_ShopA_LOD0_4xjdg.png",
+      "tags": [
+        "Sklep",
+        "Dach",
+        "Witryna",
+        "Ściana",
+        "Fasada",
+        "Parapet",
+        "Opaska okienna",
+        "Witryna sklepowa"
+      ],
+      "description": "Prezentowany element przedstawia nowoczesną witrynę sklepową składającą się z trzech dużych przeszkleń w formie okna trzykwaterowego. Nad całością znajduje się szerokie zadaszenie wsparte na solidnych wspornikach, tworzące daszek ochronny. Fasada uzupełniona jest o widoczny pas podokienny oraz profilowaną opaskę wokół witryny.",
+      "addedAt": "2026-11-18T19:13:07.979Z"
+    },
+    {
+      "id": 43,
+      "name": "SM_001_ShopDoor_LOD0",
+      "fullPath": "/Game/Generated_Buildings/Mesh/Shop/ShopDoor/SM_001_ShopDoor_LOD0.SM_001_ShopDoor_LOD0",
+      "image": "images/SM_001_ShopDoor_LOD0_2uiif.png",
+      "tags": [
+        "Sklep",
+        "Dach",
+        "Witryna",
+        "Ściana",
+        "Fasada",
+        "Cokół",
+        "Opaska okienna",
+        "Witryna sklepowa",
+        "Wewnątrz"
+      ],
+      "description": "Fasada budynku posiada rozległą witrynę sklepową z dużymi przeszkleniami oraz centralnie umieszczone drzwi wejściowe. Nad parterem znajduje się wyraźnie wysunięty, płaski daszek wsparty na profilowanych elementach konstrukcyjnych. Całość dopełniają ozdobne opaski wokół witryn oraz cokół u podstawy ściany.",
+      "addedAt": "2026-11-18T19:13:36.739Z"
     }
   ]
 }
