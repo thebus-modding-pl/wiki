@@ -706,7 +706,6 @@
       transform: translateY(0);
     }
 
-    /* NAPRAWIONY DYMEK KARTY: Otwiera się automatycznie w dół, żeby nigdy się nie uciął */
     .card-score-tooltip-wrap {
       position: relative;
       display: inline-block;
@@ -2381,7 +2380,6 @@
       renderGrid();
       renderMeshPreview();
 
-      // Odświeżenie przycisków ulubionych w wynikach Street View jeśli są wyświetlone
       if (document.getElementById('view-streetview').classList.contains('active') && pendingStreetviewBlob) {
         document.querySelectorAll('.card').forEach(card => {
           const btn = card.querySelector('.fav-btn');
@@ -2546,7 +2544,7 @@
       e.target.value = '';
     }
 
-    // AI STREET VIEW Z POPRAWIONĄ MATEMATYKĄ (SUROWY KARNY ZA RÓŻNE TYPY OBIEKTÓW)
+    // AI STREET VIEW Z PRECYZYJNĄ ANALIZĄ DETALI OKIEN I ŚCIAN
     async function searchStreetviewMatches() {
       if (!pendingStreetviewBlob) return;
 
@@ -2565,7 +2563,7 @@
 
       searchBtn.disabled = true;
       wrapper.classList.add('ai-loading');
-      resultsInfo.textContent = 'AI analizuje budynek i dopasowuje tagi z bazy...';
+      resultsInfo.textContent = 'AI analizuje detale stolarki, układ skrzyżowania/okien i dobiera tagi z bazy...';
       resultsGrid.innerHTML = '';
 
       try {
@@ -2576,12 +2574,19 @@
         });
 
         const allUniqueTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
-        const promptText = `Przeanalizuj zrzut ekranu budynku ze Street View i wyodrębnij jego cechy architektoniczne.
-Wybierz z poniższej listy dostępnych tagów te, które pasują do tego budynku: ${JSON.stringify(allUniqueTags)}.
+        
+        // ZAKTUALIZOWANY PROMPT STREET VIEW (WYMAGAJĄCY SZCZEGÓŁÓW OKIEN I KONSTRUKCJI)
+        const promptText = `Przeanalizuj ten zrzut ekranu budynku ze Street View ze szczególnym uwzględnieniem układu stolarki okiennej i detali fasady.
+Zwróć uwagę na:
+- Liczbę skrzydeł okiennych (np. okno jedno-, dwu- lub trójskrzydłowe),
+- Czy nad głównym oknem znajduje się dodatkowe okno poziome / lufcik / świetlik,
+- Obecność balkonu, balkonu francuskiego, gzymsów, pilastrów lub ozdobnych nadokienników.
+
+Wybierz z listy dostępnych tagów te, które pasują do tego budynku: ${JSON.stringify(allUniqueTags)}.
 Zwróć WYŁĄCZNIE poprawny JSON:
 {
   "detectedTags": ["tag1", "tag2"],
-  "description": "Ogólne podsumowanie cech architektonicznych budynku ze zdjęcia po polsku"
+  "description": "Konkretny opis układu stolarki, liczby skrzydeł, ewentualnych dodatkowych okien poziomych oraz cech architektonicznych ze zdjęcia po polsku."
 }`;
 
         const aiJson = await callGeminiWithFallback(apiKey, promptText, pendingStreetviewBlob.type || 'image/jpeg', base64Data);
@@ -2596,27 +2601,22 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           const assetDescLower = (asset.description || '').toLowerCase();
           let score = 100;
 
-          // Surowa weryfikacja kluczowych konfliktów typu balkon / łuk / itp.
           const isTargetFrenchBalcony = targetTags.includes('balkon francuski');
           const isAssetHasRegularBalcony = assetTags.includes('balkon') || assetNameLower.includes('balkon') || assetDescLower.includes('balkon');
           const isAssetHasFrenchBalcony = assetTags.includes('balkon francuski') || assetNameLower.includes('balkon francuski');
 
-          // Jeśli użytkownik szuka balkonu francuskiego, a obiekt ma zwykły pełny balkon (lub na odwrót), z miejsca ucinamy ocenę!
           if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
-            score -= 45; // Ogromna kara za pomylenie balkonu ze zwykłym
+            score -= 45;
           }
 
           const isTargetArch = targetTags.includes('łukowe') || targetTags.includes('łuk');
           const isAssetArch = assetTags.includes('łukowe') || assetTags.includes('łuk') || assetNameLower.includes('łuk');
           if (isTargetArch !== isAssetArch) {
-            score -= 30; // Kara za niezgodność łuków (np. zwykłe okno vs łukowe)
+            score -= 30;
           }
 
-          // Dopasowanie standardowych tagów
           targetTags.forEach(tTag => {
-            if (assetTags.includes(tTag)) {
-              // OK
-            } else {
+            if (!assetTags.includes(tTag)) {
               score -= 15;
             }
           });
@@ -2663,7 +2663,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         resultsInfo.innerHTML = `
           <div class="sv-summary-bar">
             <div class="sv-analysis-text">
-              ✨ <strong>Analiza słowna Street View:</strong> Rozpoznano cechy: <em>${detectedTagsListStr}</em>. ${parsedAnalysis.description || ''} Obiekty poniżej zostały zweryfikowane pod kątem ścisłych różnic konstrukcyjnych (np. balkon vs balkon francuski).
+              ✨ <strong>Szczegółowa analiza AI Street View:</strong> ${parsedAnalysis.description || ''} (Wykryte tagi: <em>${detectedTagsListStr}</em>). Obiekty zostały porównane pod kątem precyzyjnych detali stolarki i konstrukcji.
             </div>
             <div class="sv-tooltip-wrap">
               <div class="sv-info-badge">
@@ -2696,7 +2696,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             badgeColor = 'var(--accent-yellow)';
           }
 
-          let breakdownHtml = `<strong style="color:#ffffff;">Sztywne rozliczenie punktowe (${score}%):</strong><br>`;
+          let breakdownHtml = `<strong style="color:#ffffff;">Szczegółowe rozliczenie punktowe (${score}%):</strong><br>`;
           if (item.matchedList.length > 0) {
             breakdownHtml += `<span style="color:#34d399;">✓ Zgodne tagi:</span> ${item.matchedList.join(', ')}<br>`;
           }
@@ -3496,7 +3496,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       const origText = btn.textContent;
 
       btn.disabled = true;
-      btn.textContent = 'Generowanie...';
+      btn.textContent = 'Analiza detali...';
       wrapper.classList.add('ai-loading');
 
       try {
@@ -3514,10 +3514,16 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         });
 
         const existingTagsJson = JSON.stringify(availableTags);
-        const promptText = `Jesteś asystentem bazy assetów 3D do gry The Bus. Na obrazku znajduje się moduł architektoniczny (Static Mesh) budynku. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
-1. "description": Opisz po polsku w 1-2 zwięzłych zdaniach wyłącznie konstrukcję, architekturę i kształt tego elementu budynku. ABSOLUTNY ZAKAZ wspominania o szachownicy, przezroczystości, teksturach, kolorach, różowym kolorze tła, niebie ani żadnych elementach otoczenia graficznego.
+        
+        // ZAKTUALIZOWANY PROMPT OPISU MESHÓW (SKUPIONY NA DETALACH STOLARKI I KONSTRUKCJI)
+        const promptText = `Jesteś profesjonalnym architektem i asystentem bazy assetów 3D do gry The Bus. Przeanalizuj ten Static Mesh budynku ze szczególnym naciskiem na detale konstrukcyjne. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
+1. "description": Opisz po polsku w 2-3 konkretnych zdaniach układ elementu, skupiając się na:
+   - Liczbie skrzydeł okiennych (np. okno dwuskrzydłowe, trójskrzydłowe),
+   - Obecności dodatkowych elementów (np. czy nad głównym oknem znajduje się mniejsze okno poziome/świetlik/lufcik, gzymsy, pasy podokienne),
+   - Rodzaju zadaszenia, balkonu lub oprawy.
+   ABSOLUTNY ZAKAZ wspominania o szachownicy, przezroczystości, teksturach, kolorach, różowym tle czy otoczeniu.
 2. "matchedTags": Wybierz z poniższej listy istniejących tagów pasujące: ${existingTagsJson}
-3. "suggestedNewTags": Zaproponuj maksymalnie 1-2 nowe tagi konstrukcyjne lub architektoniczne jeśli brakuje (zakaz tagów dotyczących kolorów, tekstur czy tła, lub tablica []).
+3. "suggestedNewTags": Zaproponuj maksymalnie 2-3 bardzo konkretne nowe tagi techniczne (np. "Okno trójskrzydłowe", "Nadokiennik", "Okno poziome"), jeśli ich brakuje.
 Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags": [] }`;
 
         const aiJson = await callGeminiWithFallback(apiKey, promptText, blob.type || 'image/jpeg', base64Data);
