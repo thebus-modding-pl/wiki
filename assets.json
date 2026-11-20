@@ -824,9 +824,12 @@
         "Parapet",
         "Fasada",
         "Balustrada",
-        "Okno dwuskrzydłowe"
+        "Wnęka okienna",
+        "Okno trójskrzydłowe",
+        "Świetlik nadokienny",
+        "Okno wielokwaterowe"
       ],
-      "description": "Fasada budynku zawiera dwa wysokie okna dwuskrzydłowe o pionowej orientacji. Pod każdym z okien zamontowany jest prosty parapet oraz zabezpieczenie w formie balustrady tworzącej balkon francuski.",
+      "description": "Fasada budynku zawiera okno trójskrzydłowe z dodatkowym mniejszym świetlikiem poziomym umieszczonym w górnej części. Podział stolarki okiennej uzupełnia widoczny parapet zewnętrzny zamontowany w płaszczyźnie ściany. Całość osadzona jest w prostej wnęce okiennej.",
       "addedAt": "2026-11-20T20:10:43.168Z"
     },
     {
@@ -968,12 +971,15 @@
         "Balkon francuski",
         "Parapet",
         "Balustrada",
-        "Okno dwuskrzydłowe",
         "Fasada",
         "Wnęka balkonowa",
-        "Bariera okienna"
+        "Bariera okienna",
+        "Kolumny",
+        "Zadaszenie",
+        "Okno wielokwaterowe",
+        "Klasyczny"
       ],
-      "description": "Fasada budynku posiada dwa okna dwuskrzydłowe osadzone w płaszczyźnie ściany. Po lewej stronie znajduje się wnęka z balkonem zabezpieczonym prostą metalową balustradą. Po prawej stronie umieszczono okno z zamontowaną nisko barierą typu francuskiego oraz widocznym parapetem.",
+      "description": "Fasada budynku posiada duże okno wielokwaterowe z widocznym parapetem u podstawy. Całość osłonięta jest wystającym zadaszeniem wspartym na dwóch ozdobnych kolumnach umieszczonych po bokach.",
       "addedAt": "2026-11-20T20:13:15.942Z"
     },
     {
@@ -1062,13 +1068,14 @@
         "Balustrada",
         "Parapet",
         "Opaska okienna",
-        "Okno dwuskrzydłowe",
         "Wnęka balkonowa",
         "Bariera okienna",
         "Wnęka okienna",
-        "Balkon francuski"
+        "Balkon francuski",
+        "Okno wielokwaterowe",
+        "Okno trójskrzydłowe"
       ],
-      "description": "Prezentowany element przedstawia fragment fasady budynku z głęboką wnęką okienną. Wewnątrz znajduje się okno dwuskrzydłowe osadzone w nowoczesnej oprawie. Przed otworem okiennym umieszczono poziomitą barierę zabezpieczającą typu balkonu francuskiego.",
+      "description": "Fasada budynku zawiera okno trójskrzydłowe osadzone w wyraźnej wnęce okiennej z widocznym parapetem. Całość uzupełniają pionowe elementy konstrukcyjne oraz pasy podokienne dzielące płaszczyznę ściany.",
       "addedAt": "2026-11-20T20:15:41.725Z"
     },
     {
@@ -1751,10 +1758,11 @@
         "Fasada",
         "Parapet",
         "Opaska okienna",
-        "Okno dwuskrzydłowe",
-        "Gzyms nadokienny"
+        "Gzyms nadokienny",
+        "Kamienica",
+        "Wnęka okienna"
       ],
-      "description": "Fasada budynku posiada trzy okna dwuskrzydłowe osadzone w wyraźnych opaskach okiennych. Nad każdym otworem okiennym umieszczony jest dekoracyjny gzyms nadokienny, a pod nimi znajdują się wystające parapety. Całość tworzy klasyczny układ architektoniczny.",
+      "description": "Fasada budynku posiada trzy prostokątne otwory okienne rozmieszczone w dwóch osiach. Okna są dwuskrzydłowe z podziałem pionowym na kwatery. Nad każdym oknem umieszczony jest dekoracyjny element nadokiennika, a całość uzupełniają wyraźnie zaznaczone parapety.",
       "addedAt": "2026-11-20T20:28:53.979Z"
     },
     {
@@ -1768,10 +1776,10 @@
         "Ściana",
         "Gzyms",
         "Okno wielokwaterowe",
-        "Okno dwuskrzydłowe",
         "Okno trójskrzydłowe",
         "Świetlik nadokienny",
-        "Pilaster"
+        "Pilaster",
+        "Roleta"
       ],
       "description": "Fasada budynku charakteryzuje się trzema dużymi otworami okiennymi o zróżnicowanej szerokości, w tym centralnym oknem trójskrzydłowym oraz bocznymi oknami dwuskrzydłowymi. Nad głównymi kwaterami okiennymi umieszczone są mniejsze, poziome świetliki nadokienne podzielone na mniejsze kwadratowe kwatery. Całość osadzona jest w płaszczyźnie ściany z wyraźnie zaznaczonymi filarami i gzymsem wieńczącym.",
       "addedAt": "2026-11-20T20:29:02.003Z"
@@ -1882,7 +1890,6 @@
         "Ściana",
         "Parapet",
         "Opaska okienna",
-        "Okno dwuskrzydłowe",
         "Fasada"
       ],
       "description": "Fasada budynku posiada dwa osadzone w ścianie okna z wyraźnymi parapetami. Po lewej stronie znajduje się okno mniejsze, prawdopodobnie jednoskrzydłowe lub dwuskrzydłowe, natomiast po prawej stronie umieszczono większe okno dwuskrzydłowe. Całość stanowi prosty fragment ściany zewnętrznej z elementami stolarki otworowej.",
