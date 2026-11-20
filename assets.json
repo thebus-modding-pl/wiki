@@ -530,20 +530,16 @@
       "fullPath": "/Game/Generated_Buildings/Mesh/Facade/Office/SM_001_C_LOD0.SM_001_C_LOD0",
       "image": "images/26.png",
       "tags": [
-        "Okna",
-        "Drzwi",
-        "Roleta",
-        "Ściana",
         "Cokół",
-        "Gzyms",
         "Fasada",
-        "Balkon",
-        "Balustrada",
-        "Wnęka balkonowa",
-        "Parapet",
-        "Drzwi balkonowe"
+        "Gzyms",
+        "Ściana",
+        "Witryna",
+        "Sklep",
+        "Roleta",
+        "Witryna sklepowa"
       ],
-      "description": "Bryła budynku przedstawia fragment ściany z wnęką balkonową i poziomą balustradą zabezpieczającą. W elewacji osadzone są drzwi balkonowe oraz jednoskrzydłowe okno, a całość konstrukcji dopełnia wyraźnie zaznaczony cokół w dolnej części.",
+      "description": "Prezentowany element to płaska fasada budynku zawierająca przeszklone witryny oraz centralnie umieszczone drzwi. W górnej części znajduje się szeroki, pochyły gzyms dachowy, natomiast u podstawy umieszczono niski cokół. Duże przeszklenia podzielone są pionowymi słupkami konstrukcyjnymi.",
       "addedAt": "2026-11-17T23:38:58.107Z"
     },
     {
