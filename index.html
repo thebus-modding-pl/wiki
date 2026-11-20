@@ -598,7 +598,6 @@
       border-color: #18181c;
     }
 
-    /* ZABLOKOWANA SZEROKOŚĆ LICZNIKA — zapobiega przesuwaniu się przycisków filtrów */
     .tag-count {
       background-color: rgba(255, 255, 255, 0.08);
       padding: 2px 6px;
@@ -846,7 +845,6 @@
       line-height: 1.35;
     }
 
-    /* NOWOŚĆ Z DYMKEM PO NAJECHANIU */
     .badge-new-wrap {
       position: relative;
       display: inline-flex;
@@ -1999,7 +1997,6 @@
       </div>
     </div>
 
-    <!-- ZAKŁADKA AI STREET VIEW -->
     <div id="view-streetview" class="view-section">
       <div class="container">
         <header class="hero">
@@ -2184,7 +2181,7 @@
 
         <div class="form-group">
           <label class="form-label">
-            <span>Zdjęcie obiektu PNG (zapis w /images na GitHubie w tle)</span>
+            <span>Zdjęcie obiektu PNG (zapisuje się jako images/&lt;ID&gt;.png)</span>
             <button type="button" class="btn-admin-config" style="padding:3px 8px; font-size:10px;" onclick="openGithubConfigModal()">⚙ GitHub Token</button>
           </label>
           <div class="paste-dropzone" id="mf-paste-zone" onclick="document.getElementById('mf-file-input').click()">
@@ -2194,7 +2191,7 @@
             <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
             <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
           </div>
-          <input type="text" id="mf-image" class="form-input" placeholder="images/SM_001_a9f2.png (wypełni się automatycznie)" oninput="onManualImageUrlInput()">
+          <input type="text" id="mf-image" class="form-input" placeholder="images/1.png (wypełni się automatycznie po ID)" oninput="onManualImageUrlInput()">
           <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link.</div>
 
           <div class="automation-checks-group">
@@ -2462,17 +2459,22 @@
       };
     }
 
-    function generateUniqueImageFilename(shortName) {
-      const cleanName = shortName.replace(/[^a-zA-Z0-9_-]/g, '_');
-      const suffix = Math.random().toString(36).substring(2, 7);
-      return `images/${cleanName}_${suffix}.png`;
+    /* NAZWA PLIKU ZDJĘCIA ZAWSZE W FORMACIE images/<ID>.png */
+    function getMeshImagePathById(meshId) {
+      return `images/${Number(meshId)}.png`;
+    }
+
+    function getActiveFormMeshId() {
+      if (editingMeshIndex !== null && allAssets[editingMeshIndex]) {
+        return getNumericMeshId(allAssets[editingMeshIndex], editingMeshIndex);
+      }
+      return getNextMeshId();
     }
 
     function onMeshPathInput() {
-      const rawPathVal = document.getElementById('mf-name').value.trim();
-      if (rawPathVal && pendingImageBlob) {
-        const { fullName } = parseUnrealPath(rawPathVal);
-        document.getElementById('mf-image').value = generateUniqueImageFilename(fullName);
+      const targetId = getActiveFormMeshId();
+      if (pendingImageBlob) {
+        document.getElementById('mf-image').value = getMeshImagePathById(targetId);
       }
     }
 
@@ -2487,8 +2489,8 @@
     }
 
     function getNumericMeshId(asset, fallbackIndex) {
-      if (typeof asset.id === 'number') return asset.id;
-      const parsed = parseInt(asset.id, 10);
+      if (asset && typeof asset.id === 'number') return asset.id;
+      const parsed = asset ? parseInt(asset.id, 10) : NaN;
       return !isNaN(parsed) ? parsed : fallbackIndex + 1;
     }
 
@@ -2500,7 +2502,6 @@
       return age >= 0 && age < THREE_DAYS_MS;
     }
 
-    /* FORMATOWANIE RELATYWNEGO CZASU DLA DYMKA PRZY ZNACZNIKU NOWOŚĆ */
     function formatRelativeTime(addedAt) {
       if (!addedAt) return '';
       const timestamp = new Date(addedAt).getTime();
@@ -2592,20 +2593,16 @@
       clearFieldError('mf-image', 'err-mf-image');
       pendingImageBlob = rawBlob;
 
+      const targetId = getActiveFormMeshId();
+      const targetPath = getMeshImagePathById(targetId);
+
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
 
       previewEl.src = URL.createObjectURL(rawBlob);
       previewEl.classList.add('visible');
-      statusText.innerHTML = '✅ Obraz załadowany! (wyśle się w tle po kliknięciu Zapisz)';
-
-      const rawPathVal = document.getElementById('mf-name').value.trim();
-      if (rawPathVal) {
-        const { fullName } = parseUnrealPath(rawPathVal);
-        document.getElementById('mf-image').value = generateUniqueImageFilename(fullName);
-      } else {
-        document.getElementById('mf-image').value = `images/mesh_${Math.random().toString(36).substring(2, 7)}.png`;
-      }
+      statusText.innerHTML = `✅ Obraz gotowy jako <strong>${targetPath}</strong> (wyśle się po zapisie)`;
+      document.getElementById('mf-image').value = targetPath;
 
       if (isAutoAiEnabled()) {
         generateAiMeshDescription();
@@ -2836,7 +2833,8 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       }
     }
 
-    async function uploadPendingImageToGithubInBackground(blob, targetRepoFilePath) {
+    /* UPLOAD ZDJĘCIA JAKO images/<ID>.png Z OBSŁUGĄ NADPISYWANIA (SHA) PRZY EDYCJI */
+    async function uploadPendingImageToGithubInBackground(blob, targetRepoFilePath, meshId) {
       if (!blob) return targetRepoFilePath;
       const toast = showToast(`Wysyłanie ${targetRepoFilePath}...`);
 
@@ -2856,21 +2854,39 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         });
 
         const apiUrl = `https://api.github.com/repos/${repo}/contents/${targetRepoFilePath}`;
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        };
+
+        let existingSha = null;
+        const headCheck = await fetch(apiUrl, { method: 'GET', headers });
+        if (headCheck.ok) {
+          const existingData = await headCheck.json();
+          if (existingData && existingData.sha) {
+            existingSha = existingData.sha;
+          }
+        }
+
+        const payload = {
+          message: existingSha
+            ? `Nadpisano zdjęcie ${targetRepoFilePath} (ID ${meshId})`
+            : `Dodano zdjęcie ${targetRepoFilePath} (ID ${meshId})`,
+          content: base64Content
+        };
+        if (existingSha) {
+          payload.sha = existingSha;
+        }
+
         const resp = await fetch(apiUrl, {
           method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.github+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: `Dodano zdjęcie ${targetRepoFilePath} w tle przez panel admina`,
-            content: base64Content
-          })
+          headers,
+          body: JSON.stringify(payload)
         });
 
         if (resp.ok) {
-          toast.success(`Wgrano na serwer: ${targetRepoFilePath}`);
+          toast.success(existingSha ? `Nadpisano na serwerze: ${targetRepoFilePath}` : `Wgrano na serwer: ${targetRepoFilePath}`);
         } else {
           toast.error(`Błąd wgrania pliku na serwer GitHub`);
         }
@@ -3073,6 +3089,11 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           availableTags = data.tags || Array.from(new Set(allAssets.flatMap(a => a.tags)));
         }
 
+        allAssets = allAssets.map((a, idx) => ({
+          ...a,
+          id: getNumericMeshId(a, idx)
+        }));
+
         updateMeshStats();
         renderTags();
         renderGrid();
@@ -3118,7 +3139,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       );
     }
 
-    /* FILTRY: "Wszystkie" i "Ulubione" zawsze na początku, reszta posortowana od A do Z */
     function renderTags() {
       const allUniqueTags = Array.from(new Set([...availableTags, ...allAssets.flatMap(a => a.tags)]))
         .sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
@@ -3228,8 +3248,10 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
       const tagsHtml = asset.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
       const newBadgeHtml = buildNewBadgeHtml(asset.addedAt);
-      const imgContent = asset.image
-        ? `<img src="${asset.image}" alt="${asset.name}" loading="lazy" onerror="handleImageError(this)">`
+      const cacheBuster = asset._imgVersion ? `?v=${asset._imgVersion}` : '';
+      const imgSrc = asset.image ? `${asset.image}${cacheBuster}` : '';
+      const imgContent = imgSrc
+        ? `<img src="${imgSrc}" alt="${asset.name}" loading="lazy" onerror="handleImageError(this)">`
         : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
 
       card.innerHTML = `
@@ -3328,32 +3350,35 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       const statusText = document.getElementById('mf-paste-status');
       const previewEl = document.getElementById('mf-paste-preview');
       const submitNextBtn = document.getElementById('mf-submit-next-btn');
-      statusText.innerHTML = 'Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zdjęcie PNG, przeciągnij plik lub <u>wybierz z dysku</u>';
+      const activeId = getActiveFormMeshId();
+      const defaultPath = getMeshImagePathById(activeId);
+
+      statusText.innerHTML = `Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zdjęcie PNG (zapisze się jako <strong>${defaultPath}</strong>), przeciągnij lub <u>wybierz z dysku</u>`;
 
       if (index !== null) {
         const asset = allAssets[index];
-        document.getElementById('mesh-form-eyebrow').textContent = 'EDYCJA OBIEKTU';
+        document.getElementById('mesh-form-eyebrow').textContent = `EDYCJA OBIEKTU • ID ${activeId}`;
         document.getElementById('mesh-form-title').textContent = 'EDYTUJ MESH';
         document.getElementById('mf-submit-btn').textContent = 'Zapisz zmiany';
         submitNextBtn.style.display = 'none';
         document.getElementById('mf-name').value = asset.fullPath || asset.name;
-        document.getElementById('mf-image').value = asset.image || '';
+        document.getElementById('mf-image').value = asset.image || defaultPath;
         document.getElementById('mf-desc').value = asset.description || '';
         modalSelectedTags = new Set(asset.tags);
 
         if (asset.image) {
-          previewEl.src = asset.image;
+          previewEl.src = asset._imgVersion ? `${asset.image}?v=${asset._imgVersion}` : asset.image;
           previewEl.classList.add('visible');
         } else {
           previewEl.classList.remove('visible');
         }
       } else {
-        document.getElementById('mesh-form-eyebrow').textContent = 'NOWY WPIS';
+        document.getElementById('mesh-form-eyebrow').textContent = `NOWY WPIS • ID ${activeId}`;
         document.getElementById('mesh-form-title').textContent = 'DODAJ MESH';
         document.getElementById('mf-submit-btn').textContent = 'Dodaj do listy';
         submitNextBtn.style.display = 'inline-block';
         document.getElementById('mf-name').value = '';
-        document.getElementById('mf-image').value = '';
+        document.getElementById('mf-image').value = defaultPath;
         document.getElementById('mf-desc').value = '';
         modalSelectedTags = new Set();
         previewEl.classList.remove('visible');
@@ -3426,17 +3451,27 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
       refreshAdminActivity();
       const { fullName, fullPath } = parseUnrealPath(rawPathVal);
+      const meshId = getActiveFormMeshId();
+      const imgVersion = Date.now();
 
       if (pendingImageBlob) {
-        image = generateUniqueImageFilename(fullName);
-        uploadPendingImageToGithubInBackground(pendingImageBlob, image).then(uploadedPath => {
-          const found = allAssets.find(a => a.fullPath === fullPath || a.name === fullName);
+        image = getMeshImagePathById(meshId);
+        const localBlobUrl = URL.createObjectURL(pendingImageBlob);
+        uploadPendingImageToGithubInBackground(pendingImageBlob, image, meshId).then(() => {
+          const found = allAssets.find(a => getNumericMeshId(a, 0) === meshId);
           if (found) {
-            found.image = uploadedPath;
+            found.image = image;
+            found._imgVersion = Date.now();
             renderGrid();
             renderMeshPreview();
           }
         });
+
+        if (editingMeshIndex !== null) {
+          allAssets[editingMeshIndex]._tempPreviewUrl = localBlobUrl;
+        }
+      } else if (!image) {
+        image = getMeshImagePathById(meshId);
       }
 
       tags.forEach(tag => {
@@ -3447,25 +3482,27 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         const current = allAssets[editingMeshIndex];
         allAssets[editingMeshIndex] = {
           ...current,
-          id: current.id !== undefined ? current.id : getNumericMeshId(current, editingMeshIndex),
+          id: meshId,
           name: fullName,
           fullPath,
           image,
           tags,
           description,
           addedAt: current.addedAt || new Date().toISOString(),
-          _status: current._status === 'added' ? 'added' : 'edited'
+          _status: current._status === 'added' ? 'added' : 'edited',
+          _imgVersion: imgVersion
         };
       } else {
         allAssets.push({
-          id: getNextMeshId(),
+          id: meshId,
           name: fullName,
           fullPath,
           image,
           tags,
           description,
           addedAt: new Date().toISOString(),
-          _status: 'added'
+          _status: 'added',
+          _imgVersion: imgVersion
         });
       }
 
@@ -3476,7 +3513,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
       if (addAnother) {
         openMeshFormModal(null, null);
-        document.getElementById('mesh-form-eyebrow').textContent = `DODANO POPRZEDNI (${fullName}) • KOLEJNY WPIS`;
+        document.getElementById('mesh-form-eyebrow').textContent = `DODANO POPRZEDNI (${fullName}) • KOLEJNY WPIS (ID ${getActiveFormMeshId()})`;
       } else {
         closeModal('mesh-form-modal');
       }
@@ -3501,7 +3538,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       refreshAdminActivity();
       const cleanAssets = allAssets
         .filter(a => a._status !== 'deleted')
-        .map(({ _status, _prevStatus, ...rest }) => rest);
+        .map(({ _status, _prevStatus, _imgVersion, _tempPreviewUrl, ...rest }) => rest);
 
       const sortedExportTags = [...availableTags].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
       const output = { tags: sortedExportTags, assets: cleanAssets };
@@ -3606,7 +3643,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
         const existingTagsJson = JSON.stringify(availableTags);
 
-        /* RYGORYSTYCZNY PROMPT DLA FILTRÓW (TAGÓW) PRZY BOGATYM OPISIE */
         const promptText = `Jesteś profesjonalnym architektem i asystentem bazy assetów 3D do gry The Bus. Przeanalizuj ten Static Mesh budynku. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
 
 1. "description": Opisz swobodnie i szczegółowo po polsku w 2-3 konkretnych zdaniach wszystko, co widzisz w konstrukcji tego elementu (liczba skrzydeł okiennych, np. dwuskrzydłowe/trójskrzydłowe, dodatkowe okna poziome/lufciki nad oknem, gzymsy, balkony, pasy podokienne, zadaszenia, kształt bryły).
@@ -3821,24 +3857,6 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
       renderTutorialsPreview();
     }
 
-    function exportTutorialsJson(btn) {
-      refreshAdminActivity();
-      const cleanTutorials = allTutorials
-        .filter(t => t._status !== 'deleted')
-        .map(({ _status, _prevStatus, ...rest }) => rest);
-
-      navigator.clipboard.writeText(JSON.stringify(cleanTutorials, null, 2));
-      const orig = btn.textContent;
-      btn.textContent = '✓ Skopiowano JSON do schowka!';
-      btn.style.background = '#10b981';
-      btn.style.color = '#000';
-      setTimeout(() => {
-        btn.textContent = orig;
-        btn.style.background = '';
-        btn.style.color = '';
-      }, 2000);
-    }
-
     function applyPreviewTransform() {
       const box = document.getElementById('modal-media-box');
       const img = document.getElementById('modal-preview-img');
@@ -3879,9 +3897,10 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
       const mediaBox = document.getElementById('modal-media-box');
 
       if (asset.image) {
+        const src = asset._imgVersion ? `${asset.image}?v=${asset._imgVersion}` : asset.image;
         mediaBox.innerHTML = `
           <button type="button" class="zoom-toggle-btn" id="zoom-toggle-btn" title="Przybliż / Oddal">+</button>
-          <img id="modal-preview-img" src="${asset.image}" alt="${asset.name}" draggable="false" onerror="handleImageError(this)">
+          <img id="modal-preview-img" src="${src}" alt="${asset.name}" draggable="false" onerror="handleImageError(this)">
           <div class="zoom-hint-badge" id="zoom-hint-badge">🔍 Kliknij obraz, aby przybliżyć</div>
         `;
         setupPreviewZoomControls();
