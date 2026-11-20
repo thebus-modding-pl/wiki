@@ -556,6 +556,7 @@
     .tag-pill {
       display: inline-flex;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
       background-color: var(--bg-surface);
       border: 1px solid var(--border-color);
@@ -565,7 +566,7 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
     }
 
     .tag-pill:hover:not(:disabled) {
@@ -597,12 +598,18 @@
       border-color: #18181c;
     }
 
+    /* ZABLOKOWANA SZEROKOŚĆ LICZNIKA — zapobiega przesuwaniu się przycisków filtrów */
     .tag-count {
       background-color: rgba(255, 255, 255, 0.08);
-      padding: 2px 7px;
+      padding: 2px 6px;
       border-radius: 999px;
       font-size: 11px;
       font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      min-width: 28px;
+      text-align: center;
+      display: inline-block;
+      flex-shrink: 0;
     }
 
     .tag-pill.active .tag-count {
@@ -839,6 +846,13 @@
       line-height: 1.35;
     }
 
+    /* NOWOŚĆ Z DYMKEM PO NAJECHANIU */
+    .badge-new-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
     .badge-new {
       background: rgba(16, 185, 129, 0.18);
       border: 1px solid rgba(16, 185, 129, 0.55);
@@ -851,6 +865,34 @@
       border-radius: 5px;
       text-transform: uppercase;
       white-space: nowrap;
+      cursor: help;
+    }
+
+    .badge-new-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background-color: #18181c;
+      color: #ffffff;
+      border: 1px solid var(--border-hover);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 60;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85);
+      transform: translateY(-4px);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      pointer-events: none;
+    }
+
+    .badge-new-wrap:hover .badge-new-tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .card-header-actions {
@@ -2192,7 +2234,7 @@
                 <div class="tag-selector-list" id="mf-tag-list"></div>
               </div>
               <div class="ai-tags-hint" id="ai-tags-hint">
-                <span>✨ <strong>AI zasugerowało nowe tagi</strong> (na niebiesko). Kliknij tag powyżej, aby go odznaczyć, lub odrzuć wszystkie:</span>
+                <span>✨ <strong>AI zasugerowało brakującą ogólną kategorię</strong> (na niebiesko). Kliknij tag powyżej, aby go odznaczyć, lub odrzuć:</span>
                 <button type="button" class="btn-dismiss-ai-tags" onclick="rejectAllAiSuggestedTags()">Odrzuć sugestie</button>
               </div>
             </div>
@@ -2458,6 +2500,52 @@
       return age >= 0 && age < THREE_DAYS_MS;
     }
 
+    /* FORMATOWANIE RELATYWNEGO CZASU DLA DYMKA PRZY ZNACZNIKU NOWOŚĆ */
+    function formatRelativeTime(addedAt) {
+      if (!addedAt) return '';
+      const timestamp = new Date(addedAt).getTime();
+      if (isNaN(timestamp)) return '';
+      const diffMs = Math.max(0, Date.now() - timestamp);
+
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 1) return 'Dodano: przed chwilą';
+      if (mins < 60) {
+        if (mins === 1) return 'Dodano: 1 minutę temu';
+        const mod10 = mins % 10;
+        const mod100 = mins % 100;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+          return `Dodano: ${mins} minuty temu`;
+        }
+        return `Dodano: ${mins} minut temu`;
+      }
+
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) {
+        if (hours === 1) return 'Dodano: 1 godzinę temu';
+        const mod10 = hours % 10;
+        const mod100 = hours % 100;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+          return `Dodano: ${hours} godziny temu`;
+        }
+        return `Dodano: ${hours} godzin temu`;
+      }
+
+      const days = Math.floor(hours / 24);
+      if (days === 1) return 'Dodano: 1 dzień temu';
+      return `Dodano: ${days} dni temu`;
+    }
+
+    function buildNewBadgeHtml(addedAt) {
+      if (!isNewItem(addedAt)) return '';
+      const relTime = formatRelativeTime(addedAt);
+      return `
+        <span class="badge-new-wrap">
+          <span class="badge-new">NOWOŚĆ</span>
+          <span class="badge-new-tooltip">${relTime}</span>
+        </span>
+      `;
+    }
+
     function getTimestamp(addedAt) {
       if (!addedAt) return 0;
       const t = new Date(addedAt).getTime();
@@ -2544,7 +2632,6 @@
       e.target.value = '';
     }
 
-    // AI STREET VIEW Z PRECYZYJNĄ ANALIZĄ DETALI OKIEN I ŚCIAN
     async function searchStreetviewMatches() {
       if (!pendingStreetviewBlob) return;
 
@@ -2563,7 +2650,7 @@
 
       searchBtn.disabled = true;
       wrapper.classList.add('ai-loading');
-      resultsInfo.textContent = 'AI analizuje detale stolarki, układ skrzyżowania/okien i dobiera tagi z bazy...';
+      resultsInfo.textContent = 'AI analizuje detale stolarki, układ okien i dobiera tagi z bazy...';
       resultsGrid.innerHTML = '';
 
       try {
@@ -2574,8 +2661,7 @@
         });
 
         const allUniqueTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
-        
-        // ZAKTUALIZOWANY PROMPT STREET VIEW (WYMAGAJĄCY SZCZEGÓŁÓW OKIEN I KONSTRUKCJI)
+
         const promptText = `Przeanalizuj ten zrzut ekranu budynku ze Street View ze szczególnym uwzględnieniem układu stolarki okiennej i detali fasady.
 Zwróć uwagę na:
 - Liczbę skrzydeł okiennych (np. okno jedno-, dwu- lub trójskrzydłowe),
@@ -3032,14 +3118,17 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       );
     }
 
+    /* FILTRY: "Wszystkie" i "Ulubione" zawsze na początku, reszta posortowana od A do Z */
     function renderTags() {
-      const allUniqueTags = Array.from(new Set([...availableTags, ...allAssets.flatMap(a => a.tags)]));
+      const allUniqueTags = Array.from(new Set([...availableTags, ...allAssets.flatMap(a => a.tags)]))
+        .sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
+
       const tagsBar = document.getElementById('tags-bar');
       tagsBar.innerHTML = '';
 
       const allBtn = document.createElement('button');
       allBtn.className = `tag-pill ${(!showFavoritesOnly && selectedTags.size === 0) ? 'active' : ''}`;
-      allBtn.innerHTML = `Wszystkie <span class="tag-count">${allAssets.filter(matchesSearchText).length}</span>`;
+      allBtn.innerHTML = `<span>Wszystkie</span> <span class="tag-count">${allAssets.filter(matchesSearchText).length}</span>`;
       allBtn.onclick = () => {
         showFavoritesOnly = false;
         selectedTags.clear();
@@ -3053,7 +3142,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
       const favBtn = document.createElement('button');
       favBtn.className = `tag-pill favorites-pill ${showFavoritesOnly ? 'active' : ''}`;
-      favBtn.innerHTML = `❤️ Ulubione <span class="tag-count">${favCount}</span>`;
+      favBtn.innerHTML = `<span>❤️ Ulubione</span> <span class="tag-count">${favCount}</span>`;
       favBtn.onclick = () => {
         showFavoritesOnly = !showFavoritesOnly;
         renderTags();
@@ -3074,7 +3163,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
         const btn = document.createElement('button');
         btn.className = `tag-pill ${isSelected ? 'active' : ''}`;
-        btn.innerHTML = `${tag} <span class="tag-count">${matchingCount}</span>`;
+        btn.innerHTML = `<span>${tag}</span> <span class="tag-count">${matchingCount}</span>`;
 
         if (matchingCount === 0 && !isSelected) {
           btn.disabled = true;
@@ -3138,7 +3227,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       const favSymbol = isFav ? '❤️' : '♡';
 
       const tagsHtml = asset.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
-      const newBadgeHtml = isNewItem(asset.addedAt) ? `<span class="badge-new">NOWOŚĆ</span>` : '';
+      const newBadgeHtml = buildNewBadgeHtml(asset.addedAt);
       const imgContent = asset.image
         ? `<img src="${asset.image}" alt="${asset.name}" loading="lazy" onerror="handleImageError(this)">`
         : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
@@ -3297,7 +3386,8 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       const list = document.getElementById('mf-tag-list');
       list.innerHTML = '';
 
-      const combinedTags = Array.from(new Set([...aiSuggestedNewTags, ...availableTags]));
+      const sortedExisting = [...availableTags].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
+      const combinedTags = Array.from(new Set([...aiSuggestedNewTags, ...sortedExisting]));
       const tagsToShow = combinedTags.filter(t => t.toLowerCase().includes(q));
 
       tagsToShow.forEach(tag => {
@@ -3413,7 +3503,8 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         .filter(a => a._status !== 'deleted')
         .map(({ _status, _prevStatus, ...rest }) => rest);
 
-      const output = { tags: availableTags, assets: cleanAssets };
+      const sortedExportTags = [...availableTags].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
+      const output = { tags: sortedExportTags, assets: cleanAssets };
       navigator.clipboard.writeText(JSON.stringify(output, null, 2));
       const orig = btn.textContent;
       btn.textContent = '✓ Skopiowano JSON do schowka!';
@@ -3514,16 +3605,18 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         });
 
         const existingTagsJson = JSON.stringify(availableTags);
-        
-        // ZAKTUALIZOWANY PROMPT OPISU MESHÓW (SKUPIONY NA DETALACH STOLARKI I KONSTRUKCJI)
-        const promptText = `Jesteś profesjonalnym architektem i asystentem bazy assetów 3D do gry The Bus. Przeanalizuj ten Static Mesh budynku ze szczególnym naciskiem na detale konstrukcyjne. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
-1. "description": Opisz po polsku w 2-3 konkretnych zdaniach układ elementu, skupiając się na:
-   - Liczbie skrzydeł okiennych (np. okno dwuskrzydłowe, trójskrzydłowe),
-   - Obecności dodatkowych elementów (np. czy nad głównym oknem znajduje się mniejsze okno poziome/świetlik/lufcik, gzymsy, pasy podokienne),
-   - Rodzaju zadaszenia, balkonu lub oprawy.
-   ABSOLUTNY ZAKAZ wspominania o szachownicy, przezroczystości, teksturach, kolorach, różowym tle czy otoczeniu.
-2. "matchedTags": Wybierz z poniższej listy istniejących tagów pasujące: ${existingTagsJson}
-3. "suggestedNewTags": Zaproponuj maksymalnie 2-3 bardzo konkretne nowe tagi techniczne (np. "Okno trójskrzydłowe", "Nadokiennik", "Okno poziome"), jeśli ich brakuje.
+
+        /* RYGORYSTYCZNY PROMPT DLA FILTRÓW (TAGÓW) PRZY BOGATYM OPISIE */
+        const promptText = `Jesteś profesjonalnym architektem i asystentem bazy assetów 3D do gry The Bus. Przeanalizuj ten Static Mesh budynku. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
+
+1. "description": Opisz swobodnie i szczegółowo po polsku w 2-3 konkretnych zdaniach wszystko, co widzisz w konstrukcji tego elementu (liczba skrzydeł okiennych, np. dwuskrzydłowe/trójskrzydłowe, dodatkowe okna poziome/lufciki nad oknem, gzymsy, balkony, pasy podokienne, zadaszenia, kształt bryły).
+   ABSOLUTNY ZAKAZ wspominania w opisie o szachownicy, przezroczystości, teksturach, kolorach tła czy otoczeniu.
+
+2. "matchedTags": Wybierz z poniższej listy istniejących tagów TYLKO te, które w 100% pasują do obiektu: ${existingTagsJson}
+
+3. "suggestedNewTags": BĄDŹ BARDZO RYGORYSTYCZNY. NIE wymyślaj nowych tagów na siłę ani szczegółowych opisowych etykiet (ZAKAZ tagów typu "Okno poziome nad głównym", "Podwójny gzyms", "Ozdobna oprawa" itp. — takie detale mają trafić WYŁĄCZNIE do pola "description").
+   Zaproponuj maksymalnie 1 (słownie: JEDEN) nowy, krótki (1-2 słowa), ogólny tag kategorii (np. "Balkon", "Dach", "Schody", "Witryna", "Filary") TYLKO wtedy, gdy na liście istniejących tagów ewidentnie brakuje głównego, ogólnego elementu widocznego na zdjęciu. W 90% przypadków zwróć pustą tablicę [].
+
 Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags": [] }`;
 
         const aiJson = await callGeminiWithFallback(apiKey, promptText, blob.type || 'image/jpeg', base64Data);
@@ -3543,9 +3636,9 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
         }
 
         if (Array.isArray(parsed.suggestedNewTags)) {
-          parsed.suggestedNewTags.slice(0, 2).forEach(rawTag => {
+          parsed.suggestedNewTags.slice(0, 1).forEach(rawTag => {
             const cleanTag = String(rawTag).trim();
-            if (!cleanTag) return;
+            if (!cleanTag || cleanTag.split(/\s+/).length > 2) return;
             const alreadyExists = availableTags.find(t => t.toLowerCase() === cleanTag.toLowerCase());
             if (alreadyExists) {
               modalSelectedTags.add(alreadyExists);
@@ -3577,7 +3670,7 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
       };
 
       const thumbUrl = tut.thumbnail || getYoutubeThumbnail(tut.youtubeUrl);
-      const newBadgeHtml = isNewItem(tut.addedAt) ? `<span class="badge-new">NOWOŚĆ</span>` : '';
+      const newBadgeHtml = buildNewBadgeHtml(tut.addedAt);
       const imgHtml = thumbUrl
         ? `<img src="${thumbUrl}" alt="${tut.title}" loading="lazy" onerror="handleImageError(this)"><div class="yt-play-badge">▶</div>`
         : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
