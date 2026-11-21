@@ -639,7 +639,6 @@
       color: var(--text-primary);
     }
 
-    /* PRZEŁĄCZNIK ON/OFF I PASEK POSTĘPU W AI STREET VIEW */
     .sv-deep-toggle-box {
       background-color: var(--bg-surface);
       border: 1px solid var(--border-color);
@@ -670,7 +669,7 @@
     .sv-deep-toggle-sub {
       font-size: 12px;
       color: var(--text-secondary);
-      margin-top: 3px;
+      margin-top: 4px;
     }
 
     .switch-pill {
@@ -2195,10 +2194,10 @@
           <div class="sv-deep-toggle-box">
             <div class="sv-deep-toggle-info">
               <div class="sv-deep-toggle-title">
-                <span>🔬 Analizuj szczegółowo bazę meshów (każdy pasujący mesh + jego zdjęcie po kolei)</span>
+                <span>🔬 Analizuj szczegółowo bazę meshów</span>
               </div>
               <div class="sv-deep-toggle-sub">
-                Po włączeniu AI najpierw odrzuca niezgodne kategorie (Okno / Drzwi / Balkon), a następnie analizuje po kolei każdy pasujący mesh z jego zdjęciem, opisem i tagami. <strong>Uwaga: może zająć dłuższą chwilę (nawet kilka minut).</strong>
+                Sztuczna inteligencja bierze pod uwagę skan każdych obiektów i porównuje ze zdjęciem źródłowym (może zająć to nawet kilka minut).
               </div>
             </div>
             <label class="switch-pill" for="sv-deep-scan-toggle">
@@ -2527,8 +2526,8 @@
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
     const GEMINI_MODELS_FALLBACK = [
-      'gemini-3.5-flash-lite',
-      'gemini-2.5-flash'
+      'gemini-3.8-flash',
+      'gemini-3.5-flash-lite'
     ];
 
     let availableTags = [];
@@ -2561,6 +2560,13 @@
       startX: 0,
       startY: 0
     };
+
+    class ScanFatalError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'ScanFatalError';
+      }
+    }
 
     function showToast(text) {
       const container = document.getElementById('toast-container');
@@ -2855,7 +2861,6 @@
       });
     }
 
-    /* FILTROWANIE KATEGORII PRZED SZCZEGÓŁOWYM SKANEM: USUWA NIEZGODNE TAGI OKNO / BALKON / DRZWI */
     function matchesPrimaryCategoryTag(asset, primaryCategory) {
       const tagsLower = (asset.tags || []).map(t => String(t).toLowerCase().trim());
 
@@ -2863,19 +2868,12 @@
       const isDoor = tagsLower.some(t => t === 'drzwi' || t.startsWith('drzwi '));
       const isBalcony = tagsLower.some(t => t === 'balkon' || t === 'balkony' || t.startsWith('balkon '));
 
-      if (primaryCategory === 'Okno') {
-        return isWindow;
-      }
-      if (primaryCategory === 'Drzwi') {
-        return isDoor;
-      }
-      if (primaryCategory === 'Balkon') {
-        return isBalcony;
-      }
+      if (primaryCategory === 'Okno') return isWindow;
+      if (primaryCategory === 'Drzwi') return isDoor;
+      if (primaryCategory === 'Balkon') return isBalcony;
       return true;
     }
 
-    /* WSTĘPNA ANALIZA ZDJĘCIA UŻYTKOWNIKA: ODRZUCANIE OBIEKTÓW NIEBĘDĄCYCH BUDYNKIEM + KATEGORIA (Okno / Drzwi / Balkon) */
     async function analyzeUserStreetviewGate(apiKey, mimeType, base64Data) {
       const gatePrompt = `Jesteś asystentem bazy assetów architektonicznych 3D do gry The Bus.
 Sprawdź załączone zdjęcie i wykonaj 2 zadania:
@@ -2883,14 +2881,14 @@ Sprawdź załączone zdjęcie i wykonaj 2 zadania:
 1. "isBuildingElement": ustaw true TYLKO jeśli na zdjęciu widoczny jest fragment budynku, fasady, elewacji, okna, drzwi, balkonu, witryny, dachu, gzymsu lub konstrukcji architektonicznej.
    Ustaw false, jeśli zdjęcie przedstawia roślinę/kwiat, zwierzę, jedzenie, samochód/pojazd niezwiązany z fasadą budynku, twarz, krajobraz bez architektury budynków, mem lub losowy przedmiot niebędący elementem budynku.
 
-2. "primaryCategory": wybierz JEDNĄ z trzech ogólnych kategorii: "Okno", "Drzwi" lub "Balkon" (ta kategoria posłuży do odfiltrowania bazy przed skanem).
+2. "primaryCategory": wybierz JEDNĄ z trzech ogólnych kategorii: "Okno", "Drzwi" lub "Balkon".
    - Jeśli widać główne drzwi / wejście / bramę -> "Drzwi"
    - Jeśli widać balkon / balustradę balkonową / balkon francuski -> "Balkon"
    - W pozostałych przypadkach okien / fasad / witryn -> "Okno"
 
 3. "detectedTags": wybierz pasujące ogólne cechy spośród: ["Okno", "Drzwi", "Balkon", "Okno dwuskrzydłowe", "Okno trójskrzydłowe", "Okno wielokwaterowe", "Okno łukowe", "Okno poziome", "Świetlik nadokienny", "Balkon francuski", "Balustrada", "Gzyms", "Nadokiennik", "Witryna", "Kamienica", "Klasyczny", "Nowe", "Roleta", "Parapet", "Cokół"].
 
-4. "rejectionReason": jeśli "isBuildingElement" jest false, podaj krótki powód po polsku (np. "Na zdjęciu widoczny jest kwiat, a nie element budynku"). W przeciwnym razie "".
+4. "rejectionReason": jeśli "isBuildingElement" jest false, podaj krótki powód po polsku. W przeciwnym razie "".
 
 5. "description": krótki opis architektoniczny po polsku (1-2 zdania).
 
@@ -2926,7 +2924,24 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       };
     }
 
-    /* OCENA POJEDYNCZEGO MESHA W TRYBIE SZCZEGÓŁOWYM (ID + OPIS + TAGI + ŚCIEŻKA ZDJĘCIA + OBRAZ) */
+    function isModelUnavailableOrRetryableError(status, msg) {
+      const lower = (msg || '').toLowerCase();
+      return (
+        status === 404 ||
+        status === 429 ||
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504 ||
+        lower.includes('no longer available') ||
+        lower.includes('not found') ||
+        lower.includes('model') && lower.includes('available') ||
+        lower.includes('quota') ||
+        lower.includes('rate') ||
+        lower.includes('overloaded')
+      );
+    }
+
     async function scoreSingleMeshWithImage(apiKey, userMimeType, userBase64, userGate, asset) {
       const assetId = getNumericMeshId(asset, 0);
       const imgPath = asset.image || getMeshImagePathById(assetId);
@@ -2948,25 +2963,25 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         meshPart = null;
       }
 
-      const meshPrompt = `Porównaj ZDJĘCIE 1 (szukany element ze Street View) ze ZDJĘCIEM 2 (obiekt z bazy meshów 3D do gry The Bus).
+      const meshPrompt = `Oceń, na ile ten mesh 3D pasuje do zdjęcia źródłowego ze Street View.
 
-Kategoria ogólna ze zdjęcia 1: "${userGate.primaryCategory}" (tagi: ${JSON.stringify(userGate.detectedTags)}).
-Opis ze zdjęcia 1: "${userGate.description}".
+Kontekst zdjęcia źródłowego:
+- Kategoria: "${userGate.primaryCategory}"
+- Tagi: ${JSON.stringify(userGate.detectedTags)}
+- Opis: "${userGate.description}"
 
-Dane mesha ze zdjęcia 2:
-- id: ${assetId}
-- name: "${asset.name}"
-- imagePath: "${imgPath}"
-- tags: ${JSON.stringify(asset.tags || [])}
-- description: "${asset.description || ''}"
+Dane ocenianego mesha:
+- Nazwa: "${asset.name}"
+- Tagi: ${JSON.stringify(asset.tags || [])}
+- Opis: "${asset.description || ''}"
 
-Oceń dopasowanie (0-100) na podstawie wyglądu na obu zdjęciach, opisu oraz tagów.
-Jeśli bryła, liczba skrzydeł, łuk lub układ wyraźnie się różni, obniż wynik adekwatnie.
+W polu "reason" napisz WYŁĄCZNIE konkretny WNIOSEK po polsku (1-2 zdania), dlaczego ten mesh pasuje lub dlaczego nie pasuje do zdjęcia źródłowego (np. układ skrzydeł, podziały, łuk, proporcje lub brak zgodności bryły).
+ABSOLUTNY ZAKAZ pisania w "reason" sformułowań typu "Zdjęcie 1 przedstawia..." ani "Zdjęcie 2 / ID ... przedstawia...". Od razu przejdź do wniosku o dopasowaniu do zdjęcia źródłowego.
 
 Zwróć WYŁĄCZNIE poprawny JSON:
 {
   "score": 85,
-  "reason": "Krótkie uzasadnienie dopasowania po polsku (1-2 zdania)."
+  "reason": "Wniosek dlaczego pasuje lub nie pasuje do zdjęcia źródłowego."
 }`;
 
       const parts = [{ text: meshPrompt }];
@@ -2974,7 +2989,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         parts.push(meshPart);
       }
 
-      let lastError = null;
+      let lastErrorMsg = '';
       for (const modelName of GEMINI_MODELS_FALLBACK) {
         const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
           method: 'POST',
@@ -3004,33 +3019,32 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           sc = Math.max(0, Math.min(100, Math.round(sc)));
           return {
             score: sc,
-            reason: parsed.reason || `Porównano z mesh ID ${assetId} (${asset.name}).`
+            reason: (parsed.reason || '').trim() || 'Brak wniosku z analizy.'
           };
         }
 
-        lastError = data.error;
-        const msg = (data.error.message || '').toLowerCase();
+        const msg = data.error.message || 'Błąd komunikacji z Google AI.';
         const status = data.error.code || resp.status;
+        lastErrorMsg = msg;
 
-        if (status === 400 || status === 403 || msg.includes('api key not valid')) {
+        if (status === 400 || status === 403 || msg.toLowerCase().includes('api key not valid')) {
           localStorage.removeItem(GEMINI_KEY_STORAGE);
-          throw new Error('Nieprawidłowy klucz Google AI API.');
+          throw new ScanFatalError('Nieprawidłowy klucz Google AI API.');
         }
 
-        if (status === 429 || msg.includes('quota') || msg.includes('rate')) {
-          await sleepMs(12000);
+        if (status === 429 || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate')) {
+          await sleepMs(4000);
           continue;
         }
 
-        if (status !== 503 && !msg.includes('overloaded')) {
-          throw new Error(data.error.message || 'Błąd komunikacji z Google AI.');
+        if (isModelUnavailableOrRetryableError(status, msg)) {
+          continue;
         }
+
+        throw new ScanFatalError(msg);
       }
 
-      return {
-        score: 0,
-        reason: lastError?.message || 'Pominięto z powodu limitu zapytań AI.'
-      };
+      throw new ScanFatalError(lastErrorMsg || 'Żaden model AI nie odpowiedział poprawnie.');
     }
 
     function renderStreetviewScoredGrid(scoredList) {
@@ -3094,7 +3108,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             </div>
           </div>
           <div class="card-image-wrap">${imgContent}</div>
-          <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza (ID ${assetId}):</strong> ${item.reason}</div>
+          <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza:</strong> ${item.reason}</div>
           <div class="card-footer">
             <div class="card-tags-list">${tagsHtml}</div>
           </div>
@@ -3233,7 +3247,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           return;
         }
 
-        /* TRYB SZCZEGÓŁOWY (ON): PIERW ODRZUCA NIEZGODNE TAGI OKNO / BALKON / DRZWI, POTEM SKANUJE KAŻDY PASUJĄCY MESH + ZDJĘCIE */
         wrapper.classList.remove('ai-loading');
         progressCard.classList.add('active');
 
@@ -3247,7 +3260,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         resultsInfo.innerHTML = `
           <div class="sv-summary-bar">
             <div class="sv-analysis-text">
-              🔬 <strong>Szczegółowy skan LIVE (${primaryCat}):</strong> Odrzucono <strong>${rejectedCount}</strong> obiektów o niezgodnej kategorii (Okno/Drzwi/Balkon). Pozostało do skanowania: <strong>${totalItems}</strong> z ${allActiveAssets.length} meshów. (${gateResult.description})
+              🔬 <strong>Szczegółowy skan LIVE (${primaryCat}):</strong> Odrzucono <strong>${rejectedCount}</strong> obiektów o niezgodnej kategorii. Pozostało do skanowania: <strong>${totalItems}</strong> z ${allActiveAssets.length} meshów.
             </div>
             <div class="sv-tooltip-wrap">
               <div class="sv-info-badge">ℹ️ Tagi analizy</div>
@@ -3283,9 +3296,9 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           progressPctEl.textContent = `${pct}%`;
           progressFillEl.style.width = `${pct}%`;
           progressEtaEl.textContent = i === 0
-            ? `Szacowany czas: może zająć dłuższą chwilę (${processedCount}/${totalItems})`
+            ? `Szacowany czas: może zająć to nawet kilka minut (${processedCount}/${totalItems})`
             : `Szacowany pozostały czas: ~${formatEtaSeconds(remainingSec)} (${processedCount}/${totalItems})`;
-          progressCurrentEl.textContent = `Analizuję [${primaryCat}] ID ${assetId}: ${asset.name} (${asset.image || getMeshImagePathById(assetId)})...`;
+          progressCurrentEl.textContent = `Analizuję [${primaryCat}] ${asset.name} (${asset.image || getMeshImagePathById(assetId)})...`;
 
           const singleEval = await scoreSingleMeshWithImage(apiKey, mimeType, base64Data, gateResult, asset);
 
@@ -3306,10 +3319,11 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           progressPctEl.textContent = '100%';
           progressFillEl.style.width = '100%';
           progressEtaEl.textContent = 'Zakończono skan pasującej kategorii';
-          progressCurrentEl.textContent = `Przeanalizowano wszystkie ${totalItems} obiektów z kategorii "${primaryCat}" (odrzucono ${rejectedCount} z innych kategorii).`;
+          progressCurrentEl.textContent = `Przeanalizowano wszystkie ${totalItems} obiektów z kategorii "${primaryCat}".`;
         }
 
       } catch (err) {
+        progressCard.classList.remove('active');
         resultsInfo.innerHTML = `<span style="color:#ef4444">Błąd AI Street View: ${err.message}</span>`;
       } finally {
         wrapper.classList.remove('ai-loading');
@@ -4062,19 +4076,19 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         if (!data.error) return data;
 
         lastError = data.error;
-        const msg = (data.error.message || '').toLowerCase();
+        const msg = data.error.message || 'Błąd komunikacji z Google AI.';
         const status = data.error.code || resp.status;
 
-        if (status === 400 || status === 403 || msg.includes('api key not valid')) {
+        if (status === 400 || status === 403 || msg.toLowerCase().includes('api key not valid')) {
           localStorage.removeItem(GEMINI_KEY_STORAGE);
           throw new Error('Nieprawidłowy klucz Google AI API.');
         }
 
-        if (status !== 503 && status !== 429 && !msg.includes('overloaded')) {
-          throw new Error(data.error.message || 'Błąd komunikacji z Google AI.');
+        if (!isModelUnavailableOrRetryableError(status, msg)) {
+          throw new Error(msg);
         }
       }
-      throw new Error(lastError?.message || 'Serwery Google AI są chwilowo przeciążone.');
+      throw new Error(lastError?.message || 'Serwery Google AI są chwilowo niedostępne.');
     }
 
     async function generateAiMeshDescription() {
