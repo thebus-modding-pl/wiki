@@ -1868,15 +1868,6 @@
       min-height: 120px;
     }
 
-    .sv-loading-container.ai-loading .sv-loading-content {
-      opacity: 0.3;
-      pointer-events: none;
-    }
-
-    .sv-loading-container.ai-loading .ai-loader-overlay {
-      display: flex;
-    }
-
     .discord-dots-pill {
       background: rgba(17, 17, 22, 0.95);
       border: 1px solid #32323d;
@@ -2292,7 +2283,7 @@
           <div>
             <div class="hero-eyebrow">INTELIGENTNY DOBÓR OBIEKTÓW 3D</div>
             <h1>AI STREET VIEW (1:1)</h1>
-            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. AI rozpozna kategorię (Okno / Drzwi / Balkon), odrzuci zdjęcia niezwiązane z architekturą i dopasuje pasujące meshe.</p>
+            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. AI rozpozna kategorię (Okno / Drzwi / Balkon), odrzuci niezgodne formy (np. balkony przy zwykłym oknie czy zaokrąglone łuki przy prostych ramach) i dopasuje pasujące meshe.</p>
           </div>
         </header>
 
@@ -2354,13 +2345,6 @@
         </div>
 
         <div class="sv-loading-container" id="sv-target-wrapper">
-          <div class="ai-loader-overlay">
-            <div class="discord-dots-pill" title="AI analizuje budynek i dopasowuje elementy...">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
           <div class="sv-loading-content">
             <div class="results-info" id="sv-results-info" style="margin-bottom: 20px;"></div>
             <main class="grid" id="sv-results-grid"></main>
@@ -2649,10 +2633,10 @@
     const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
-const GEMINI_MODELS_FALLBACK = [
-  'gemini-3.5-flash-lite',
-  'gemini-3.8-flash'
-];
+    const GEMINI_MODELS_FALLBACK = [
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash'
+    ];
 
     let availableTags = [];
     let allAssets = [];
@@ -3049,44 +3033,123 @@ const GEMINI_MODELS_FALLBACK = [
       });
     }
 
-    function matchesPrimaryCategoryTag(asset, primaryCategory) {
+    function assetHasBalconyOrRailing(asset) {
+      const tagsLower = (asset.tags || []).map(t => String(t).toLowerCase().trim());
+      const nameLower = (asset.name || '').toLowerCase();
+      const descLower = (asset.description || '').toLowerCase();
+      return (
+        tagsLower.some(t => t.includes('balkon') || t.includes('balustrad') || t.includes('tralk')) ||
+        nameLower.includes('balkon') ||
+        descLower.includes('balkon') ||
+        descLower.includes('balustrad')
+      );
+    }
+
+    function assetIsArchedOrRounded(asset) {
+      const tagsLower = (asset.tags || []).map(t => String(t).toLowerCase().trim());
+      const nameLower = (asset.name || '').toLowerCase();
+      const descLower = (asset.description || '').toLowerCase();
+      return (
+        tagsLower.some(t => t.includes('łuk') || t.includes('zaokrągl') || t.includes('okragl') || t.includes('okrągł')) ||
+        nameLower.includes('luk') ||
+        nameLower.includes('łuk') ||
+        nameLower.includes('zaokragl') ||
+        descLower.includes('łukow') ||
+        descLower.includes('zaokrągl') ||
+        descLower.includes('półkolist')
+      );
+    }
+
+    function sourceIsArchedOrRounded(userGate) {
+      const tagsLower = (userGate.detectedTags || []).map(t => String(t).toLowerCase().trim());
+      const descLower = (userGate.description || '').toLowerCase();
+      return (
+        Boolean(userGate.isArchedOrRounded) ||
+        tagsLower.some(t => t.includes('łuk') || t.includes('zaokrągl') || t.includes('okragl') || t.includes('okrągł')) ||
+        descLower.includes('łukow') ||
+        descLower.includes('zaokrągl') ||
+        descLower.includes('półkolist')
+      );
+    }
+
+    function sourceHasBalcony(userGate) {
+      const tagsLower = (userGate.detectedTags || []).map(t => String(t).toLowerCase().trim());
+      const descLower = (userGate.description || '').toLowerCase();
+      return (
+        userGate.primaryCategory === 'Balkon' ||
+        Boolean(userGate.hasBalcony) ||
+        tagsLower.some(t => t.includes('balkon')) ||
+        descLower.includes('balkon')
+      );
+    }
+
+    function passesHardArchitecturalFilter(asset, userGate) {
+      const primaryCategory = userGate.primaryCategory;
       const tagsLower = (asset.tags || []).map(t => String(t).toLowerCase().trim());
 
       const isWindow = tagsLower.some(t => t === 'okno' || t === 'okna' || t.startsWith('okno ') || t.startsWith('okna '));
       const isDoor = tagsLower.some(t => t === 'drzwi' || t.startsWith('drzwi '));
       const isBalcony = tagsLower.some(t => t === 'balkon' || t === 'balkony' || t.startsWith('balkon '));
 
-      if (primaryCategory === 'Okno') return isWindow;
-      if (primaryCategory === 'Drzwi') return isDoor;
-      if (primaryCategory === 'Balkon') return isBalcony;
+      if (primaryCategory === 'Okno' && !isWindow) return false;
+      if (primaryCategory === 'Drzwi' && !isDoor) return false;
+      if (primaryCategory === 'Balkon' && !isBalcony) return false;
+
+      if (primaryCategory === 'Okno' && !sourceHasBalcony(userGate)) {
+        if (assetHasBalconyOrRailing(asset)) {
+          return false;
+        }
+      }
+
+      if (!sourceIsArchedOrRounded(userGate)) {
+        if (assetIsArchedOrRounded(asset)) {
+          return false;
+        }
+      }
+
       return true;
     }
 
-    async function analyzeUserStreetviewGate(apiKey, mimeType, base64Data) {
+    async function analyzeUserStreetviewGate(apiKey, mimeType, base64Data, candidateListForQuickMode = null) {
+      const candidatesBlock = candidateListForQuickMode
+        ? `\n6. "matches": Oceń poniżej podaną listę kandydatów z bazy 3D pod kątem dopasowania 1:1 do zdjęcia źródłowego. Dla KAŻDEGO kandydata z listy podaj "id", "score" (0-100) oraz "reason" (konkretny wniosek po polsku w 1-2 zdaniach — bez pisania "Zdjęcie 1/2 przedstawia..."). Jeśli kandydat ma niezgodne zdobienia (np. trójkątne przyczółki, tralki, 2 okna zamiast 1), daj niski wynik (5-25). Jeśli dobrze pasuje, daj wysoki wynik (70-95).
+Lista kandydatów: ${JSON.stringify(candidateListForQuickMode)}`
+        : '';
+
+      const matchesJsonExample = candidateListForQuickMode
+        ? `,\n  "matches": [ { "id": 1, "score": 85, "reason": "Konkretny wniosek o dopasowaniu bryły i detali." } ]`
+        : '';
+
       const gatePrompt = `Jesteś asystentem bazy assetów architektonicznych 3D do gry The Bus.
-Sprawdź załączone zdjęcie i wykonaj 2 zadania:
+Sprawdź załączone zdjęcie i wykonaj zadania:
 
 1. "isBuildingElement": ustaw true TYLKO jeśli na zdjęciu widoczny jest fragment budynku, fasady, elewacji, okna, drzwi, balkonu, witryny, dachu, gzymsu lub konstrukcji architektonicznej.
    Ustaw false, jeśli zdjęcie przedstawia roślinę/kwiat, zwierzę, jedzenie, samochód/pojazd niezwiązany z fasadą budynku, twarz, krajobraz bez architektury budynków, mem lub losowy przedmiot niebędący elementem budynku.
 
 2. "primaryCategory": wybierz JEDNĄ z trzech ogólnych kategorii: "Okno", "Drzwi" lub "Balkon".
    - Jeśli widać główne drzwi / wejście / bramę -> "Drzwi"
-   - Jeśli widać balkon / balustradę balkonową / balkon francuski -> "Balkon"
+   - Jeśli widać balkon / balustradę balkonową -> "Balkon"
    - W pozostałych przypadkach okien / fasad / witryn -> "Okno"
 
-3. "detectedTags": wybierz pasujące ogólne cechy spośród: ["Okno", "Drzwi", "Balkon", "Okno dwuskrzydłowe", "Okno trójskrzydłowe", "Okno wielokwaterowe", "Okno łukowe", "Okno poziome", "Świetlik nadokienny", "Balkon francuski", "Balustrada", "Gzyms", "Nadokiennik", "Witryna", "Kamienica", "Klasyczny", "Nowe", "Roleta", "Parapet", "Cokół"].
+3. "isArchedOrRounded": ustaw true TYLKO jeśli okno/otwór ma łukowe lub zaokrąglone zwieńczenie. Jeśli rama jest prosta/prostokątna, ustaw false.
 
-4. "rejectionReason": jeśli "isBuildingElement" jest false, podaj krótki powód po polsku. W przeciwnym razie "".
+4. "hasBalcony": ustaw true TYLKO jeśli na zdjęciu faktycznie jest balkon lub balustrada balkonowa.
 
-5. "description": krótki opis architektoniczny po polsku (1-2 zdania).
+5. "detectedTags": wybierz pasujące ogólne cechy spośród: ["Okno", "Drzwi", "Balkon", "Okno dwuskrzydłowe", "Okno trójskrzydłowe", "Okno wielokwaterowe", "Okno łukowe", "Okno poziome", "Świetlik nadokienny", "Balkon francuski", "Balustrada", "Gzyms", "Nadokiennik", "Witryna", "Kamienica", "Klasyczny", "Nowe", "Roleta", "Parapet", "Cokół"].
+
+6. "rejectionReason": jeśli "isBuildingElement" jest false, podaj krótki powód po polsku. W przeciwnym razie "".
+
+7. "description": krótki opis architektoniczny po polsku (1-2 zdania).${candidatesBlock}
 
 Zwróć WYŁĄCZNIE poprawny JSON:
 {
   "isBuildingElement": true,
   "primaryCategory": "Okno",
+  "isArchedOrRounded": false,
+  "hasBalcony": false,
   "detectedTags": ["Okno"],
   "rejectionReason": "",
-  "description": "..."
+  "description": "..."${matchesJsonExample}
 }`;
 
       const aiJson = await callGeminiWithFallback(apiKey, gatePrompt, mimeType, base64Data);
@@ -3106,20 +3169,26 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       return {
         isBuildingElement: Boolean(parsed.isBuildingElement),
         primaryCategory: cat,
+        isArchedOrRounded: Boolean(parsed.isArchedOrRounded),
+        hasBalcony: Boolean(parsed.hasBalcony),
         detectedTags: tags,
         rejectionReason: parsed.rejectionReason || 'Zdjęcie nie przedstawia elementu budynku.',
-        description: parsed.description || ''
+        description: parsed.description || '',
+        matches: Array.isArray(parsed.matches) ? parsed.matches : []
       };
     }
 
     function isModelUnavailableOrRetryableError(status, msg) {
       const lower = (msg || '').toLowerCase();
       return (
+        status === 429 ||
         status === 404 ||
         status === 500 ||
         status === 502 ||
         status === 503 ||
         status === 504 ||
+        lower.includes('quota') ||
+        lower.includes('rate limit') ||
         lower.includes('no longer available') ||
         lower.includes('not found') ||
         (lower.includes('model') && lower.includes('available')) ||
@@ -3229,6 +3298,12 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           }
 
           const retrySec = parseRetryAfterSeconds(msg);
+          const isDailyQuota = msg.toLowerCase().includes('per day') || (retrySec !== null && retrySec > 120);
+
+          if (isDailyQuota) {
+            continue;
+          }
+
           if (status === 429 || retrySec !== null || msg.toLowerCase().includes('quota')) {
             const waitSec = retrySec || 15;
             const ok = await waitForQuotaReset(waitSec, 'Oczekiwanie na odnowienie limitu API');
@@ -3247,7 +3322,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         }
 
         if (!switchedModel) {
-          throw new ScanFatalError(lastErrorMsg || 'Żaden model AI nie odpowiedział poprawnie.');
+          throw new ScanFatalError(lastErrorMsg || 'Wyczerpano dzienny limit zapytań lub żaden model AI nie odpowiedział.');
         }
       }
     }
@@ -3327,7 +3402,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       }
 
       const isDeepScan = document.getElementById('sv-deep-scan-toggle').checked;
-      const wrapper = document.getElementById('sv-target-wrapper');
       const searchBtn = document.getElementById('btn-sv-search');
       const resultsInfo = document.getElementById('sv-results-info');
       const resultsGrid = document.getElementById('sv-results-grid');
@@ -3335,6 +3409,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       const progressFillEl = document.getElementById('sv-progress-fill');
       const floatFillEl = document.getElementById('float-scan-fill');
       const progressCurrentEl = document.getElementById('sv-progress-current');
+      const stopScanBtn = document.getElementById('btn-stop-scan');
 
       deepScanAbortController = false;
       isDeepScanRunning = false;
@@ -3342,100 +3417,103 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       liveScoredMatches = [];
       searchBtn.disabled = true;
       resultsGrid.innerHTML = '';
-      progressCard.classList.remove('active');
+      resultsInfo.innerHTML = '';
       progressFillEl.classList.remove('scanning-pulse');
       floatFillEl.classList.remove('scanning-pulse');
       syncFloatingScanBar();
 
       let etaIntervalId = null;
-
-      if (!isDeepScan) {
-        wrapper.classList.add('ai-loading');
-      }
-      resultsInfo.textContent = 'Sprawdzam zdjęcie i określam kategorię (Okno / Drzwi / Balkon)...';
+      let quickProgressTimer = null;
 
       try {
         const mimeType = pendingStreetviewBlob.type || 'image/jpeg';
         const base64Data = await blobToBase64(pendingStreetviewBlob);
-
-        const gateResult = await analyzeUserStreetviewGate(apiKey, mimeType, base64Data);
-
-        if (!gateResult.isBuildingElement) {
-          wrapper.classList.remove('ai-loading');
-          resultsInfo.innerHTML = `
-            <div class="sv-summary-bar" style="border-color: rgba(239, 68, 68, 0.55); background: rgba(239, 68, 68, 0.08);">
-              <div class="sv-analysis-text" style="color: #fca5a5;">
-                ⛔ <strong>Zdjęcie odrzucone:</strong> ${gateResult.rejectionReason} Wgraj zrzut ekranu przedstawiający fragment budynku, okno, drzwi lub balkon.
-              </div>
-            </div>
-          `;
-          searchBtn.disabled = false;
-          return;
-        }
-
-        const targetTags = (gateResult.detectedTags || []).map(t => t.toLowerCase());
-        const primaryCat = gateResult.primaryCategory;
+        const allActiveAssets = allAssets.filter(a => a._status !== 'deleted');
+        const totalBaseCount = allActiveAssets.length;
 
         if (!isDeepScan) {
-          const scoredAssets = allAssets
-            .filter(a => a._status !== 'deleted')
-            .map((asset, idx) => {
-              const assetTags = (asset.tags || []).map(t => t.toLowerCase());
-              const assetNameLower = asset.name.toLowerCase();
-              const assetDescLower = (asset.description || '').toLowerCase();
-              let score = 92;
+          stopScanBtn.style.display = 'none';
+          progressCard.classList.add('active');
+          progressFillEl.classList.add('scanning-pulse');
 
-              const hasCatTag = matchesPrimaryCategoryTag(asset, primaryCat);
-              if (!hasCatTag) {
-                score -= 25;
-              }
+          let fakePct = 10;
+          let fakeDone = Math.max(1, Math.round(totalBaseCount * 0.1));
+          updateScanProgressUi(fakePct, 'Szacowany czas: kilka sekund...', fakeDone, totalBaseCount);
+          progressCurrentEl.textContent = `Analizuję zdjęcie i przeszukuję całą bazę (${totalBaseCount} obiektów) jednym zapytaniem AI...`;
 
-              const isTargetFrenchBalcony = targetTags.includes('balkon francuski');
-              const isAssetHasRegularBalcony = assetTags.includes('balkon') || assetNameLower.includes('balkon') || assetDescLower.includes('balkon');
-              const isAssetHasFrenchBalcony = assetTags.includes('balkon francuski') || assetNameLower.includes('balkon francuski');
+          quickProgressTimer = setInterval(() => {
+            if (fakePct < 88) {
+              fakePct += Math.floor(Math.random() * 14) + 8;
+              if (fakePct > 88) fakePct = 88;
+              fakeDone = Math.round((fakePct / 100) * totalBaseCount);
+              updateScanProgressUi(fakePct, 'Szacowany czas: ~2 s...', fakeDone, totalBaseCount);
+            }
+          }, 450);
 
-              if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
-                score -= 35;
-              }
+          const candidatePayload = allActiveAssets.map((asset, idx) => ({
+            id: getNumericMeshId(asset, idx),
+            name: asset.name,
+            tags: asset.tags || [],
+            description: asset.description || ''
+          }));
 
-              targetTags.forEach(tTag => {
-                if (tTag === 'parapet') return;
-                if (!assetTags.includes(tTag)) {
-                  score -= 10;
-                }
-              });
+          const gateResult = await analyzeUserStreetviewGate(apiKey, mimeType, base64Data, candidatePayload);
 
-              const extraTags = assetTags.filter(aTag => aTag !== 'parapet' && !targetTags.includes(aTag)).length;
-              score -= (extraTags * 2);
+          clearInterval(quickProgressTimer);
+          quickProgressTimer = null;
+          progressFillEl.classList.remove('scanning-pulse');
 
-              if (score < 5) score = 5;
-              if (score > 100) score = 100;
+          if (!gateResult.isBuildingElement) {
+            progressCard.classList.remove('active');
+            resultsInfo.innerHTML = `
+              <div class="sv-summary-bar" style="border-color: rgba(239, 68, 68, 0.55); background: rgba(239, 68, 68, 0.08);">
+                <div class="sv-analysis-text" style="color: #fca5a5;">
+                  ⛔ <strong>Zdjęcie odrzucone:</strong> ${gateResult.rejectionReason} Wgraj zrzut ekranu przedstawiający fragment budynku, okno, drzwi lub balkon.
+                </div>
+              </div>
+            `;
+            searchBtn.disabled = false;
+            return;
+          }
 
-              const matchedList = targetTags.filter(t => assetTags.includes(t));
-              const missingList = targetTags.filter(t => !assetTags.includes(t));
-              const extraList = assetTags.filter(t => !targetTags.includes(t));
+          updateScanProgressUi(100, `Zakończono (${totalBaseCount}/${totalBaseCount})`, totalBaseCount, totalBaseCount);
+          progressCurrentEl.textContent = `Przeszukano wszystkie ${totalBaseCount} obiektów w bazie.`;
 
-              const reason = `Wstępny dobór dla kategorii ${primaryCat} — zgodne cechy: ${matchedList.join(', ') || 'brak'}.`;
-
-              return {
-                asset,
-                index: idx,
-                similarityScore: Math.round(score),
-                reason,
-                matchedList,
-                missingList,
-                extraList
-              };
+          const primaryCat = gateResult.primaryCategory;
+          const aiScoreMap = new Map();
+          (gateResult.matches || []).forEach(m => {
+            aiScoreMap.set(Number(m.id), {
+              score: Math.max(0, Math.min(100, Math.round(Number(m.score) || 0))),
+              reason: (m.reason || '').trim()
             });
+          });
+
+          const hardFiltered = allActiveAssets.filter(asset => passesHardArchitecturalFilter(asset, gateResult));
+
+          const scoredAssets = hardFiltered.map((asset, idx) => {
+            const numericId = getNumericMeshId(asset, idx);
+            const aiMatch = aiScoreMap.get(numericId);
+            const score = aiMatch ? aiMatch.score : 0;
+            const reason = (aiMatch && aiMatch.reason)
+              ? aiMatch.reason
+              : (asset.description || `Dopasowany element kategorii ${primaryCat}.`);
+
+            return {
+              asset,
+              index: idx,
+              similarityScore: score,
+              reason
+            };
+          });
 
           scoredAssets.sort((a, b) => b.similarityScore - a.similarityScore);
-          liveScoredMatches = scoredAssets.filter(s => s.similarityScore > 0).slice(0, 6);
+          liveScoredMatches = scoredAssets.filter(s => s.similarityScore > 0).slice(0, 9);
 
           const detectedTagsListStr = (gateResult.detectedTags || []).join(', ');
           resultsInfo.innerHTML = `
             <div class="sv-summary-bar">
               <div class="sv-analysis-text">
-                ✨ <strong>Kategoria główna: ${primaryCat}</strong> • ${gateResult.description} (Tagi: <em>${detectedTagsListStr}</em>).
+                ✨ <strong>Kategoria główna: ${primaryCat}</strong> • ${gateResult.description}
               </div>
               <div class="sv-tooltip-wrap">
                 <div class="sv-info-badge">ℹ️ Tagi analizy</div>
@@ -3447,20 +3525,39 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             </div>
           `;
           renderStreetviewScoredGrid(liveScoredMatches);
-          wrapper.classList.remove('ai-loading');
           searchBtn.disabled = false;
           return;
         }
 
-        wrapper.classList.remove('ai-loading');
-        isDeepScanRunning = true;
+        stopScanBtn.style.display = 'inline-block';
         progressCard.classList.add('active');
         progressFillEl.classList.add('scanning-pulse');
+        updateScanProgressUi(0, 'Rozpoznawanie zdjęcia źródłowego...', 0, totalBaseCount);
+        progressCurrentEl.textContent = 'Analizuję zdjęcie źródłowe i określam cechy architektoniczne...';
+
+        const gateResult = await analyzeUserStreetviewGate(apiKey, mimeType, base64Data, null);
+
+        if (!gateResult.isBuildingElement) {
+          progressCard.classList.remove('active');
+          progressFillEl.classList.remove('scanning-pulse');
+          resultsInfo.innerHTML = `
+            <div class="sv-summary-bar" style="border-color: rgba(239, 68, 68, 0.55); background: rgba(239, 68, 68, 0.08);">
+              <div class="sv-analysis-text" style="color: #fca5a5;">
+                ⛔ <strong>Zdjęcie odrzucone:</strong> ${gateResult.rejectionReason} Wgraj zrzut ekranu przedstawiający fragment budynku, okno, drzwi lub balkon.
+              </div>
+            </div>
+          `;
+          searchBtn.disabled = false;
+          return;
+        }
+
+        isDeepScanRunning = true;
         floatFillEl.classList.add('scanning-pulse');
         syncFloatingScanBar();
 
-        const allActiveAssets = allAssets.filter(a => a._status !== 'deleted');
-        const filteredAssets = allActiveAssets.filter(a => matchesPrimaryCategoryTag(a, primaryCat));
+        const primaryCat = gateResult.primaryCategory;
+        const targetTags = (gateResult.detectedTags || []).map(t => t.toLowerCase());
+        const filteredAssets = allActiveAssets.filter(asset => passesHardArchitecturalFilter(asset, gateResult));
         const rejectedCount = allActiveAssets.length - filteredAssets.length;
         const totalItems = filteredAssets.length;
         const startTime = Date.now();
@@ -3473,7 +3570,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         resultsInfo.innerHTML = `
           <div class="sv-summary-bar">
             <div class="sv-analysis-text">
-              🔬 <strong>Szczegółowy skan LIVE (${primaryCat}):</strong> Odrzucono <strong>${rejectedCount}</strong> obiektów o niezgodnej kategorii. Pozostało do skanowania: <strong>${totalItems}</strong> z ${allActiveAssets.length} meshów.
+              🔬 <strong>Szczegółowy skan LIVE (${primaryCat}):</strong> Odrzucono <strong>${rejectedCount}</strong> niezgodnych obiektów (inne kategorie, balkony lub łuki). Pozostało do skanowania: <strong>${totalItems}</strong> z ${allActiveAssets.length} meshów.
             </div>
             <div class="sv-tooltip-wrap">
               <div class="sv-info-badge">ℹ️ Tagi analizy</div>
@@ -3491,7 +3588,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           progressCard.classList.remove('active');
           progressFillEl.classList.remove('scanning-pulse');
           floatFillEl.classList.remove('scanning-pulse');
-          resultsInfo.innerHTML += `<div style="color:#fbbf24;">Brak obiektów w bazie z tagiem kategorii <strong>${primaryCat}</strong>.</div>`;
+          resultsInfo.innerHTML += `<div style="color:#fbbf24;">Brak pasujących obiektów w bazie dla kategorii <strong>${primaryCat}</strong> po odfiltrowaniu niezgodnych form.</div>`;
           searchBtn.disabled = false;
           return;
         }
@@ -3576,6 +3673,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
       } catch (err) {
         if (etaIntervalId) clearInterval(etaIntervalId);
+        if (quickProgressTimer) clearInterval(quickProgressTimer);
         isDeepScanRunning = false;
         syncFloatingScanBar();
         progressFillEl.classList.remove('scanning-pulse');
@@ -3584,11 +3682,11 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         resultsInfo.innerHTML = `<span style="color:#ef4444">Błąd AI Street View: ${err.message}</span>`;
       } finally {
         if (etaIntervalId) clearInterval(etaIntervalId);
+        if (quickProgressTimer) clearInterval(quickProgressTimer);
         isDeepScanRunning = false;
         syncFloatingScanBar();
         progressFillEl.classList.remove('scanning-pulse');
         floatFillEl.classList.remove('scanning-pulse');
-        wrapper.classList.remove('ai-loading');
         searchBtn.disabled = false;
       }
     }
@@ -4401,7 +4499,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 1. "description": Opisz swobodnie i szczegółowo po polsku w 2-3 konkretnych zdaniach wszystko, co widzisz w konstrukcji tego elementu (liczba skrzydeł okiennych, np. dwuskrzydłowe/trójskrzydłowe, dodatkowe okna poziome/lufciki nad oknem, gzymsy, balkony, pasy podokienne, zadaszenia, kształt bryły).
    ABSOLUTNY ZAKAZ wspominania w opisie o szachownicy, przezroczystości, teksturach, kolorach tła czy otoczeniu.
 
-2. "matchedTags": Wybierz z poniższej listy istniejących tagów TYLKO te, które w 100% pasują do obiektu: ${existingTagsJson}
+2. "matchedTags": Wybierz z poniższej listy istniejących tagów TYLKO te, które w 100% pasują do obiektu (pomiń wszystko, co nie występuje na tym obiekcie): ${existingTagsJson}
 
 3. "suggestedNewTags": BĄDŹ BARDZO RYGORYSTYCZNY. NIE wymyślaj nowych tagów na siłę ani szczegółowych opisowych etykiet (ZAKAZ tagów typu "Okno poziome nad głównym", "Podwójny gzyms", "Ozdobna oprawa" itp. — takie detale mają trafić WYŁĄCZNIE do pola "description").
    Zaproponuj maksymalnie 1 (słownie: JEDEN) nowy, krótki (1-2 słowa), ogólny tag kategorii (np. "Balkon", "Dach", "Schody", "Witryna", "Filary") TYLKO wtedy, gdy na liście istniejących tagów ewidentnie brakuje głównego, ogólnego elementu widocznego na zdjęciu. W 90% przypadków zwróć pustą tablicę [].
@@ -4414,7 +4512,7 @@ Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags":
 
         if (parsed.description) document.getElementById('mf-desc').value = parsed.description.trim();
 
-        for (const oldSug of aiSuggestedNewTags) modalSelectedTags.delete(oldSug);
+        modalSelectedTags.clear();
         aiSuggestedNewTags.clear();
 
         if (Array.isArray(parsed.matchedTags)) {
