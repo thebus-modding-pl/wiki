@@ -639,6 +639,175 @@
       color: var(--text-primary);
     }
 
+    /* PRZEŁĄCZNIK ON/OFF I PASEK POSTĘPU W AI STREET VIEW */
+    .sv-deep-toggle-box {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .sv-deep-toggle-info {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .sv-deep-toggle-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sv-deep-toggle-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    .switch-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-pill input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .switch-track {
+      width: 46px;
+      height: 26px;
+      background-color: #27272f;
+      border: 1px solid var(--border-hover);
+      border-radius: 999px;
+      position: relative;
+      transition: background-color 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+
+    .switch-pill input:checked + .switch-track {
+      background-color: #2563eb;
+      border-color: #60a5fa;
+    }
+
+    .switch-pill input:checked + .switch-track::after {
+      transform: translateX(20px);
+    }
+
+    .switch-state-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 32px;
+    }
+
+    .switch-pill input:checked ~ .switch-state-label {
+      color: #60a5fa;
+    }
+
+    .sv-progress-card {
+      display: none;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+    }
+
+    .sv-progress-card.active {
+      display: block;
+    }
+
+    .sv-progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .sv-progress-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 800;
+      color: #60a5fa;
+    }
+
+    .sv-progress-eta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .sv-progress-track {
+      width: 100%;
+      height: 10px;
+      background-color: #1c1c22;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #2a2a34;
+      margin-bottom: 10px;
+    }
+
+    .sv-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2563eb, #10b981);
+      transition: width 0.25s ease;
+    }
+
+    .sv-progress-current {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      word-break: break-word;
+    }
+
+    .btn-stop-scan {
+      background-color: rgba(239, 68, 68, 0.16);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-stop-scan:hover {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+
     .sv-summary-bar {
       display: flex;
       justify-content: space-between;
@@ -1594,7 +1763,7 @@
 
     .sv-loading-container {
       position: relative;
-      min-height: 160px;
+      min-height: 120px;
     }
 
     .sv-loading-container.ai-loading .sv-loading-content {
@@ -1997,13 +2166,14 @@
       </div>
     </div>
 
+    <!-- ZAKŁADKA AI STREET VIEW -->
     <div id="view-streetview" class="view-section">
       <div class="container">
         <header class="hero">
           <div>
             <div class="hero-eyebrow">INTELIGENTNY DOBÓR OBIEKTÓW 3D</div>
             <h1>AI STREET VIEW (1:1)</h1>
-            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. AI wyodrębni cechy i dopasuje obiekty na podstawie dokładnego systemu punktowego tagów.</p>
+            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. AI rozpozna kategorię (Okno / Drzwi / Balkon), odrzuci zdjęcia niezwiązane z architekturą i dopasuje pasujące meshe.</p>
           </div>
         </header>
 
@@ -2022,12 +2192,43 @@
             </div>
           </div>
 
-          <div style="text-align: center; margin-top: 16px;">
+          <div class="sv-deep-toggle-box">
+            <div class="sv-deep-toggle-info">
+              <div class="sv-deep-toggle-title">
+                <span>🔬 Analizuj szczegółowo bazę meshów (każdy pasujący mesh + jego zdjęcie po kolei)</span>
+              </div>
+              <div class="sv-deep-toggle-sub">
+                Po włączeniu AI najpierw odrzuca niezgodne kategorie (Okno / Drzwi / Balkon), a następnie analizuje po kolei każdy pasujący mesh z jego zdjęciem, opisem i tagami. <strong>Uwaga: może zająć dłuższą chwilę (nawet kilka minut).</strong>
+              </div>
+            </div>
+            <label class="switch-pill" for="sv-deep-scan-toggle">
+              <input type="checkbox" id="sv-deep-scan-toggle" onchange="updateDeepScanToggleLabel()">
+              <span class="switch-track"></span>
+              <span class="switch-state-label" id="sv-deep-scan-label">OFF</span>
+            </label>
+          </div>
+
+          <div style="text-align: center; margin-top: 20px;">
             <button type="button" class="btn-primary" id="btn-sv-search" onclick="searchStreetviewMatches()" style="padding: 14px 28px; font-size: 14px;" disabled>
               🔍 Szukaj pasujących meshów 1:1 w bazie
             </button>
           </div>
         </section>
+
+        <!-- PASEK POSTĘPU + ETA + PRZYCISK STOP -->
+        <div class="sv-progress-card" id="sv-progress-card">
+          <div class="sv-progress-top">
+            <div>
+              <span class="sv-progress-pct" id="sv-progress-pct">0%</span>
+              <span class="sv-progress-eta" id="sv-progress-eta" style="margin-left: 12px;">Szacowany czas: obliczanie...</span>
+            </div>
+            <button type="button" class="btn-stop-scan" id="btn-stop-scan" onclick="stopDeepScan()">⏹ Przerwij skan</button>
+          </div>
+          <div class="sv-progress-track">
+            <div class="sv-progress-fill" id="sv-progress-fill"></div>
+          </div>
+          <div class="sv-progress-current" id="sv-progress-current">Oczekiwanie na start...</div>
+        </div>
 
         <div class="sv-loading-container" id="sv-target-wrapper">
           <div class="ai-loader-overlay">
@@ -2347,6 +2548,8 @@
     let editingTutorialIndex = null;
     let pendingImageBlob = null;
     let pendingStreetviewBlob = null;
+    let deepScanAbortController = false;
+    let liveScoredMatches = [];
 
     let previewZoomState = {
       isZoomed: false,
@@ -2419,16 +2622,8 @@
       renderGrid();
       renderMeshPreview();
 
-      if (document.getElementById('view-streetview').classList.contains('active') && pendingStreetviewBlob) {
-        document.querySelectorAll('.card').forEach(card => {
-          const btn = card.querySelector('.fav-btn');
-          if (btn && btn.getAttribute('onclick')?.includes(numId)) {
-            const isNowFav = favs.includes(numId);
-            btn.className = isNowFav ? 'fav-btn is-favorite' : 'fav-btn';
-            btn.title = isNowFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych';
-            btn.textContent = isNowFav ? '❤️' : '♡';
-          }
-        });
+      if (document.getElementById('view-streetview').classList.contains('active') && liveScoredMatches.length > 0) {
+        renderStreetviewScoredGrid(liveScoredMatches);
       }
     }
 
@@ -2459,7 +2654,6 @@
       };
     }
 
-    /* NAZWA PLIKU ZDJĘCIA ZAWSZE W FORMACIE images/<ID>.png */
     function getMeshImagePathById(meshId) {
       return `images/${Number(meshId)}.png`;
     }
@@ -2629,6 +2823,286 @@
       e.target.value = '';
     }
 
+    function updateDeepScanToggleLabel() {
+      const checked = document.getElementById('sv-deep-scan-toggle').checked;
+      document.getElementById('sv-deep-scan-label').textContent = checked ? 'ON' : 'OFF';
+    }
+
+    function stopDeepScan() {
+      deepScanAbortController = true;
+      document.getElementById('sv-progress-current').textContent = 'Zatrzymywanie skanowania...';
+    }
+
+    function formatEtaSeconds(sec) {
+      if (!isFinite(sec) || sec <= 0) return 'mniej niż 1 s';
+      const total = Math.ceil(sec);
+      const mins = Math.floor(total / 60);
+      const rem = total % 60;
+      if (mins <= 0) return `${rem} s`;
+      return `${mins} min ${rem} s`;
+    }
+
+    function sleepMs(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    /* FILTROWANIE KATEGORII PRZED SZCZEGÓŁOWYM SKANEM: USUWA NIEZGODNE TAGI OKNO / BALKON / DRZWI */
+    function matchesPrimaryCategoryTag(asset, primaryCategory) {
+      const tagsLower = (asset.tags || []).map(t => String(t).toLowerCase().trim());
+
+      const isWindow = tagsLower.some(t => t === 'okno' || t === 'okna' || t.startsWith('okno ') || t.startsWith('okna '));
+      const isDoor = tagsLower.some(t => t === 'drzwi' || t.startsWith('drzwi '));
+      const isBalcony = tagsLower.some(t => t === 'balkon' || t === 'balkony' || t.startsWith('balkon '));
+
+      if (primaryCategory === 'Okno') {
+        return isWindow;
+      }
+      if (primaryCategory === 'Drzwi') {
+        return isDoor;
+      }
+      if (primaryCategory === 'Balkon') {
+        return isBalcony;
+      }
+      return true;
+    }
+
+    /* WSTĘPNA ANALIZA ZDJĘCIA UŻYTKOWNIKA: ODRZUCANIE OBIEKTÓW NIEBĘDĄCYCH BUDYNKIEM + KATEGORIA (Okno / Drzwi / Balkon) */
+    async function analyzeUserStreetviewGate(apiKey, mimeType, base64Data) {
+      const gatePrompt = `Jesteś asystentem bazy assetów architektonicznych 3D do gry The Bus.
+Sprawdź załączone zdjęcie i wykonaj 2 zadania:
+
+1. "isBuildingElement": ustaw true TYLKO jeśli na zdjęciu widoczny jest fragment budynku, fasady, elewacji, okna, drzwi, balkonu, witryny, dachu, gzymsu lub konstrukcji architektonicznej.
+   Ustaw false, jeśli zdjęcie przedstawia roślinę/kwiat, zwierzę, jedzenie, samochód/pojazd niezwiązany z fasadą budynku, twarz, krajobraz bez architektury budynków, mem lub losowy przedmiot niebędący elementem budynku.
+
+2. "primaryCategory": wybierz JEDNĄ z trzech ogólnych kategorii: "Okno", "Drzwi" lub "Balkon" (ta kategoria posłuży do odfiltrowania bazy przed skanem).
+   - Jeśli widać główne drzwi / wejście / bramę -> "Drzwi"
+   - Jeśli widać balkon / balustradę balkonową / balkon francuski -> "Balkon"
+   - W pozostałych przypadkach okien / fasad / witryn -> "Okno"
+
+3. "detectedTags": wybierz pasujące ogólne cechy spośród: ["Okno", "Drzwi", "Balkon", "Okno dwuskrzydłowe", "Okno trójskrzydłowe", "Okno wielokwaterowe", "Okno łukowe", "Okno poziome", "Świetlik nadokienny", "Balkon francuski", "Balustrada", "Gzyms", "Nadokiennik", "Witryna", "Kamienica", "Klasyczny", "Nowe", "Roleta", "Parapet", "Cokół"].
+
+4. "rejectionReason": jeśli "isBuildingElement" jest false, podaj krótki powód po polsku (np. "Na zdjęciu widoczny jest kwiat, a nie element budynku"). W przeciwnym razie "".
+
+5. "description": krótki opis architektoniczny po polsku (1-2 zdania).
+
+Zwróć WYŁĄCZNIE poprawny JSON:
+{
+  "isBuildingElement": true,
+  "primaryCategory": "Okno",
+  "detectedTags": ["Okno"],
+  "rejectionReason": "",
+  "description": "..."
+}`;
+
+      const aiJson = await callGeminiWithFallback(apiKey, gatePrompt, mimeType, base64Data);
+      const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      const parsed = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+
+      let cat = parsed.primaryCategory;
+      if (!['Okno', 'Drzwi', 'Balkon'].includes(cat)) {
+        cat = 'Okno';
+      }
+
+      const tags = Array.isArray(parsed.detectedTags) ? parsed.detectedTags.map(String) : [];
+      if (!tags.includes(cat)) {
+        tags.unshift(cat);
+      }
+
+      return {
+        isBuildingElement: Boolean(parsed.isBuildingElement),
+        primaryCategory: cat,
+        detectedTags: tags,
+        rejectionReason: parsed.rejectionReason || 'Zdjęcie nie przedstawia elementu budynku.',
+        description: parsed.description || ''
+      };
+    }
+
+    /* OCENA POJEDYNCZEGO MESHA W TRYBIE SZCZEGÓŁOWYM (ID + OPIS + TAGI + ŚCIEŻKA ZDJĘCIA + OBRAZ) */
+    async function scoreSingleMeshWithImage(apiKey, userMimeType, userBase64, userGate, asset) {
+      const assetId = getNumericMeshId(asset, 0);
+      const imgPath = asset.image || getMeshImagePathById(assetId);
+
+      let meshPart = null;
+      try {
+        const resp = await fetch(asset._imgVersion ? `${imgPath}?v=${asset._imgVersion}` : imgPath);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const b64 = await blobToBase64(blob);
+          meshPart = {
+            inlineData: {
+              mimeType: blob.type || 'image/png',
+              data: b64
+            }
+          };
+        }
+      } catch (e) {
+        meshPart = null;
+      }
+
+      const meshPrompt = `Porównaj ZDJĘCIE 1 (szukany element ze Street View) ze ZDJĘCIEM 2 (obiekt z bazy meshów 3D do gry The Bus).
+
+Kategoria ogólna ze zdjęcia 1: "${userGate.primaryCategory}" (tagi: ${JSON.stringify(userGate.detectedTags)}).
+Opis ze zdjęcia 1: "${userGate.description}".
+
+Dane mesha ze zdjęcia 2:
+- id: ${assetId}
+- name: "${asset.name}"
+- imagePath: "${imgPath}"
+- tags: ${JSON.stringify(asset.tags || [])}
+- description: "${asset.description || ''}"
+
+Oceń dopasowanie (0-100) na podstawie wyglądu na obu zdjęciach, opisu oraz tagów.
+Jeśli bryła, liczba skrzydeł, łuk lub układ wyraźnie się różni, obniż wynik adekwatnie.
+
+Zwróć WYŁĄCZNIE poprawny JSON:
+{
+  "score": 85,
+  "reason": "Krótkie uzasadnienie dopasowania po polsku (1-2 zdania)."
+}`;
+
+      const parts = [{ text: meshPrompt }];
+      if (meshPart) {
+        parts.push(meshPart);
+      }
+
+      let lastError = null;
+      for (const modelName of GEMINI_MODELS_FALLBACK) {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                ...parts,
+                {
+                  inlineData: {
+                    mimeType: userMimeType,
+                    data: userBase64
+                  }
+                }
+              ]
+            }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        const data = await resp.json();
+        if (!data.error) {
+          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+          const parsed = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+          let sc = Number(parsed.score);
+          if (isNaN(sc)) sc = 0;
+          sc = Math.max(0, Math.min(100, Math.round(sc)));
+          return {
+            score: sc,
+            reason: parsed.reason || `Porównano z mesh ID ${assetId} (${asset.name}).`
+          };
+        }
+
+        lastError = data.error;
+        const msg = (data.error.message || '').toLowerCase();
+        const status = data.error.code || resp.status;
+
+        if (status === 400 || status === 403 || msg.includes('api key not valid')) {
+          localStorage.removeItem(GEMINI_KEY_STORAGE);
+          throw new Error('Nieprawidłowy klucz Google AI API.');
+        }
+
+        if (status === 429 || msg.includes('quota') || msg.includes('rate')) {
+          await sleepMs(12000);
+          continue;
+        }
+
+        if (status !== 503 && !msg.includes('overloaded')) {
+          throw new Error(data.error.message || 'Błąd komunikacji z Google AI.');
+        }
+      }
+
+      return {
+        score: 0,
+        reason: lastError?.message || 'Pominięto z powodu limitu zapytań AI.'
+      };
+    }
+
+    function renderStreetviewScoredGrid(scoredList) {
+      const resultsGrid = document.getElementById('sv-results-grid');
+      resultsGrid.innerHTML = '';
+
+      const sorted = [...scoredList].sort((a, b) => b.similarityScore - a.similarityScore);
+      const favIds = getFavoriteIds();
+
+      sorted.forEach(item => {
+        const assetObj = item.asset;
+        const score = item.similarityScore;
+        const assetId = getNumericMeshId(assetObj, item.index);
+        const isFav = favIds.includes(assetId);
+        const favBtnClass = isFav ? 'fav-btn is-favorite' : 'fav-btn';
+        const favSymbol = isFav ? '❤️' : '♡';
+
+        let badgeColor = 'var(--accent-red)';
+        if (score >= 85) {
+          badgeColor = 'var(--accent-green)';
+        } else if (score >= 50) {
+          badgeColor = 'var(--accent-yellow)';
+        }
+
+        let breakdownHtml = `<strong style="color:#ffffff;">Dopasowanie: ${score}%</strong><br>`;
+        if (item.matchedList && item.matchedList.length > 0) {
+          breakdownHtml += `<span style="color:#34d399;">✓ Zgodne cechy:</span> ${item.matchedList.join(', ')}<br>`;
+        }
+        if (item.missingList && item.missingList.length > 0) {
+          breakdownHtml += `<span style="color:#f87171;">✗ Brakujące cechy:</span> ${item.missingList.join(', ')}<br>`;
+        }
+        if (item.extraList && item.extraList.length > 0) {
+          breakdownHtml += `<span style="color:#fbbf24;">⚠ Dodatkowe cechy:</span> ${item.extraList.join(', ')}<br>`;
+        }
+
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.onclick = () => openModal(assetObj);
+
+        const cacheBuster = assetObj._imgVersion ? `?v=${assetObj._imgVersion}` : '';
+        const imgContent = assetObj.image
+          ? `<img src="${assetObj.image}${cacheBuster}" alt="${assetObj.name}" loading="lazy" onerror="handleImageError(this)">`
+          : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+
+        const tagsHtml = (assetObj.tags || []).map(t => `<span class="card-tag">${t}</span>`).join('');
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-title">${assetObj.name}</div>
+              <div class="card-score-tooltip-wrap">
+                <span class="card-score-badge" style="background:${badgeColor}25; border:1px solid ${badgeColor}; color:${badgeColor};">${score}% DOPASOWANIA</span>
+                <div class="card-score-tooltip-box">
+                  ${breakdownHtml}
+                </div>
+              </div>
+            </div>
+            <div class="card-header-actions">
+              <button class="${favBtnClass}" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}" onclick="toggleFavorite(event, ${assetId})">${favSymbol}</button>
+              <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
+            </div>
+          </div>
+          <div class="card-image-wrap">${imgContent}</div>
+          <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza (ID ${assetId}):</strong> ${item.reason}</div>
+          <div class="card-footer">
+            <div class="card-tags-list">${tagsHtml}</div>
+          </div>
+        `;
+        resultsGrid.appendChild(card);
+      });
+    }
+
     async function searchStreetviewMatches() {
       if (!pendingStreetviewBlob) return;
 
@@ -2640,190 +3114,200 @@
         localStorage.setItem(GEMINI_KEY_STORAGE, apiKey);
       }
 
+      const isDeepScan = document.getElementById('sv-deep-scan-toggle').checked;
       const wrapper = document.getElementById('sv-target-wrapper');
       const searchBtn = document.getElementById('btn-sv-search');
       const resultsInfo = document.getElementById('sv-results-info');
       const resultsGrid = document.getElementById('sv-results-grid');
+      const progressCard = document.getElementById('sv-progress-card');
+      const progressPctEl = document.getElementById('sv-progress-pct');
+      const progressEtaEl = document.getElementById('sv-progress-eta');
+      const progressFillEl = document.getElementById('sv-progress-fill');
+      const progressCurrentEl = document.getElementById('sv-progress-current');
 
+      deepScanAbortController = false;
+      liveScoredMatches = [];
       searchBtn.disabled = true;
-      wrapper.classList.add('ai-loading');
-      resultsInfo.textContent = 'AI analizuje detale stolarki, układ okien i dobiera tagi z bazy...';
       resultsGrid.innerHTML = '';
+      progressCard.classList.remove('active');
+
+      if (!isDeepScan) {
+        wrapper.classList.add('ai-loading');
+      }
+      resultsInfo.textContent = 'Sprawdzam zdjęcie i określam kategorię (Okno / Drzwi / Balkon)...';
 
       try {
-        const base64Data = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result.split(',')[1]);
-          reader.readAsDataURL(pendingStreetviewBlob);
-        });
+        const mimeType = pendingStreetviewBlob.type || 'image/jpeg';
+        const base64Data = await blobToBase64(pendingStreetviewBlob);
 
-        const allUniqueTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
+        const gateResult = await analyzeUserStreetviewGate(apiKey, mimeType, base64Data);
 
-        const promptText = `Przeanalizuj ten zrzut ekranu budynku ze Street View ze szczególnym uwzględnieniem układu stolarki okiennej i detali fasady.
-Zwróć uwagę na:
-- Liczbę skrzydeł okiennych (np. okno jedno-, dwu- lub trójskrzydłowe),
-- Czy nad głównym oknem znajduje się dodatkowe okno poziome / lufcik / świetlik,
-- Obecność balkonu, balkonu francuskiego, gzymsów, pilastrów lub ozdobnych nadokienników.
+        if (!gateResult.isBuildingElement) {
+          wrapper.classList.remove('ai-loading');
+          resultsInfo.innerHTML = `
+            <div class="sv-summary-bar" style="border-color: rgba(239, 68, 68, 0.55); background: rgba(239, 68, 68, 0.08);">
+              <div class="sv-analysis-text" style="color: #fca5a5;">
+                ⛔ <strong>Zdjęcie odrzucone:</strong> ${gateResult.rejectionReason} Wgraj zrzut ekranu przedstawiający fragment budynku, okno, drzwi lub balkon.
+              </div>
+            </div>
+          `;
+          searchBtn.disabled = false;
+          return;
+        }
 
-Wybierz z listy dostępnych tagów te, które pasują do tego budynku: ${JSON.stringify(allUniqueTags)}.
-Zwróć WYŁĄCZNIE poprawny JSON:
-{
-  "detectedTags": ["tag1", "tag2"],
-  "description": "Konkretny opis układu stolarki, liczby skrzydeł, ewentualnych dodatkowych okien poziomych oraz cech architektonicznych ze zdjęcia po polsku."
-}`;
+        const targetTags = (gateResult.detectedTags || []).map(t => t.toLowerCase());
+        const primaryCat = gateResult.primaryCategory;
 
-        const aiJson = await callGeminiWithFallback(apiKey, promptText, pendingStreetviewBlob.type || 'image/jpeg', base64Data);
-        const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        const parsedAnalysis = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+        if (!isDeepScan) {
+          const scoredAssets = allAssets
+            .filter(a => a._status !== 'deleted')
+            .map((asset, idx) => {
+              const assetTags = (asset.tags || []).map(t => t.toLowerCase());
+              const assetNameLower = asset.name.toLowerCase();
+              const assetDescLower = (asset.description || '').toLowerCase();
+              let score = 100;
 
-        const targetTags = (parsedAnalysis.detectedTags || []).map(t => t.toLowerCase());
+              const hasCatTag = matchesPrimaryCategoryTag(asset, primaryCat);
+              if (!hasCatTag) {
+                score -= 35;
+              }
 
-        const scoredAssets = allAssets.map((asset, idx) => {
-          const assetTags = (asset.tags || []).map(t => t.toLowerCase());
-          const assetNameLower = asset.name.toLowerCase();
-          const assetDescLower = (asset.description || '').toLowerCase();
-          let score = 100;
+              const isTargetFrenchBalcony = targetTags.includes('balkon francuski');
+              const isAssetHasRegularBalcony = assetTags.includes('balkon') || assetNameLower.includes('balkon') || assetDescLower.includes('balkon');
+              const isAssetHasFrenchBalcony = assetTags.includes('balkon francuski') || assetNameLower.includes('balkon francuski');
 
-          const isTargetFrenchBalcony = targetTags.includes('balkon francuski');
-          const isAssetHasRegularBalcony = assetTags.includes('balkon') || assetNameLower.includes('balkon') || assetDescLower.includes('balkon');
-          const isAssetHasFrenchBalcony = assetTags.includes('balkon francuski') || assetNameLower.includes('balkon francuski');
+              if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
+                score -= 45;
+              }
 
-          if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
-            score -= 45;
-          }
+              targetTags.forEach(tTag => {
+                if (!assetTags.includes(tTag)) {
+                  score -= 12;
+                }
+              });
 
-          const isTargetArch = targetTags.includes('łukowe') || targetTags.includes('łuk');
-          const isAssetArch = assetTags.includes('łukowe') || assetTags.includes('łuk') || assetNameLower.includes('łuk');
-          if (isTargetArch !== isAssetArch) {
-            score -= 30;
-          }
+              const extraTags = assetTags.filter(aTag => !targetTags.includes(aTag)).length;
+              score -= (extraTags * 4);
 
-          targetTags.forEach(tTag => {
-            if (!assetTags.includes(tTag)) {
-              score -= 15;
-            }
-          });
+              if (score < 10) score = 10;
+              if (score > 100) score = 100;
 
-          const extraTags = assetTags.filter(aTag => !targetTags.includes(aTag)).length;
-          score -= (extraTags * 5);
+              const matchedList = targetTags.filter(t => assetTags.includes(t));
+              const missingList = targetTags.filter(t => !assetTags.includes(t));
+              const extraList = assetTags.filter(t => !targetTags.includes(t));
 
-          if (score < 10) score = 10;
-          if (score > 100) score = 100;
+              const reason = `Kategoria: ${primaryCat}. Zgodne: ${matchedList.join(', ') || 'brak'}. Brakujące: ${missingList.join(', ') || 'brak'}.`;
 
-          const matchedList = targetTags.filter(t => assetTags.includes(t));
-          const missingList = targetTags.filter(t => !assetTags.includes(t));
-          const extraList = assetTags.filter(t => !targetTags.includes(t));
+              return {
+                asset,
+                index: idx,
+                similarityScore: Math.round(score),
+                reason,
+                matchedList,
+                missingList,
+                extraList
+              };
+            });
 
-          let customReason = `Element architektoniczny "${asset.name}". `;
-          if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
-            customReason += `⚠️ Konflikt typów: obiekt posiada pełny balkon zamiast francuskiego (-45%). `;
-          }
-          if (matchedList.length > 0) {
-            customReason += `Zgodne cechy: ${matchedList.join(', ')}. `;
-          }
-          if (missingList.length > 0) {
-            customReason += `Brakujące cechy: ${missingList.join(', ')} (-15% każda). `;
-          }
-          if (extraList.length > 0) {
-            customReason += `Dodatkowe elementy: ${extraList.join(', ')}.`;
-          }
+          scoredAssets.sort((a, b) => b.similarityScore - a.similarityScore);
+          liveScoredMatches = scoredAssets.slice(0, 6);
 
-          return {
-            asset,
-            index: idx,
-            similarityScore: Math.round(score),
-            reason: customReason,
-            matchedList,
-            missingList,
-            extraList
-          };
-        });
+          const detectedTagsListStr = (gateResult.detectedTags || []).join(', ');
+          resultsInfo.innerHTML = `
+            <div class="sv-summary-bar">
+              <div class="sv-analysis-text">
+                ✨ <strong>Kategoria główna: ${primaryCat}</strong> • ${gateResult.description} (Tagi: <em>${detectedTagsListStr}</em>).
+              </div>
+              <div class="sv-tooltip-wrap">
+                <div class="sv-info-badge">ℹ️ Tagi analizy</div>
+                <div class="sv-tooltip-box">
+                  <strong>Wykryte tagi:</strong><br>
+                  <span style="color: #93c5fd; font-family: 'JetBrains Mono', monospace;">${detectedTagsListStr}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          renderStreetviewScoredGrid(liveScoredMatches);
+          wrapper.classList.remove('ai-loading');
+          searchBtn.disabled = false;
+          return;
+        }
 
-        scoredAssets.sort((a, b) => b.similarityScore - a.similarityScore);
-        const topMatches = scoredAssets.slice(0, 6);
-        const detectedTagsListStr = (parsedAnalysis.detectedTags || []).join(', ') || 'brak wykrytych cech';
+        /* TRYB SZCZEGÓŁOWY (ON): PIERW ODRZUCA NIEZGODNE TAGI OKNO / BALKON / DRZWI, POTEM SKANUJE KAŻDY PASUJĄCY MESH + ZDJĘCIE */
+        wrapper.classList.remove('ai-loading');
+        progressCard.classList.add('active');
+
+        const allActiveAssets = allAssets.filter(a => a._status !== 'deleted');
+        const filteredAssets = allActiveAssets.filter(a => matchesPrimaryCategoryTag(a, primaryCat));
+        const rejectedCount = allActiveAssets.length - filteredAssets.length;
+        const totalItems = filteredAssets.length;
+        const startTime = Date.now();
+        const detectedTagsListStr = (gateResult.detectedTags || []).join(', ');
 
         resultsInfo.innerHTML = `
           <div class="sv-summary-bar">
             <div class="sv-analysis-text">
-              ✨ <strong>Szczegółowa analiza AI Street View:</strong> ${parsedAnalysis.description || ''} (Wykryte tagi: <em>${detectedTagsListStr}</em>). Obiekty zostały porównane pod kątem precyzyjnych detali stolarki i konstrukcji.
+              🔬 <strong>Szczegółowy skan LIVE (${primaryCat}):</strong> Odrzucono <strong>${rejectedCount}</strong> obiektów o niezgodnej kategorii (Okno/Drzwi/Balkon). Pozostało do skanowania: <strong>${totalItems}</strong> z ${allActiveAssets.length} meshów. (${gateResult.description})
             </div>
             <div class="sv-tooltip-wrap">
-              <div class="sv-info-badge">
-                ℹ️ Szczegóły wykrytych tagów
-              </div>
+              <div class="sv-info-badge">ℹ️ Tagi analizy</div>
               <div class="sv-tooltip-box">
-                <strong>Wykryte tagi ze zdjęcia:</strong><br>
-                <span style="color: #93c5fd; font-family: 'JetBrains Mono', monospace;">${detectedTagsListStr}</span>
+                <strong>Kategoria główna:</strong> ${primaryCat}<br>
+                <strong>Wykryte tagi:</strong> <span style="color: #93c5fd; font-family: 'JetBrains Mono', monospace;">${detectedTagsListStr}</span>
               </div>
             </div>
-          </div>
-          <div style="font-size:13px; color:var(--text-secondary); margin-bottom: 12px;">
-            Znaleziono <strong>${topMatches.length}</strong> najlepiej pasujących obiektów w bazie:
           </div>
         `;
 
-        topMatches.forEach(item => {
-          const assetObj = item.asset;
-          const score = item.similarityScore;
-          const assetId = getNumericMeshId(assetObj, item.index);
-          const favIds = getFavoriteIds();
-          const isFav = favIds.includes(assetId);
-          const favBtnClass = isFav ? 'fav-btn is-favorite' : 'fav-btn';
-          const favSymbol = isFav ? '❤️' : '♡';
+        if (totalItems === 0) {
+          progressCard.classList.remove('active');
+          resultsInfo.innerHTML += `<div style="color:#fbbf24;">Brak obiektów w bazie z tagiem kategorii <strong>${primaryCat}</strong>.</div>`;
+          searchBtn.disabled = false;
+          return;
+        }
 
-          let badgeColor = 'var(--accent-red)';
-          if (score >= 85) {
-            badgeColor = 'var(--accent-green)';
-          } else if (score >= 50) {
-            badgeColor = 'var(--accent-yellow)';
+        for (let i = 0; i < totalItems; i++) {
+          if (deepScanAbortController) {
+            progressCurrentEl.textContent = `Skan przerwany przez użytkownika na ${i} / ${totalItems}.`;
+            break;
           }
 
-          let breakdownHtml = `<strong style="color:#ffffff;">Szczegółowe rozliczenie punktowe (${score}%):</strong><br>`;
-          if (item.matchedList.length > 0) {
-            breakdownHtml += `<span style="color:#34d399;">✓ Zgodne tagi:</span> ${item.matchedList.join(', ')}<br>`;
-          }
-          if (item.missingList.length > 0) {
-            breakdownHtml += `<span style="color:#f87171;">✗ Brakujące cechy (-${item.missingList.length * 15}%):</span> ${item.missingList.join(', ')}<br>`;
-          }
-          if (item.extraList.length > 0) {
-            breakdownHtml += `<span style="color:#fbbf24;">⚠ Dodatkowe cechy (-${item.extraList.length * 5}%):</span> ${item.extraList.join(', ')}<br>`;
-          }
+          const asset = filteredAssets[i];
+          const assetId = getNumericMeshId(asset, i);
+          const processedCount = i + 1;
+          const pct = Math.round((processedCount / totalItems) * 100);
+          const elapsedSec = (Date.now() - startTime) / 1000;
+          const avgSecPerItem = elapsedSec / processedCount;
+          const remainingSec = avgSecPerItem * (totalItems - processedCount);
 
-          const card = document.createElement('article');
-          card.className = 'card';
-          card.onclick = () => openModal(assetObj);
+          progressPctEl.textContent = `${pct}%`;
+          progressFillEl.style.width = `${pct}%`;
+          progressEtaEl.textContent = i === 0
+            ? `Szacowany czas: może zająć dłuższą chwilę (${processedCount}/${totalItems})`
+            : `Szacowany pozostały czas: ~${formatEtaSeconds(remainingSec)} (${processedCount}/${totalItems})`;
+          progressCurrentEl.textContent = `Analizuję [${primaryCat}] ID ${assetId}: ${asset.name} (${asset.image || getMeshImagePathById(assetId)})...`;
 
-          const imgContent = assetObj.image
-            ? `<img src="${assetObj.image}" alt="${assetObj.name}" loading="lazy" onerror="handleImageError(this)">`
-            : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+          const singleEval = await scoreSingleMeshWithImage(apiKey, mimeType, base64Data, gateResult, asset);
 
-          const tagsHtml = assetObj.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+          liveScoredMatches.push({
+            asset,
+            index: i,
+            similarityScore: singleEval.score,
+            reason: singleEval.reason,
+            matchedList: (asset.tags || []).filter(t => targetTags.includes(t.toLowerCase())),
+            missingList: [],
+            extraList: []
+          });
 
-          card.innerHTML = `
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">${assetObj.name}</div>
-                <div class="card-score-tooltip-wrap">
-                  <span class="card-score-badge" style="background:${badgeColor}25; border:1px solid ${badgeColor}; color:${badgeColor};">${score}% DOPASOWANIA</span>
-                  <div class="card-score-tooltip-box">
-                    ${breakdownHtml}
-                  </div>
-                </div>
-              </div>
-              <div class="card-header-actions">
-                <button class="${favBtnClass}" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}" onclick="toggleFavorite(event, ${assetId})">${favSymbol}</button>
-                <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
-              </div>
-            </div>
-            <div class="card-image-wrap">${imgContent}</div>
-            <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza mesha:</strong> ${item.reason}</div>
-            <div class="card-footer">
-              <div class="card-tags-list">${tagsHtml}</div>
-            </div>
-          `;
-          resultsGrid.appendChild(card);
-        });
+          renderStreetviewScoredGrid(liveScoredMatches);
+        }
+
+        if (!deepScanAbortController) {
+          progressPctEl.textContent = '100%';
+          progressFillEl.style.width = '100%';
+          progressEtaEl.textContent = 'Zakończono skan pasującej kategorii';
+          progressCurrentEl.textContent = `Przeanalizowano wszystkie ${totalItems} obiektów z kategorii "${primaryCat}" (odrzucono ${rejectedCount} z innych kategorii).`;
+        }
 
       } catch (err) {
         resultsInfo.innerHTML = `<span style="color:#ef4444">Błąd AI Street View: ${err.message}</span>`;
@@ -2833,7 +3317,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       }
     }
 
-    /* UPLOAD ZDJĘCIA JAKO images/<ID>.png Z OBSŁUGĄ NADPISYWANIA (SHA) PRZY EDYCJI */
     async function uploadPendingImageToGithubInBackground(blob, targetRepoFilePath, meshId) {
       if (!blob) return targetRepoFilePath;
       const toast = showToast(`Wysyłanie ${targetRepoFilePath}...`);
@@ -3456,7 +3939,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
 
       if (pendingImageBlob) {
         image = getMeshImagePathById(meshId);
-        const localBlobUrl = URL.createObjectURL(pendingImageBlob);
         uploadPendingImageToGithubInBackground(pendingImageBlob, image, meshId).then(() => {
           const found = allAssets.find(a => getNumericMeshId(a, 0) === meshId);
           if (found) {
@@ -3466,10 +3948,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             renderMeshPreview();
           }
         });
-
-        if (editingMeshIndex !== null) {
-          allAssets[editingMeshIndex]._tempPreviewUrl = localBlobUrl;
-        }
       } else if (!image) {
         image = getMeshImagePathById(meshId);
       }
@@ -3538,7 +4016,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       refreshAdminActivity();
       const cleanAssets = allAssets
         .filter(a => a._status !== 'deleted')
-        .map(({ _status, _prevStatus, _imgVersion, _tempPreviewUrl, ...rest }) => rest);
+        .map(({ _status, _prevStatus, _imgVersion, ...rest }) => rest);
 
       const sortedExportTags = [...availableTags].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
       const output = { tags: sortedExportTags, assets: cleanAssets };
@@ -3635,12 +4113,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           blob = await imgResp.blob();
         }
 
-        const base64Data = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result.split(',')[1]);
-          reader.readAsDataURL(blob);
-        });
-
+        const base64Data = await blobToBase64(blob);
         const existingTagsJson = JSON.stringify(availableTags);
 
         const promptText = `Jesteś profesjonalnym architektem i asystentem bazy assetów 3D do gry The Bus. Przeanalizuj ten Static Mesh budynku. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
