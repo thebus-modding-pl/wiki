@@ -449,9 +449,13 @@
         "Balustrada",
         "Parapet",
         "Wnęka okienna",
-        "Okno trójskrzydłowe"
+        "Okno trójskrzydłowe",
+        "Balkon z balustradą",
+        "Drzwi",
+        "Drzwi balkonowe",
+        "Okno wielokwaterowe"
       ],
-      "description": "Prezentowany model przedstawia fragment płaskiej ściany z osadzonym w głębokiej wnęce oknem trójskrzydłowym. Górna część okna posiada dodatkowe mniejsze kwatery pełniące funkcję świetlików. Całość osadzona jest w obramowaniu z wyraźnym parapetem u dołu.",
+      "description": "Fasada budynku wyposażona jest w szerokie drzwi balkonowe oraz przylegające do nich duże okno wielokwaterowe z podziałem na poziome segmenty. Przed przeszkleniami znajduje się funkcjonalny balkon z prostą, metalową balustradą, osadzony na wystającej płycie.",
       "addedAt": "2026-11-17T23:33:14.240Z"
     },
     {
