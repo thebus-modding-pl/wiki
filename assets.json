@@ -394,8 +394,7 @@
         "Okna",
         "Roleta",
         "Ściana",
-        "Fasada",
-        "Okno dwuskrzydłowe"
+        "Fasada"
       ],
       "description": "Prezentowany element to fragment fasady budynku z dwoma oknami wyposażonymi w zewnętrzne rolety. Okna osadzone są w płaszczyźnie ściany i posiadają widoczne ramy.",
       "addedAt": "2026-11-17T23:28:37.653Z"
