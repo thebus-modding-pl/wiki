@@ -124,6 +124,74 @@
       color: var(--text-primary);
     }
 
+    /* PŁYWAJĄCY PASEK POSTĘPU W TLE (GDY UŻYTKOWNIK JEST POZA AI STREET VIEW) */
+    .floating-scan-bar {
+      display: none;
+      position: fixed;
+      top: 38px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(560px, calc(100vw - 32px));
+      background: rgba(17, 17, 22, 0.96);
+      border: 1px solid var(--border-hover);
+      border-radius: 12px;
+      padding: 12px 16px;
+      z-index: 95;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+    }
+
+    .floating-scan-bar.visible {
+      display: block;
+    }
+
+    .floating-scan-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .floating-scan-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .floating-scan-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 800;
+      color: #60a5fa;
+    }
+
+    .floating-scan-eta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .floating-scan-new {
+      display: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 800;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin-top: 8px;
+      width: fit-content;
+    }
+
+    .floating-scan-new.visible {
+      display: inline-block;
+    }
+
     .main-wrapper {
       flex: 1;
     }
@@ -769,12 +837,12 @@
 
     .sv-progress-track {
       width: 100%;
-      height: 10px;
+      height: 12px;
       background-color: #1c1c22;
       border-radius: 999px;
       overflow: hidden;
       border: 1px solid #2a2a34;
-      margin-bottom: 10px;
+      position: relative;
     }
 
     .sv-progress-fill {
@@ -782,6 +850,35 @@
       width: 0%;
       background: linear-gradient(90deg, #2563eb, #10b981);
       transition: width 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sv-progress-fill.scanning-pulse::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -35%;
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+      animation: pingPongFlash 1.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pingPongFlash {
+      0% { left: -30%; }
+      100% { left: 95%; }
+    }
+
+    .progress-sub-counts {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #71717a;
+      user-select: none;
     }
 
     .sv-progress-current {
@@ -789,6 +886,13 @@
       color: var(--text-secondary);
       font-family: 'JetBrains Mono', monospace;
       word-break: break-word;
+      margin-top: 8px;
+    }
+
+    .sv-progress-browse-note {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 6px;
     }
 
     .btn-stop-scan {
@@ -1996,6 +2100,25 @@
     </div>
   </nav>
 
+  <!-- PŁYWAJĄCY PASEK POSTĘPU W TLE POZA AI STREET VIEW -->
+  <div class="floating-scan-bar" id="floating-scan-bar" onclick="switchTab('streetview')" title="Kliknij, aby wrócić do AI Street View">
+    <div class="floating-scan-top">
+      <div class="floating-scan-meta">
+        <span class="floating-scan-pct" id="float-scan-pct">0%</span>
+        <span class="floating-scan-eta" id="float-scan-eta">Szacowany pozostały czas: obliczanie...</span>
+      </div>
+      <button type="button" class="btn-stop-scan" onclick="event.stopPropagation(); stopDeepScan();">⏹ Przerwij skan</button>
+    </div>
+    <div class="sv-progress-track">
+      <div class="sv-progress-fill" id="float-scan-fill"></div>
+    </div>
+    <div class="progress-sub-counts">
+      <span id="float-count-done">0</span>
+      <span id="float-count-total">0</span>
+    </div>
+    <div class="floating-scan-new" id="float-scan-new">+0 nowe</div>
+  </div>
+
   <div class="main-wrapper">
     <div id="view-start" class="view-section active">
       <div class="container">
@@ -2214,7 +2337,7 @@
           </div>
         </section>
 
-        <!-- PASEK POSTĘPU + ETA + PRZYCISK STOP -->
+        <!-- PASEK POSTĘPU + ETA + LICZNIKI + PRZYCISK STOP -->
         <div class="sv-progress-card" id="sv-progress-card">
           <div class="sv-progress-top">
             <div>
@@ -2226,7 +2349,12 @@
           <div class="sv-progress-track">
             <div class="sv-progress-fill" id="sv-progress-fill"></div>
           </div>
+          <div class="progress-sub-counts">
+            <span id="sv-count-done">0</span>
+            <span id="sv-count-total">0</span>
+          </div>
           <div class="sv-progress-current" id="sv-progress-current">Oczekiwanie na start...</div>
+          <div class="sv-progress-browse-note">Możesz w tym czasie przeglądać stronę.</div>
         </div>
 
         <div class="sv-loading-container" id="sv-target-wrapper">
@@ -2548,6 +2676,8 @@
     let pendingImageBlob = null;
     let pendingStreetviewBlob = null;
     let deepScanAbortController = false;
+    let isDeepScanRunning = false;
+    let awayNewMatchesCount = 0;
     let liveScoredMatches = [];
 
     let previewZoomState = {
@@ -2839,17 +2969,50 @@
       document.getElementById('sv-progress-current').textContent = 'Zatrzymywanie skanowania...';
     }
 
+    function syncFloatingScanBar() {
+      const bar = document.getElementById('floating-scan-bar');
+      const isOnStreetView = document.getElementById('view-streetview').classList.contains('active');
+
+      if (isDeepScanRunning && !isOnStreetView) {
+        bar.classList.add('visible');
+        const newBadge = document.getElementById('float-scan-new');
+        if (awayNewMatchesCount > 0) {
+          newBadge.textContent = `+${awayNewMatchesCount} nowe`;
+          newBadge.classList.add('visible');
+        } else {
+          newBadge.classList.remove('visible');
+        }
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
+
+    function updateScanProgressUi(pct, etaText, doneCount, totalCount) {
+      const safePct = Math.max(0, Math.min(100, Number(pct) || 0));
+      const safeDone = Math.max(0, Number(doneCount) || 0);
+      const safeTotal = Math.max(0, Number(totalCount) || 0);
+
+      document.getElementById('sv-progress-pct').textContent = `${safePct}%`;
+      document.getElementById('sv-progress-eta').textContent = etaText;
+      document.getElementById('sv-progress-fill').style.width = `${safePct}%`;
+      document.getElementById('sv-count-done').textContent = `${safeDone}`;
+      document.getElementById('sv-count-total').textContent = `${safeTotal}`;
+
+      document.getElementById('float-scan-pct').textContent = `${safePct}%`;
+      document.getElementById('float-scan-eta').textContent = etaText;
+      document.getElementById('float-scan-fill').style.width = `${safePct}%`;
+      document.getElementById('float-count-done').textContent = `${safeDone}`;
+      document.getElementById('float-count-total').textContent = `${safeTotal}`;
+    }
+
     function formatEtaSeconds(sec) {
-      if (!isFinite(sec) || sec <= 0) return 'mniej niż 1 s';
-      const total = Math.ceil(sec);
+      const safeSec = Math.max(0, Number(sec) || 0);
+      if (!isFinite(safeSec) || safeSec <= 0) return '0 s';
+      const total = Math.ceil(safeSec);
       const mins = Math.floor(total / 60);
       const rem = total % 60;
       if (mins <= 0) return `${rem} s`;
       return `${mins} min ${rem} s`;
-    }
-
-    function sleepMs(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     async function blobToBase64(blob) {
@@ -2935,7 +3098,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         status === 504 ||
         lower.includes('no longer available') ||
         lower.includes('not found') ||
-        lower.includes('model') && lower.includes('available') ||
+        (lower.includes('model') && lower.includes('available')) ||
         lower.includes('quota') ||
         lower.includes('rate') ||
         lower.includes('overloaded')
@@ -2963,7 +3126,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         meshPart = null;
       }
 
-      const meshPrompt = `Oceń, na ile ten mesh 3D pasuje do zdjęcia źródłowego ze Street View.
+      const meshPrompt = `Oceń, jak dobrze ten mesh 3D odpowiada zdjęciu źródłowemu ze Street View pod kątem bryły, układu skrzydeł, podziałów i charakteru architektonicznego.
 
 Kontekst zdjęcia źródłowego:
 - Kategoria: "${userGate.primaryCategory}"
@@ -2975,12 +3138,17 @@ Dane ocenianego mesha:
 - Tagi: ${JSON.stringify(asset.tags || [])}
 - Opis: "${asset.description || ''}"
 
-W polu "reason" napisz WYŁĄCZNIE konkretny WNIOSEK po polsku (1-2 zdania), dlaczego ten mesh pasuje lub dlaczego nie pasuje do zdjęcia źródłowego (np. układ skrzydeł, podziały, łuk, proporcje lub brak zgodności bryły).
-ABSOLUTNY ZAKAZ pisania w "reason" sformułowań typu "Zdjęcie 1 przedstawia..." ani "Zdjęcie 2 / ID ... przedstawia...". Od razu przejdź do wniosku o dopasowaniu do zdjęcia źródłowego.
+Zasady punktacji (0-100):
+- Jeśli bryła, liczba skrzydeł i proporcje są bardzo zbliżone do zdjęcia źródłowego (np. okno dwuskrzydłowe o podobnym układzie), dawaj wysokie dopasowanie (70-95%).
+- Pojedynczy drobny tag taki jak "Parapet" sam w sobie NIE jest powodem do zaniżania wyniku do 10-40%.
+- Jeśli obiekt jest wyraźnie innym typem (np. wielosegmentowa witryna zamiast pojedynczego okna albo łuk/balkon zamiast prostego okna), daj niski wynik (np. 10-35%). Jeśli zupełnie nie pasuje, daj 0.
+
+W polu "reason" napisz WYŁĄCZNIE konkretny WNIOSEK po polsku (1-2 zdania), dlaczego ten mesh pasuje lub dlaczego nie pasuje do zdjęcia źródłowego.
+ABSOLUTNY ZAKAZ pisania w "reason" sformułowań typu "Zdjęcie 1 przedstawia..." ani "Zdjęcie 2 / ID ... przedstawia...". Od razu przejdź do wniosku.
 
 Zwróć WYŁĄCZNIE poprawny JSON:
 {
-  "score": 85,
+  "score": 82,
   "reason": "Wniosek dlaczego pasuje lub nie pasuje do zdjęcia źródłowego."
 }`;
 
@@ -3032,11 +3200,6 @@ Zwróć WYŁĄCZNIE poprawny JSON:
           throw new ScanFatalError('Nieprawidłowy klucz Google AI API.');
         }
 
-        if (status === 429 || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate')) {
-          await sleepMs(4000);
-          continue;
-        }
-
         if (isModelUnavailableOrRetryableError(status, msg)) {
           continue;
         }
@@ -3051,7 +3214,8 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       const resultsGrid = document.getElementById('sv-results-grid');
       resultsGrid.innerHTML = '';
 
-      const sorted = [...scoredList].sort((a, b) => b.similarityScore - a.similarityScore);
+      const visibleMatches = scoredList.filter(item => Number(item.similarityScore) > 0);
+      const sorted = [...visibleMatches].sort((a, b) => b.similarityScore - a.similarityScore);
       const favIds = getFavoriteIds();
 
       sorted.forEach(item => {
@@ -3134,16 +3298,22 @@ Zwróć WYŁĄCZNIE poprawny JSON:
       const resultsInfo = document.getElementById('sv-results-info');
       const resultsGrid = document.getElementById('sv-results-grid');
       const progressCard = document.getElementById('sv-progress-card');
-      const progressPctEl = document.getElementById('sv-progress-pct');
-      const progressEtaEl = document.getElementById('sv-progress-eta');
       const progressFillEl = document.getElementById('sv-progress-fill');
+      const floatFillEl = document.getElementById('float-scan-fill');
       const progressCurrentEl = document.getElementById('sv-progress-current');
 
       deepScanAbortController = false;
+      isDeepScanRunning = false;
+      awayNewMatchesCount = 0;
       liveScoredMatches = [];
       searchBtn.disabled = true;
       resultsGrid.innerHTML = '';
       progressCard.classList.remove('active');
+      progressFillEl.classList.remove('scanning-pulse');
+      floatFillEl.classList.remove('scanning-pulse');
+      syncFloatingScanBar();
+
+      let etaIntervalId = null;
 
       if (!isDeepScan) {
         wrapper.classList.add('ai-loading');
@@ -3179,11 +3349,11 @@ Zwróć WYŁĄCZNIE poprawny JSON:
               const assetTags = (asset.tags || []).map(t => t.toLowerCase());
               const assetNameLower = asset.name.toLowerCase();
               const assetDescLower = (asset.description || '').toLowerCase();
-              let score = 100;
+              let score = 92;
 
               const hasCatTag = matchesPrimaryCategoryTag(asset, primaryCat);
               if (!hasCatTag) {
-                score -= 35;
+                score -= 25;
               }
 
               const isTargetFrenchBalcony = targetTags.includes('balkon francuski');
@@ -3191,26 +3361,27 @@ Zwróć WYŁĄCZNIE poprawny JSON:
               const isAssetHasFrenchBalcony = assetTags.includes('balkon francuski') || assetNameLower.includes('balkon francuski');
 
               if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
-                score -= 45;
+                score -= 35;
               }
 
               targetTags.forEach(tTag => {
+                if (tTag === 'parapet') return;
                 if (!assetTags.includes(tTag)) {
-                  score -= 12;
+                  score -= 10;
                 }
               });
 
-              const extraTags = assetTags.filter(aTag => !targetTags.includes(aTag)).length;
-              score -= (extraTags * 4);
+              const extraTags = assetTags.filter(aTag => aTag !== 'parapet' && !targetTags.includes(aTag)).length;
+              score -= (extraTags * 2);
 
-              if (score < 10) score = 10;
+              if (score < 5) score = 5;
               if (score > 100) score = 100;
 
               const matchedList = targetTags.filter(t => assetTags.includes(t));
               const missingList = targetTags.filter(t => !assetTags.includes(t));
               const extraList = assetTags.filter(t => !targetTags.includes(t));
 
-              const reason = `Kategoria: ${primaryCat}. Zgodne: ${matchedList.join(', ') || 'brak'}. Brakujące: ${missingList.join(', ') || 'brak'}.`;
+              const reason = `Wstępny dobór dla kategorii ${primaryCat} — zgodne cechy: ${matchedList.join(', ') || 'brak'}.`;
 
               return {
                 asset,
@@ -3224,7 +3395,7 @@ Zwróć WYŁĄCZNIE poprawny JSON:
             });
 
           scoredAssets.sort((a, b) => b.similarityScore - a.similarityScore);
-          liveScoredMatches = scoredAssets.slice(0, 6);
+          liveScoredMatches = scoredAssets.filter(s => s.similarityScore > 0).slice(0, 6);
 
           const detectedTagsListStr = (gateResult.detectedTags || []).join(', ');
           resultsInfo.innerHTML = `
@@ -3248,14 +3419,22 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         }
 
         wrapper.classList.remove('ai-loading');
+        isDeepScanRunning = true;
         progressCard.classList.add('active');
+        progressFillEl.classList.add('scanning-pulse');
+        floatFillEl.classList.add('scanning-pulse');
+        syncFloatingScanBar();
 
         const allActiveAssets = allAssets.filter(a => a._status !== 'deleted');
         const filteredAssets = allActiveAssets.filter(a => matchesPrimaryCategoryTag(a, primaryCat));
         const rejectedCount = allActiveAssets.length - filteredAssets.length;
         const totalItems = filteredAssets.length;
         const startTime = Date.now();
+        let completedItems = 0;
+        let currentItemStartTime = Date.now();
         const detectedTagsListStr = (gateResult.detectedTags || []).join(', ');
+
+        updateScanProgressUi(0, `Szacowany czas: obliczanie... (0/${totalItems})`, 0, totalItems);
 
         resultsInfo.innerHTML = `
           <div class="sv-summary-bar">
@@ -3273,59 +3452,108 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         `;
 
         if (totalItems === 0) {
+          isDeepScanRunning = false;
+          syncFloatingScanBar();
           progressCard.classList.remove('active');
+          progressFillEl.classList.remove('scanning-pulse');
+          floatFillEl.classList.remove('scanning-pulse');
           resultsInfo.innerHTML += `<div style="color:#fbbf24;">Brak obiektów w bazie z tagiem kategorii <strong>${primaryCat}</strong>.</div>`;
           searchBtn.disabled = false;
           return;
         }
 
+        const updateLiveEtaDisplay = () => {
+          const now = Date.now();
+          const elapsedTotalSec = Math.max(0.2, (now - startTime) / 1000);
+          const currentItemElapsedSec = Math.max(0, (now - currentItemStartTime) / 1000);
+
+          let avgSecPerItem;
+          if (completedItems > 0) {
+            avgSecPerItem = elapsedTotalSec / completedItems;
+          } else {
+            avgSecPerItem = Math.max(currentItemElapsedSec, 8);
+          }
+
+          const remainingItems = Math.max(0, totalItems - completedItems - (currentItemElapsedSec > 0 ? 0.5 : 0));
+          const remainingSec = Math.max(0, avgSecPerItem * remainingItems);
+
+          const etaLabel = (completedItems === 0 && currentItemElapsedSec < 5)
+            ? `Szacowany czas: obliczanie... (${completedItems}/${totalItems})`
+            : `Szacowany pozostały czas: ~${formatEtaSeconds(remainingSec)} (${completedItems}/${totalItems})`;
+
+          const pct = Math.round((completedItems / totalItems) * 100);
+          updateScanProgressUi(pct, etaLabel, completedItems, totalItems);
+        };
+
+        updateLiveEtaDisplay();
+        etaIntervalId = setInterval(updateLiveEtaDisplay, 5000);
+
         for (let i = 0; i < totalItems; i++) {
           if (deepScanAbortController) {
-            progressCurrentEl.textContent = `Skan przerwany przez użytkownika na ${i} / ${totalItems}.`;
+            progressCurrentEl.textContent = `Skan przerwany przez użytkownika na ${completedItems} / ${totalItems}.`;
             break;
           }
 
           const asset = filteredAssets[i];
           const assetId = getNumericMeshId(asset, i);
-          const processedCount = i + 1;
-          const pct = Math.round((processedCount / totalItems) * 100);
-          const elapsedSec = (Date.now() - startTime) / 1000;
-          const avgSecPerItem = elapsedSec / processedCount;
-          const remainingSec = avgSecPerItem * (totalItems - processedCount);
+          currentItemStartTime = Date.now();
 
-          progressPctEl.textContent = `${pct}%`;
-          progressFillEl.style.width = `${pct}%`;
-          progressEtaEl.textContent = i === 0
-            ? `Szacowany czas: może zająć to nawet kilka minut (${processedCount}/${totalItems})`
-            : `Szacowany pozostały czas: ~${formatEtaSeconds(remainingSec)} (${processedCount}/${totalItems})`;
+          const pct = Math.round((completedItems / totalItems) * 100);
+          updateScanProgressUi(pct, document.getElementById('sv-progress-eta').textContent, completedItems, totalItems);
           progressCurrentEl.textContent = `Analizuję [${primaryCat}] ${asset.name} (${asset.image || getMeshImagePathById(assetId)})...`;
 
           const singleEval = await scoreSingleMeshWithImage(apiKey, mimeType, base64Data, gateResult, asset);
 
-          liveScoredMatches.push({
-            asset,
-            index: i,
-            similarityScore: singleEval.score,
-            reason: singleEval.reason,
-            matchedList: (asset.tags || []).filter(t => targetTags.includes(t.toLowerCase())),
-            missingList: [],
-            extraList: []
-          });
+          completedItems = i + 1;
+          const updatedPct = Math.round((completedItems / totalItems) * 100);
+          updateScanProgressUi(updatedPct, document.getElementById('sv-progress-eta').textContent, completedItems, totalItems);
+          updateLiveEtaDisplay();
 
-          renderStreetviewScoredGrid(liveScoredMatches);
+          if (singleEval.score > 0) {
+            liveScoredMatches.push({
+              asset,
+              index: i,
+              similarityScore: singleEval.score,
+              reason: singleEval.reason,
+              matchedList: (asset.tags || []).filter(t => targetTags.includes(t.toLowerCase())),
+              missingList: [],
+              extraList: []
+            });
+            renderStreetviewScoredGrid(liveScoredMatches);
+
+            if (!document.getElementById('view-streetview').classList.contains('active')) {
+              awayNewMatchesCount += 1;
+              syncFloatingScanBar();
+            }
+          }
         }
 
+        clearInterval(etaIntervalId);
+        etaIntervalId = null;
+        isDeepScanRunning = false;
+        progressFillEl.classList.remove('scanning-pulse');
+        floatFillEl.classList.remove('scanning-pulse');
+        syncFloatingScanBar();
+
         if (!deepScanAbortController) {
-          progressPctEl.textContent = '100%';
-          progressFillEl.style.width = '100%';
-          progressEtaEl.textContent = 'Zakończono skan pasującej kategorii';
+          updateScanProgressUi(100, `Szacowany pozostały czas: 0 s (${totalItems}/${totalItems})`, totalItems, totalItems);
           progressCurrentEl.textContent = `Przeanalizowano wszystkie ${totalItems} obiektów z kategorii "${primaryCat}".`;
         }
 
       } catch (err) {
+        if (etaIntervalId) clearInterval(etaIntervalId);
+        isDeepScanRunning = false;
+        syncFloatingScanBar();
+        progressFillEl.classList.remove('scanning-pulse');
+        floatFillEl.classList.remove('scanning-pulse');
         progressCard.classList.remove('active');
         resultsInfo.innerHTML = `<span style="color:#ef4444">Błąd AI Street View: ${err.message}</span>`;
       } finally {
+        if (etaIntervalId) clearInterval(etaIntervalId);
+        isDeepScanRunning = false;
+        syncFloatingScanBar();
+        progressFillEl.classList.remove('scanning-pulse');
+        floatFillEl.classList.remove('scanning-pulse');
         wrapper.classList.remove('ai-loading');
         searchBtn.disabled = false;
       }
@@ -3537,6 +3765,10 @@ Zwróć WYŁĄCZNIE poprawny JSON:
         document.getElementById(`view-${name}`).classList.toggle('active', name === tab);
         document.getElementById(`nav-${name}`).classList.toggle('active', name === tab);
       });
+      if (tab === 'streetview') {
+        awayNewMatchesCount = 0;
+      }
+      syncFloatingScanBar();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
