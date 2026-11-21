@@ -1,4 +1,3017 @@
-function parseRetryAfterSeconds(errorMessage) {
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Bus Modding Wiki — Polska Społeczność</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-body: #09090b;
+      --bg-surface: #111114;
+      --bg-surface-hover: #18181c;
+      --border-color: #222226;
+      --border-hover: #3a3a42;
+      --text-primary: #ffffff;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --pill-active-bg: #ffffff;
+      --pill-active-text: #09090b;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 40px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(9, 9, 11, 0.92);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      gap: 20px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      text-decoration: none;
+    }
+
+    .brand-logo:hover {
+      transform: scale(1.03);
+      opacity: 0.92;
+    }
+
+    .brand-logo img {
+      height: 36px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .brand-fallback {
+      font-weight: 900;
+      font-size: 15px;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .brand-fallback span {
+      color: #ef4444;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+      padding-bottom: 4px;
+      cursor: pointer;
+    }
+
+    .nav-links a.active {
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--text-primary);
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .floating-scan-bar {
+      display: none;
+      position: fixed;
+      top: 38px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(560px, calc(100vw - 32px));
+      background: rgba(17, 17, 22, 0.96);
+      border: 1px solid var(--border-hover);
+      border-radius: 12px;
+      padding: 12px 16px;
+      z-index: 95;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+    }
+
+    .floating-scan-bar.visible {
+      display: block;
+    }
+
+    .floating-scan-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .floating-scan-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .floating-scan-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 800;
+      color: #60a5fa;
+    }
+
+    .floating-scan-eta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .floating-scan-new {
+      display: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 800;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin-top: 8px;
+      width: fit-content;
+    }
+
+    .floating-scan-new.visible {
+      display: inline-block;
+    }
+
+    .main-wrapper {
+      flex: 1;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    .view-section {
+      display: none;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    .admin-toolbar {
+      display: none;
+      background: #121216;
+      border: 1px solid #2b2b33;
+      border-radius: 10px;
+      padding: 14px 20px;
+      margin-bottom: 28px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    body.is-admin .admin-toolbar {
+      display: flex;
+    }
+
+    .admin-toolbar-left,
+    .admin-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .admin-badge {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 5px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .btn-admin-add {
+      background-color: var(--accent-red);
+      color: #ffffff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-admin-add:hover {
+      opacity: 0.9;
+    }
+
+    .btn-admin-config {
+      background-color: #1f1f26;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 9px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-admin-config:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-admin-export {
+      background-color: #ffffff;
+      color: #09090b;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-admin-export:hover {
+      background-color: #e5e7eb;
+    }
+
+    .admin-legend {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+    }
+
+    .dot-green { color: #34d399; font-weight: 700; }
+    .dot-blue { color: #60a5fa; font-weight: 700; }
+    .dot-red { color: #f87171; font-weight: 700; }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 36px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background-color: var(--text-muted);
+    }
+
+    .hero h1 {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      max-width: 620px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+    }
+
+    .stat-box {
+      text-align: right;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn-white {
+      background-color: #ffffff;
+      color: #09090b;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-white:hover {
+      opacity: 0.9;
+    }
+
+    .btn-outline {
+      background-color: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 12px 22px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--border-hover);
+    }
+
+    .start-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+
+    .info-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 28px;
+      transition: border-color 0.15s;
+    }
+
+    .info-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .info-card-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .info-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .info-card p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .home-section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+    }
+
+    .link-all {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .link-all:hover {
+      text-decoration: underline;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 900px;
+    }
+
+    .faq-item {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .faq-item[open] {
+      border-color: var(--border-hover);
+    }
+
+    .faq-question {
+      padding: 18px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .faq-question::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-question::after {
+      content: "+";
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      color: var(--text-secondary);
+      transition: transform 0.2s;
+    }
+
+    .faq-item[open] .faq-question::after {
+      content: "−";
+      color: #ffffff;
+    }
+
+    .faq-answer {
+      padding: 0 22px 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      border-top: 1px solid #1a1a1f;
+      padding-top: 14px;
+    }
+
+    .controls {
+      margin-bottom: 24px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-input-wrap svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 18px;
+      height: 18px;
+    }
+
+    .search-input {
+      width: 100%;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px 16px 14px 46px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-hover);
+    }
+
+    .sort-select {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0 18px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .tags-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .tag-pill:hover:not(:disabled) {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .tag-pill.active {
+      background-color: var(--pill-active-bg);
+      color: var(--pill-active-text);
+      border-color: var(--pill-active-bg);
+    }
+
+    .tag-pill.favorites-pill.active {
+      background-color: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    .tag-pill.favorites-pill.active .tag-count {
+      background-color: rgba(0, 0, 0, 0.25);
+      color: #ffffff;
+    }
+
+    .tag-pill:disabled {
+      opacity: 0.32;
+      cursor: not-allowed;
+      background-color: #0d0d10;
+      border-color: #18181c;
+    }
+
+    .tag-count {
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      min-width: 28px;
+      text-align: center;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .tag-pill.active .tag-count {
+      background-color: rgba(0, 0, 0, 0.14);
+      color: var(--pill-active-text);
+    }
+
+    .btn-reset-filters {
+      background-color: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-left: 4px;
+    }
+
+    .results-info {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .results-info strong {
+      color: var(--text-primary);
+    }
+
+    .sv-deep-toggle-box {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .sv-deep-toggle-info {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .sv-deep-toggle-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sv-deep-toggle-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .switch-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-pill input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .switch-track {
+      width: 46px;
+      height: 26px;
+      background-color: #27272f;
+      border: 1px solid var(--border-hover);
+      border-radius: 999px;
+      position: relative;
+      transition: background-color 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+
+    .switch-pill input:checked + .switch-track {
+      background-color: #2563eb;
+      border-color: #60a5fa;
+    }
+
+    .switch-pill input:checked + .switch-track::after {
+      transform: translateX(20px);
+    }
+
+    .switch-state-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 32px;
+    }
+
+    .switch-pill input:checked ~ .switch-state-label {
+      color: #60a5fa;
+    }
+
+    .sv-progress-card {
+      display: none;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+    }
+
+    .sv-progress-card.active {
+      display: block;
+    }
+
+    .sv-progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .sv-progress-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 800;
+      color: #60a5fa;
+    }
+
+    .sv-progress-eta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .sv-progress-track {
+      width: 100%;
+      height: 12px;
+      background-color: #1c1c22;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #2a2a34;
+      position: relative;
+    }
+
+    .sv-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2563eb, #10b981);
+      transition: width 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sv-progress-fill.scanning-pulse::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -35%;
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+      animation: pingPongFlash 1.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pingPongFlash {
+      0% { left: -30%; }
+      100% { left: 95%; }
+    }
+
+    .progress-sub-counts {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #71717a;
+      user-select: none;
+    }
+
+    .sv-progress-current {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      word-break: break-word;
+      margin-top: 8px;
+    }
+
+    .sv-progress-browse-note {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+
+    .btn-stop-scan {
+      background-color: rgba(239, 68, 68, 0.16);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-stop-scan:hover {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+
+    .sv-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 16px 22px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .sv-analysis-text {
+      font-size: 13px;
+      color: #d1d5db;
+      line-height: 1.5;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .sv-tooltip-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .sv-info-badge {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .sv-info-badge:hover {
+      background: rgba(59, 130, 246, 0.25);
+    }
+
+    .sv-tooltip-box {
+      visibility: hidden;
+      width: 300px;
+      background-color: #18181c;
+      color: #ffffff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 12px 14px;
+      position: absolute;
+      z-index: 30;
+      top: 100%;
+      margin-top: 6px;
+      right: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translateY(-4px);
+      border: 1px solid var(--border-hover);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .sv-tooltip-wrap:hover .sv-tooltip-box {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card-score-tooltip-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .card-score-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: help;
+    }
+
+    .card-score-tooltip-box {
+      visibility: hidden;
+      width: 290px;
+      background-color: #18181c;
+      color: #ffffff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 10px 12px;
+      position: absolute;
+      z-index: 99;
+      top: calc(100% + 6px);
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translateY(-4px);
+      border: 1px solid var(--border-hover);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.45;
+      pointer-events: none;
+    }
+
+    .card-score-tooltip-wrap:hover .card-score-tooltip-box {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.2s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      background-color: var(--bg-surface-hover);
+      transform: translateY(-2px);
+    }
+
+    .card.status-added {
+      background-color: rgba(16, 185, 129, 0.14) !important;
+      border-color: rgba(16, 185, 129, 0.6) !important;
+    }
+
+    .card.status-edited {
+      background-color: rgba(59, 130, 246, 0.15) !important;
+      border-color: rgba(59, 130, 246, 0.6) !important;
+    }
+
+    .card.status-deleted {
+      background-color: rgba(239, 68, 68, 0.18) !important;
+      border-color: rgba(239, 68, 68, 0.65) !important;
+      opacity: 0.78;
+    }
+
+    .card.status-deleted .card-title,
+    .card.status-deleted .tutorial-card-title {
+      text-decoration: line-through;
+      color: #fca5a5;
+    }
+
+    .card-header {
+      padding: 16px 16px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-word;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .card-title:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #60a5fa;
+    }
+
+    .tutorial-card-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+
+    .badge-new-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .badge-new {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.55);
+      color: #34d399;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: help;
+    }
+
+    .badge-new-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background-color: #18181c;
+      color: #ffffff;
+      border: 1px solid var(--border-hover);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 60;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85);
+      transform: translateY(-4px);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      pointer-events: none;
+    }
+
+    .badge-new-wrap:hover .badge-new-tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .fav-btn {
+      background: #1f1f24;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13px;
+    }
+
+    .fav-btn:hover {
+      border-color: var(--border-hover);
+      color: #ef4444;
+    }
+
+    .fav-btn.is-favorite {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.12);
+    }
+
+    .copy-btn {
+      background: #1f1f24;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .admin-card-actions {
+      display: none;
+      gap: 6px;
+    }
+
+    body.is-admin .admin-card-actions {
+      display: flex;
+    }
+
+    .icon-btn {
+      background: #1f1f24;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .icon-btn.edit:hover {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    .icon-btn.delete:hover {
+      background: var(--accent-red);
+      color: #ffffff;
+      border-color: var(--accent-red);
+    }
+
+    .card-image-wrap {
+      margin: 0 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background-color: var(--bg-surface);
+      border: 1px solid #1c1c21;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease;
+    }
+
+    .card:hover .card-image-wrap {
+      border-color: var(--border-hover);
+    }
+
+    .card-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .no-image-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      padding: 16px;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-surface);
+    }
+
+    .yt-play-badge {
+      position: absolute;
+      width: 46px;
+      height: 32px;
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .card:hover .yt-play-badge {
+      background: #ffffff;
+      color: #09090b;
+      transform: scale(1.08);
+    }
+
+    .card-desc {
+      padding: 12px 16px 4px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-top: auto;
+    }
+
+    .card-tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .card-tag {
+      background-color: #1a1a1f;
+      border: 1px solid #2a2a32;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .tutorial-author {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .tutorial-author span {
+      color: var(--text-primary);
+    }
+
+    .yt-watch-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--border-color);
+      padding: 24px 40px;
+      margin-top: 40px;
+      background-color: #070709;
+    }
+
+    .footer-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .admin-login-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      transition: color 0.15s;
+    }
+
+    .admin-login-link:hover {
+      color: var(--text-primary);
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast-item {
+      background: #18181c;
+      border: 1px solid #2e2e38;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      pointer-events: auto;
+      animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      min-width: 280px;
+    }
+
+    .toast-item.fade-out {
+      animation: toastSlideOut 0.25s ease-in forwards;
+    }
+
+    @keyframes toastSlideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes toastSlideOut {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(20px); opacity: 0; }
+    }
+
+    .toast-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #3f3f46;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .toast-check {
+      width: 18px;
+      height: 18px;
+      background: #10b981;
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.86);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 12px;
+      max-width: 640px;
+      width: 100%;
+      overflow: hidden;
+      margin: auto;
+    }
+
+    .modal.small {
+      max-width: 440px;
+    }
+
+    .modal.modal-instagram {
+      max-width: 1120px;
+      width: 96vw;
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      min-height: 540px;
+      max-height: 88vh;
+    }
+
+    .modal-ig-left {
+      background-color: var(--bg-surface);
+      border-right: 1px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      min-height: 360px;
+      cursor: zoom-in;
+    }
+
+    .modal-ig-left.is-zoomed {
+      cursor: grab;
+    }
+
+    .modal-ig-left.is-dragging {
+      cursor: grabbing;
+    }
+
+    .modal-ig-left img {
+      width: 100%;
+      height: 100%;
+      max-height: 88vh;
+      object-fit: contain;
+      display: block;
+      transform-origin: center center;
+      transition: transform 0.14s ease-out;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
+    .modal-ig-left.is-dragging img {
+      transition: none;
+    }
+
+    .zoom-hint-badge {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .zoom-toggle-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(9, 9, 11, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s;
+      z-index: 5;
+    }
+
+    .zoom-toggle-btn:hover {
+      background: #ffffff;
+      color: #09090b;
+    }
+
+    .modal-ig-right {
+      display: flex;
+      flex-direction: column;
+      padding: 28px;
+      overflow-y: auto;
+      background-color: var(--bg-surface);
+    }
+
+    .modal-ig-header {
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 18px;
+    }
+
+    .modal-ig-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .modal-ig-desc-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .modal-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .modal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .modal-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.65;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+
+    .modal-ig-footer {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .form-label-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-label-opt {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: none;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      background-color: #09090b;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      border-color: #ffffff;
+    }
+
+    .form-input.input-error {
+      border-color: var(--accent-red);
+    }
+
+    .field-error-text {
+      color: #f87171;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .field-error-text.visible {
+      display: block;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 84px;
+    }
+
+    .paste-dropzone {
+      border: 1px dashed #3a3a45;
+      background-color: #09090b;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .paste-dropzone:hover,
+    .paste-dropzone.dragover {
+      border-color: #ffffff;
+      background-color: #131318;
+    }
+
+    .paste-dropzone-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .paste-dropzone-text kbd {
+      background: #1f1f26;
+      border: 1px solid #353540;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #ffffff;
+    }
+
+    .paste-preview-img {
+      max-height: 110px;
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: none;
+      margin-left: auto;
+      margin-right: auto;
+      border: 1px solid #27272f;
+      background: var(--bg-surface);
+    }
+
+    .paste-preview-img.visible {
+      display: block;
+    }
+
+    .automation-checks-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .auto-ai-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.28);
+      border-radius: 7px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: #d1d5db;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .auto-ai-checkbox-row:hover {
+      border-color: rgba(96, 165, 250, 0.55);
+      background: rgba(59, 130, 246, 0.13);
+    }
+
+    .auto-ai-checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .btn-ai-gen {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #ffffff;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .btn-ai-gen:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    .ai-target-wrapper {
+      position: relative;
+      border-radius: 10px;
+      transition: opacity 0.2s ease;
+    }
+
+    .ai-target-wrapper.ai-loading .ai-target-content {
+      opacity: 0.35;
+      filter: grayscale(0.6);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .ai-loader-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 15;
+    }
+
+    .ai-target-wrapper.ai-loading .ai-loader-overlay {
+      display: flex;
+    }
+
+    .sv-loading-container {
+      position: relative;
+      min-height: 120px;
+    }
+
+    .sv-loading-container.ai-loading .sv-loading-content {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .sv-loading-container.ai-loading .ai-loader-overlay {
+      display: flex;
+    }
+
+    .discord-dots-pill {
+      background: rgba(17, 17, 22, 0.95);
+      border: 1px solid #32323d;
+      padding: 14px 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
+    }
+
+    .discord-dots-pill span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      display: inline-block;
+      animation: discordPulse 1.4s infinite ease-in-out both;
+    }
+
+    .discord-dots-pill span:nth-child(1) { animation-delay: -0.32s; }
+    .discord-dots-pill span:nth-child(2) { animation-delay: -0.16s; }
+    .discord-dots-pill span:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes discordPulse {
+      0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
+      40% { transform: scale(1.1); opacity: 1; }
+    }
+
+    .tag-selector-box {
+      background-color: #09090b;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .tag-search-mini {
+      width: 100%;
+      background: #141418;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: #ffffff;
+      font-size: 12px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+
+    .tag-selector-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .tag-option {
+      background: #18181d;
+      border: 1px solid #2a2a32;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .tag-option.selected {
+      background: #ffffff;
+      color: #09090b;
+      border-color: #ffffff;
+    }
+
+    .tag-option.ai-suggested {
+      background: rgba(59, 130, 246, 0.16);
+      border-color: rgba(59, 130, 246, 0.55);
+      color: #93c5fd;
+    }
+
+    .tag-option.ai-suggested.selected {
+      background: #2563eb;
+      border-color: #60a5fa;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.35);
+    }
+
+    .ai-tags-hint {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.38);
+      border-radius: 7px;
+      color: #93c5fd;
+      font-size: 12px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ai-tags-hint.visible {
+      display: flex;
+    }
+
+    .btn-dismiss-ai-tags {
+      background: rgba(59, 130, 246, 0.25);
+      border: 1px solid rgba(96, 165, 250, 0.5);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-dismiss-ai-tags:hover {
+      background: #2563eb;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .modal-actions-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: #ffffff;
+      color: #09090b;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary-save {
+      background: rgba(16, 185, 129, 0.16);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary-save:hover {
+      background: #10b981;
+      color: #09090b;
+      border-color: #10b981;
+    }
+
+    .btn-close {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 860px) {
+      .modal.modal-instagram {
+        grid-template-columns: 1fr;
+        max-height: none;
+      }
+      .modal-ig-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        min-height: 280px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar, .container, .site-footer { padding: 20px; }
+      .hero h1 { font-size: 30px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="brand-logo" onclick="switchTab('start')" title="Strona główna — The Bus Modding Wiki">
+        <img src="logo.png" alt="The Bus Modding Wiki" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+        <div class="brand-fallback">THE BUS <span>PL</span></div>
+      </div>
+
+      <div class="nav-links">
+        <a id="nav-start" class="active" onclick="switchTab('start')">START</a>
+        <a id="nav-meshes" onclick="switchTab('meshes')">BAZA MESHÓW</a>
+        <a id="nav-tutorials" onclick="switchTab('tutorials')">PORADNIKI</a>
+        <a id="nav-streetview" onclick="switchTab('streetview')">AI STREET VIEW</a>
+        <a id="nav-api" onclick="switchTab('api')">GOOGLE AI API</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="floating-scan-bar" id="floating-scan-bar" onclick="switchTab('streetview')" title="Kliknij, aby wrócić do AI Street View">
+    <div class="floating-scan-top">
+      <div class="floating-scan-meta">
+        <span class="floating-scan-pct" id="float-scan-pct">0%</span>
+        <span class="floating-scan-eta" id="float-scan-eta">Szacowany pozostały czas: obliczanie...</span>
+      </div>
+      <button type="button" class="btn-stop-scan" onclick="event.stopPropagation(); stopDeepScan();">⏹ Przerwij skan</button>
+    </div>
+    <div class="sv-progress-track">
+      <div class="sv-progress-fill" id="float-scan-fill"></div>
+    </div>
+    <div class="progress-sub-counts">
+      <span id="float-count-done">0</span>
+      <span id="float-count-total">0</span>
+    </div>
+    <div class="floating-scan-new" id="float-scan-new">+0 nowe</div>
+  </div>
+
+  <div class="main-wrapper">
+    <div id="view-start" class="view-section active">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">POLSKA SPOŁECZNOŚĆ MODERSKA</div>
+            <h1>THE BUS MODDING WIKI</h1>
+            <p>Centralna baza wiedzy, poradników wideo oraz katalog wygenerowanych obiektów 3D tworzona przez i dla polskiej społeczności moderów gry The Bus.</p>
+            <div class="hero-actions">
+              <button class="btn-white" onclick="switchTab('meshes')">PRZEGLĄDAJ BAZĘ MESHÓW</button>
+              <button class="btn-outline" onclick="switchTab('streetview')">WYPRÓBUJ AI STREET VIEW</button>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div class="stat-label">OBIEKTY W BAZIE</div>
+              <div class="stat-value" id="start-total-count">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">PORADNIKI</div>
+              <div class="stat-value" id="start-tutorials-count">0</div>
+            </div>
+          </div>
+        </header>
+
+        <section class="start-grid">
+          <div class="info-card">
+            <div class="info-card-num">01 / KATALOG ASSETÓW</div>
+            <h3>GOTOWE MODUŁY BUDYNKÓW</h3>
+            <p>Przeszukuj uporządkowaną bibliotekę Static Meshów. Łącz wiele filtrów naraz (np. okna i zaokrąglone), aby błyskawicznie znaleźć konkretny element architektoniczny.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">02 / BAZA WIEDZY WIDEO</div>
+            <h3>PORADNIKI DLA TWÓRCÓW</h3>
+            <p>Zbiór sprawdzonych materiałów wideo tworzonych przez społeczność — od podstaw pracy w edytorze map, po zaawansowaną optymalizację i konfigurację ruchu.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">03 / ASYSTENT AI STREET VIEW</div>
+            <h3>DOPASOWANIE ZE ZDJĘCIA 1:1</h3>
+            <p>Wklej zrzut ekranu prawdziwego budynku z Google Street View, a sztuczna inteligencja przeanalizuje architekturę i wskaże pasujące elementy 3D.</p>
+          </div>
+        </section>
+
+        <section class="home-section">
+          <div class="section-header">
+            <h2>OSTATNIO DODANE MESHE</h2>
+            <a class="link-all" onclick="switchTab('meshes')">Zobacz wszystkie obiekty →</a>
+          </div>
+          <div class="grid" id="preview-meshes-grid"></div>
+        </section>
+
+        <section class="home-section">
+          <div class="section-header">
+            <h2>OSTATNIE PORADNIKI</h2>
+            <a class="link-all" onclick="switchTab('tutorials')">Zobacz wszystkie poradniki →</a>
+          </div>
+          <div class="grid" id="preview-tutorials-grid"></div>
+        </section>
+      </div>
+    </div>
+
+    <div id="view-meshes" class="view-section">
+      <div class="container">
+        <div class="admin-toolbar">
+          <div class="admin-toolbar-left">
+            <span class="admin-badge">TRYB ADMINA</span>
+            <button class="btn-admin-add" onclick="openMeshFormModal()">+ Dodaj mesh</button>
+            <div class="admin-legend">
+              <span class="dot-green">■ Dodany</span>
+              <span class="dot-blue">■ Edytowany</span>
+              <span class="dot-red">■ Do usunięcia</span>
+            </div>
+          </div>
+          <div class="admin-toolbar-right">
+            <button class="btn-admin-config" onclick="openGithubConfigModal()">⚙ Konfiguracja GitHub</button>
+            <button class="btn-admin-export" onclick="exportAssetsJson(this)">Eksportuj assets.json</button>
+          </div>
+        </div>
+
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">REJESTR PUBLICZNY</div>
+            <h1>BAZA STATIC MESHÓW</h1>
+            <p>Kliknij nazwę, aby skopiować samą nazwę, lub użyj przycisku, aby skopiować ścieżkę od /Game/...</p>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div class="stat-label">DOSTĘPNE MESHE</div>
+              <div class="stat-value" id="total-count">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">KATEGORIE</div>
+              <div class="stat-value" id="tags-count">0</div>
+            </div>
+          </div>
+        </header>
+
+        <section class="controls">
+          <div class="search-row">
+            <div class="search-input-wrap">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input type="text" id="search-input" class="search-input" placeholder="Szukaj po nazwie mesha (np. SM_008), tagu lub opisie...">
+            </div>
+            <select id="sort-select" class="sort-select">
+              <option value="default">Domyślne (po ID)</option>
+              <option value="newest">Najnowsze</option>
+              <option value="oldest">Najstarsze</option>
+              <option value="az">Nazwa A–Z</option>
+              <option value="za">Nazwa Z–A</option>
+            </select>
+          </div>
+
+          <div class="tags-bar" id="tags-bar"></div>
+
+          <div class="results-info" id="results-info">
+            Ładowanie bazy...
+          </div>
+        </section>
+
+        <main class="grid" id="assets-grid"></main>
+      </div>
+    </div>
+
+    <div id="view-tutorials" class="view-section">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">BAZA WIEDZY SPOŁECZNOŚCI</div>
+            <h1>PORADNIKI WIDEO</h1>
+            <p>Materiały szkoleniowe, omówienia narzędzi oraz poradniki tworzenia map i obiektów do gry The Bus.</p>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-box">
+              <div class="stat-label">DOSTĘPNE FILMY</div>
+              <div class="stat-value" id="tutorials-total-count">0</div>
+            </div>
+          </div>
+        </header>
+
+        <section class="controls">
+          <div class="search-row">
+            <div class="search-input-wrap">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input type="text" id="tutorial-search-input" class="search-input" placeholder="Szukaj poradnika po tytule, autorze lub opisie...">
+            </div>
+            <select id="tutorial-sort-select" class="sort-select">
+              <option value="default">Domyślne</option>
+              <option value="newest">Najnowsze</option>
+              <option value="oldest">Najstarsze</option>
+              <option value="az">Tytuł A–Z</option>
+              <option value="za">Tytuł Z–A</option>
+            </select>
+          </div>
+
+          <div class="results-info" id="tutorials-results-info">
+            Ładowanie poradników...
+          </div>
+        </section>
+
+        <main class="grid" id="tutorials-grid"></main>
+      </div>
+    </div>
+
+    <div id="view-streetview" class="view-section">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">INTELIGENTNY DOBÓR OBIEKTÓW 3D</div>
+            <h1>AI STREET VIEW (1:1)</h1>
+            <p>Wklej zrzut ekranu budynku lub elementu fasady z Google Street View. AI rozpozna kategorię (Okno / Drzwi / Balkon), odrzuci zdjęcia niezwiązane z architekturą i dopasuje pasujące meshe.</p>
+          </div>
+        </header>
+
+        <section class="controls" style="max-width: 800px; margin: 0 auto 36px auto;">
+          <div class="form-group">
+            <label class="form-label">
+              <span>Zrzut ekranu budynku / fasady (wklej Ctrl + V lub wybierz plik)</span>
+              <button type="button" class="btn-admin-config" style="padding:4px 8px; font-size:10px;" onclick="changeGeminiApiKey()">🔑 Klucz AI</button>
+            </label>
+            <div class="paste-dropzone" id="sv-paste-zone" onclick="document.getElementById('sv-file-input').click()" style="padding: 24px;">
+              <div class="paste-dropzone-text" id="sv-paste-status">
+                Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zrzut ze schowka, przeciągnij plik lub <u>wybierz z dysku</u>
+              </div>
+              <img id="sv-paste-preview" class="paste-preview-img" alt="Podgląd zdjęcia" style="max-height: 180px;">
+              <input type="file" id="sv-file-input" accept="image/*" style="display:none" onchange="handleStreetviewFileSelect(event)">
+            </div>
+          </div>
+
+          <div class="sv-deep-toggle-box">
+            <div class="sv-deep-toggle-info">
+              <div class="sv-deep-toggle-title">
+                <span>🔬 Analizuj szczegółowo bazę meshów</span>
+              </div>
+              <div class="sv-deep-toggle-sub">
+                Sztuczna inteligencja bierze pod uwagę skan każdych obiektów i porównuje ze zdjęciem źródłowym (może zająć to nawet kilka minut).
+              </div>
+            </div>
+            <label class="switch-pill" for="sv-deep-scan-toggle">
+              <input type="checkbox" id="sv-deep-scan-toggle" onchange="updateDeepScanToggleLabel()">
+              <span class="switch-track"></span>
+              <span class="switch-state-label" id="sv-deep-scan-label">OFF</span>
+            </label>
+          </div>
+
+          <div style="text-align: center; margin-top: 20px;">
+            <button type="button" class="btn-primary" id="btn-sv-search" onclick="searchStreetviewMatches()" style="padding: 14px 28px; font-size: 14px;" disabled>
+              🔍 Szukaj pasujących meshów 1:1 w bazie
+            </button>
+          </div>
+        </section>
+
+        <div class="sv-progress-card" id="sv-progress-card">
+          <div class="sv-progress-top">
+            <div>
+              <span class="sv-progress-pct" id="sv-progress-pct">0%</span>
+              <span class="sv-progress-eta" id="sv-progress-eta" style="margin-left: 12px;">Szacowany czas: obliczanie...</span>
+            </div>
+            <button type="button" class="btn-stop-scan" id="btn-stop-scan" onclick="stopDeepScan()">⏹ Przerwij skan</button>
+          </div>
+          <div class="sv-progress-track">
+            <div class="sv-progress-fill" id="sv-progress-fill"></div>
+          </div>
+          <div class="progress-sub-counts">
+            <span id="sv-count-done">0</span>
+            <span id="sv-count-total">0</span>
+          </div>
+          <div class="sv-progress-current" id="sv-progress-current">Oczekiwanie na start...</div>
+          <div class="sv-progress-browse-note">Możesz w tym czasie przeglądać stronę.</div>
+        </div>
+
+        <div class="sv-loading-container" id="sv-target-wrapper">
+          <div class="ai-loader-overlay">
+            <div class="discord-dots-pill" title="AI analizuje budynek i dopasowuje elementy...">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="sv-loading-content">
+            <div class="results-info" id="sv-results-info" style="margin-bottom: 20px;"></div>
+            <main class="grid" id="sv-results-grid"></main>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-api" class="view-section">
+      <div class="container">
+        <header class="hero">
+          <div>
+            <div class="hero-eyebrow">KONFIGURACJA ASYSTENTA AI</div>
+            <h1>GOOGLE AI API</h1>
+            <p>Dowiedz się, jak w mniej niż minutę uzyskać bezpłatny klucz Google Gemini API, aby korzystać z rozpoznawania budynków ze Street View oraz automatycznego opisywania obiektów.</p>
+            <div class="hero-actions">
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="btn-white">OTWÓRZ GOOGLE AI STUDIO ↗</a>
+            </div>
+          </div>
+        </header>
+
+        <section class="start-grid">
+          <div class="info-card">
+            <div class="info-card-num">KROK 01 / LOGOWANIE</div>
+            <h3>WEJDŹ DO GOOGLE AI STUDIO</h3>
+            <p>Otwórz oficjalną stronę <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/app/apikey</a> i zaloguj się na swoje zwykłe konto Google (Gmail). Nie musisz zakładać konta firmowego ani podawać karty płatniczej.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">KROK 02 / GENEROWANIE</div>
+            <h3>UTWÓRZ NOWY KLUCZ API</h3>
+            <p>Kliknij niebieski przycisk <strong>„Create API key”</strong> w prawym górnym rogu, a następnie potwierdź utworzenie klucza w nowym projekcie. Po kilku sekundach pojawi się ciąg znaków zaczynający się od <code>AIza...</code>.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-num">KROK 03 / UŻYCIE NA WIKI</div>
+            <h3>WKLEJ KLUCZ W PRZEGLĄDARCE</h3>
+            <p>Skopiuj wygenerowany klucz i wklej go w okienku na naszej stronie, gdy zostaniesz o to poproszony. Klucz zapisuje się wyłącznie w pamięci lokalnej Twojej przeglądarki.</p>
+          </div>
+        </section>
+
+        <section class="home-section">
+          <div class="section-header">
+            <h2>NAJCZĘŚCIEJ ZADAWANE PYTANIA (FAQ)</h2>
+          </div>
+
+          <div class="faq-list">
+            <details class="faq-item" open>
+              <summary class="faq-question">Dlaczego potrzebuję własny klucz API?</summary>
+              <div class="faq-answer">
+                Nasza strona działa jako darmowy projekt społecznościowy na GitHub Pages i nie posiada płatnego serwera pośredniczącego. Google nakłada limity zapytań na każdy pojedynczy klucz API — gdyby wszyscy użytkownicy korzystali z jednego wspólnego klucza, limit wyczerpałby się po kilkunastu minutach. Własny klucz daje Ci indywidualną, darmową pulę zapytań tylko dla Ciebie.
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">Czy jest to w 100% darmowe?</summary>
+              <div class="faq-answer">
+                Tak. Google udostępnia darmowy plan (Free Tier) w Google AI Studio bez konieczności podpinania karty kredytowej ani danych rozliczeniowych. Dla lekkich modeli (takich jak Gemini Flash-Lite, z którego korzystamy) darmowy limit wynosi aż <strong>500 zapytań dziennie</strong> oraz 15 zapytań na minutę — to w zupełności wystarcza do codziennej pracy przy budowie map.
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">Czy wklejenie klucza na stronie jest bezpieczne?</summary>
+              <div class="faq-answer">
+                Tak. Twój klucz API nigdy nie jest wysyłany na żaden nasz serwer ani nigdzie publikowany — zapisuje się wyłącznie w pamięci Twojej własnej przeglądarki (<code>localStorage</code>) i służy jedynie do bezpośredniej komunikacji między Twoim komputerem a serwerami Google. W każdej chwili możesz go też usunąć lub unieważnić jednym kliknięciem w panelu Google AI Studio.
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">Czy Google może naliczyć opłaty po przekroczeniu limitu?</summary>
+              <div class="faq-answer">
+                Nie. Dopóki sam ręcznie nie podepniesz karty płatniczej w Google Cloud Billing, Twoje konto działa wyłącznie w darmowym trybie. Po przekroczeniu dziennego limitu zapytań API po prostu zwróci komunikat o limicie i odblokuje się automatycznie następnego dnia — bez jakichkolwiek opłat.
+              </div>
+            </details>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span>THE BUS MODDING WIKI — POLSKA SPOŁECZNOŚĆ</span>
+        <a id="admin-auth-trigger" class="admin-login-link" onclick="handleAdminAuthClick()">🔒 Logowanie admina</a>
+      </div>
+      <span>Nieoficjalny projekt polskiej społeczności moderskiej. „The Bus” jest znakiem towarowym firmy TML-Studios.</span>
+    </div>
+  </footer>
+
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal('modal-backdrop')">
+    <div class="modal modal-instagram" onclick="event.stopPropagation()">
+      <div class="modal-ig-left" id="modal-media-box"></div>
+      <div class="modal-ig-right">
+        <div class="modal-ig-header">
+          <div class="modal-eyebrow">STATIC MESH • PODGLĄD OBIEKTU</div>
+          <h2 class="modal-title" id="modal-title"></h2>
+        </div>
+
+        <div class="modal-ig-tags" id="modal-tags-list"></div>
+
+        <div class="modal-ig-desc-label">Opis obiektu</div>
+        <p class="modal-desc" id="modal-desc"></p>
+
+        <div class="modal-ig-footer">
+          <button class="btn-primary" id="modal-copy-btn">Kopiuj</button>
+          <button class="btn-close" onclick="closeModal('modal-backdrop')">Zamknij</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="login-modal" onclick="closeModal('login-modal')">
+    <div class="modal small" onclick="event.stopPropagation()">
+      <div class="modal-body">
+        <div class="modal-eyebrow">STREFA ADMINISTRATORA</div>
+        <h2 class="modal-title">LOGOWANIE</h2>
+        <div class="form-group">
+          <label class="form-label">Hasło administratora</label>
+          <input type="password" id="admin-password-input" class="form-input" placeholder="Wpisz hasło..." oninput="clearFieldError('admin-password-input', 'login-error-msg')" onkeydown="if(event.key==='Enter') submitAdminLogin()">
+          <div class="field-error-text" id="login-error-msg">Nieprawidłowe hasło administratora.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-primary" onclick="submitAdminLogin()">Zaloguj się</button>
+          <button class="btn-close" onclick="closeModal('login-modal')">Anuluj</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="mesh-form-modal" onclick="closeModal('mesh-form-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-body">
+        <div class="modal-eyebrow" id="mesh-form-eyebrow">PANEL ADMINA</div>
+        <h2 class="modal-title" id="mesh-form-title">DODAJ NOWY MESH</h2>
+
+        <div class="form-group">
+          <label class="form-label">Ścieżka Static Mesha (Ctrl + C w UE)</label>
+          <input type="text" id="mf-name" class="form-input" placeholder="/Script/Engine.StaticMesh'/Game/.../SM_001.SM_001'" oninput="onMeshPathInput(); clearFieldError('mf-name', 'err-mf-name')">
+          <div class="field-error-text" id="err-mf-name">To pole jest wymagane — wklej ścieżkę mesha.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <span>Zdjęcie obiektu PNG (zapisuje się jako images/&lt;ID&gt;.png)</span>
+            <button type="button" class="btn-admin-config" style="padding:3px 8px; font-size:10px;" onclick="openGithubConfigModal()">⚙ GitHub Token</button>
+          </label>
+          <div class="paste-dropzone" id="mf-paste-zone" onclick="document.getElementById('mf-file-input').click()">
+            <div class="paste-dropzone-text" id="mf-paste-status">
+              Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zdjęcie PNG, przeciągnij plik lub <u>wybierz z dysku</u>
+            </div>
+            <img id="mf-paste-preview" class="paste-preview-img" alt="Podgląd">
+            <input type="file" id="mf-file-input" accept="image/*" style="display:none" onchange="handleManualFileSelect(event)">
+          </div>
+          <input type="text" id="mf-image" class="form-input" placeholder="images/1.png (wypełni się automatycznie po ID)" oninput="onManualImageUrlInput()">
+          <div class="field-error-text" id="err-mf-image">Wklej najpierw zdjęcie lub link.</div>
+
+          <div class="automation-checks-group">
+            <label class="auto-ai-checkbox-row" for="mf-auto-ai-checkbox">
+              <input type="checkbox" id="mf-auto-ai-checkbox" onchange="saveAutoAiPreference(this.checked)">
+              <span>✨ Automatycznie twórz opis i dobieraj tagi AI po wklejeniu zdjęcia</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="ai-target-wrapper" id="ai-target-wrapper">
+          <div class="ai-loader-overlay">
+            <div class="discord-dots-pill" title="AI analizuje obiekt i dobiera tagi...">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+
+          <div class="ai-target-content">
+            <div class="form-group">
+              <label class="form-label">
+                <span>Opis obiektu <span class="form-label-opt">(opcjonalnie)</span></span>
+                <div class="form-label-actions">
+                  <button type="button" class="btn-admin-config" style="padding:4px 8px; font-size:10px;" title="Zmień klucz Google AI API" onclick="changeGeminiApiKey()">🔑 Klucz AI</button>
+                  <button type="button" class="btn-ai-gen" id="btn-ai-desc" onclick="generateAiMeshDescription()">✨ Generuj opis i tagi AI</button>
+                </div>
+              </label>
+              <textarea id="mf-desc" class="form-textarea" placeholder="Krótki opis wyglądu budynku (niewymagany)..." oninput="clearFieldError('mf-desc', 'err-mf-desc')"></textarea>
+              <div class="field-error-text" id="err-mf-desc"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Wybierz tagi</label>
+              <div class="tag-selector-box">
+                <input type="text" id="mf-tag-search" class="tag-search-mini" placeholder="Szukaj tagu..." oninput="renderModalTagSelector()">
+                <div class="tag-selector-list" id="mf-tag-list"></div>
+              </div>
+              <div class="ai-tags-hint" id="ai-tags-hint">
+                <span>✨ <strong>AI zasugerowało brakującą ogólną kategorię</strong> (na niebiesko). Kliknij tag powyżej, aby go odznaczyć, lub odrzuć:</span>
+                <button type="button" class="btn-dismiss-ai-tags" onclick="rejectAllAiSuggestedTags()">Odrzuć sugestie</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <div class="modal-actions-left">
+            <button class="btn-primary" id="mf-submit-btn" onclick="saveMeshForm(false)">Zapisz mesh</button>
+            <button class="btn-secondary-save" id="mf-submit-next-btn" onclick="saveMeshForm(true)">Dodaj i kolejny +</button>
+          </div>
+          <button class="btn-close" onclick="closeModal('mesh-form-modal')">Anuluj</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="tutorial-form-modal" onclick="closeModal('tutorial-form-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-body">
+        <div class="modal-eyebrow" id="tut-form-eyebrow">PANEL ADMINA</div>
+        <h2 class="modal-title" id="tut-form-title">DODAJ PORADNIK</h2>
+
+        <div class="form-group">
+          <label class="form-label">Tytuł poradnika</label>
+          <input type="text" id="tf-title" class="form-input" placeholder="np. Jak tworzyć skrzyżowania w The Bus" oninput="clearFieldError('tf-title', 'err-tf-title')">
+          <div class="field-error-text" id="err-tf-title">Podaj tytuł poradnika.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Link do wideo YouTube</label>
+          <input type="text" id="tf-url" class="form-input" placeholder="https://www.youtube.com/watch?v=..." oninput="clearFieldError('tf-url', 'err-tf-url')">
+          <div class="field-error-text" id="err-tf-url">Wklej poprawny link do filmu na YouTube.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Autor wideo <span class="form-label-opt">(opcjonalnie)</span></label>
+          <input type="text" id="tf-author" class="form-input" placeholder="np. Piotrullo978">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Opis poradnika <span class="form-label-opt">(opcjonalnie)</span></label>
+          <textarea id="tf-desc" class="form-textarea" placeholder="Czego dotyczy film (niewymagane)..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-primary" id="tf-submit-btn" onclick="saveTutorialForm()">Zapisz poradnik</button>
+          <button class="btn-close" onclick="closeModal('tutorial-form-modal')">Anuluj</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="github-config-modal" onclick="closeModal('github-config-modal')">
+    <div class="modal small" onclick="event.stopPropagation()">
+      <div class="modal-body">
+        <div class="modal-eyebrow">ZAPIS ZDJĘĆ DO REPOZYTORIUM</div>
+        <h2 class="modal-title">KONFIGURACJA GITHUB</h2>
+
+        <div class="form-group">
+          <label class="form-label">Repozytorium (użytkownik/nazwa)</label>
+          <input type="text" id="gh-repo-input" class="form-input" placeholder="np. Piotrullo978/thebus-wiki" oninput="clearFieldError('gh-repo-input', 'err-gh-config')">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">GitHub Personal Access Token</label>
+          <input type="password" id="gh-token-input" class="form-input" placeholder="github_pat_..." oninput="clearFieldError('gh-token-input', 'err-gh-config')">
+          <div class="field-error-text" id="err-gh-config">Uzupełnij oba pola powyżej.</div>
+        </div>
+
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+          Dane zapisują się wyłącznie lokalnie w Twojej przeglądarce. Token wymaga uprawnienia <strong>Contents: Read and write</strong>.
+        </p>
+
+        <div class="modal-actions">
+          <button class="btn-primary" onclick="saveGithubConfig()">Zapisz konfigurację</button>
+          <button class="btn-close" onclick="closeModal('github-config-modal')">Anuluj</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASS = 'admin6767';
+    const SESSION_KEY = 'thebus_admin_expires';
+    const GH_REPO_KEY = 'thebus_gh_repo';
+    const GH_TOKEN_KEY = 'thebus_gh_token';
+    const GEMINI_KEY_STORAGE = 'gemini_admin_api_key';
+    const AUTO_AI_PREF_KEY = 'thebus_auto_ai_on_upload';
+    const FAVORITES_STORAGE_KEY = 'thebus_favorite_mesh_ids';
+    const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
+    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+    const GEMINI_MODELS_FALLBACK = [
+      'gemini-3.8-flash',
+      'gemini-3.5-flash-lite'
+    ];
+
+    let availableTags = [];
+    let allAssets = [];
+    let allTutorials = [];
+
+    let selectedTags = new Set();
+    let showFavoritesOnly = false;
+    let searchQuery = '';
+    let sortMode = 'default';
+    let tutorialSearchQuery = '';
+    let tutorialSortMode = 'default';
+
+    let editingMeshIndex = null;
+    let modalSelectedTags = new Set();
+    let aiSuggestedNewTags = new Set();
+    let editingTutorialIndex = null;
+    let pendingImageBlob = null;
+    let pendingStreetviewBlob = null;
+    let deepScanAbortController = false;
+    let isDeepScanRunning = false;
+    let awayNewMatchesCount = 0;
+    let liveScoredMatches = [];
+
+    let previewZoomState = {
+      isZoomed: false,
+      scale: 2.4,
+      panX: 0,
+      panY: 0,
+      isDragging: false,
+      hasMoved: false,
+      startX: 0,
+      startY: 0
+    };
+
+    class ScanFatalError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'ScanFatalError';
+      }
+    }
+
+    function showToast(text) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast-item';
+      toast.innerHTML = `
+        <div class="toast-spinner"></div>
+        <span>${text}</span>
+      `;
+      container.appendChild(toast);
+
+      return {
+        success: (successText) => {
+          const spinner = toast.querySelector('.toast-spinner');
+          if (spinner) {
+            const check = document.createElement('div');
+            check.className = 'toast-check';
+            check.textContent = '✓';
+            spinner.replaceWith(check);
+          }
+          toast.querySelector('span').textContent = successText;
+          setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 250);
+          }, 2000);
+        },
+        error: (errText) => {
+          const spinner = toast.querySelector('.toast-spinner');
+          if (spinner) spinner.style.borderTopColor = '#ef4444';
+          toast.querySelector('span').textContent = errText;
+          setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 250);
+          }, 3500);
+        }
+      };
+    }
+
+    function getFavoriteIds() {
+      try {
+        const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function toggleFavorite(e, assetId) {
+      e.stopPropagation();
+      let favs = getFavoriteIds();
+      const numId = Number(assetId);
+      if (favs.includes(numId)) {
+        favs = favs.filter(id => id !== numId);
+      } else {
+        favs.push(numId);
+      }
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favs));
+      renderTags();
+      renderGrid();
+      renderMeshPreview();
+
+      if (document.getElementById('view-streetview').classList.contains('active') && liveScoredMatches.length > 0) {
+        renderStreetviewScoredGrid(liveScoredMatches);
+      }
+    }
+
+    function saveAutoAiPreference(isChecked) {
+      localStorage.setItem(AUTO_AI_PREF_KEY, isChecked ? '1' : '0');
+    }
+
+    function isAutoAiEnabled() {
+      return localStorage.getItem(AUTO_AI_PREF_KEY) === '1';
+    }
+
+    function parseUnrealPath(rawInput) {
+      let trimmed = rawInput.trim();
+      let fullPath = trimmed;
+
+      const matchApos = trimmed.match(/'([^']+)'/);
+      if (matchApos && matchApos[1]) {
+        fullPath = matchApos[1];
+      }
+
+      const parts = fullPath.split('/');
+      const lastPart = parts[parts.length - 1] || fullPath;
+      const shortName = lastPart.includes('.') ? lastPart.split('.')[0] : lastPart;
+
+      return {
+        fullName: shortName.trim(),
+        fullPath: fullPath.trim()
+      };
+    }
+
+    function getMeshImagePathById(meshId) {
+      return `images/${Number(meshId)}.png`;
+    }
+
+    function getActiveFormMeshId() {
+      if (editingMeshIndex !== null && allAssets[editingMeshIndex]) {
+        return getNumericMeshId(allAssets[editingMeshIndex], editingMeshIndex);
+      }
+      return getNextMeshId();
+    }
+
+    function onMeshPathInput() {
+      const targetId = getActiveFormMeshId();
+      if (pendingImageBlob) {
+        document.getElementById('mf-image').value = getMeshImagePathById(targetId);
+      }
+    }
+
+    function getNextMeshId() {
+      let maxId = 0;
+      allAssets.forEach((asset, idx) => {
+        const numericId = typeof asset.id === 'number' ? asset.id : parseInt(asset.id, 10);
+        if (!isNaN(numericId) && numericId > maxId) maxId = numericId;
+        else if (idx + 1 > maxId) maxId = idx + 1;
+      });
+      return maxId + 1;
+    }
+
+    function getNumericMeshId(asset, fallbackIndex) {
+      if (asset && typeof asset.id === 'number') return asset.id;
+      const parsed = asset ? parseInt(asset.id, 10) : NaN;
+      return !isNaN(parsed) ? parsed : fallbackIndex + 1;
+    }
+
+    function isNewItem(addedAt) {
+      if (!addedAt) return false;
+      const timestamp = new Date(addedAt).getTime();
+      if (isNaN(timestamp)) return false;
+      const age = Date.now() - timestamp;
+      return age >= 0 && age < THREE_DAYS_MS;
+    }
+
+    function formatRelativeTime(addedAt) {
+      if (!addedAt) return '';
+      const timestamp = new Date(addedAt).getTime();
+      if (isNaN(timestamp)) return '';
+      const diffMs = Math.max(0, Date.now() - timestamp);
+
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 1) return 'Dodano: przed chwilą';
+      if (mins < 60) {
+        if (mins === 1) return 'Dodano: 1 minutę temu';
+        const mod10 = mins % 10;
+        const mod100 = mins % 100;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+          return `Dodano: ${mins} minuty temu`;
+        }
+        return `Dodano: ${mins} minut temu`;
+      }
+
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) {
+        if (hours === 1) return 'Dodano: 1 godzinę temu';
+        const mod10 = hours % 10;
+        const mod100 = hours % 100;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+          return `Dodano: ${hours} godziny temu`;
+        }
+        return `Dodano: ${hours} godzin temu`;
+      }
+
+      const days = Math.floor(hours / 24);
+      if (days === 1) return 'Dodano: 1 dzień temu';
+      return `Dodano: ${days} dni temu`;
+    }
+
+    function buildNewBadgeHtml(addedAt) {
+      if (!isNewItem(addedAt)) return '';
+      const relTime = formatRelativeTime(addedAt);
+      return `
+        <span class="badge-new-wrap">
+          <span class="badge-new">NOWOŚĆ</span>
+          <span class="badge-new-tooltip">${relTime}</span>
+        </span>
+      `;
+    }
+
+    function getTimestamp(addedAt) {
+      if (!addedAt) return 0;
+      const t = new Date(addedAt).getTime();
+      return isNaN(t) ? 0 : t;
+    }
+
+    function detectDefaultGithubRepo() {
+      const saved = localStorage.getItem(GH_REPO_KEY);
+      if (saved) return saved;
+      const host = window.location.hostname;
+      if (host.endsWith('.github.io')) {
+        const owner = host.replace('.github.io', '');
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const repo = pathParts[0] || `${owner}.github.io`;
+        return `${owner}/${repo}`;
+      }
+      return '';
+    }
+
+    function openGithubConfigModal() {
+      refreshAdminActivity();
+      clearFieldError('gh-repo-input', 'err-gh-config');
+      clearFieldError('gh-token-input', 'err-gh-config');
+      document.getElementById('gh-repo-input').value = detectDefaultGithubRepo();
+      document.getElementById('gh-token-input').value = localStorage.getItem(GH_TOKEN_KEY) || '';
+      document.getElementById('github-config-modal').classList.add('open');
+    }
+
+    function saveGithubConfig() {
+      const repo = document.getElementById('gh-repo-input').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
+      const token = document.getElementById('gh-token-input').value.trim();
+
+      if (!repo || !repo.includes('/') || !token) {
+        showFieldError('gh-repo-input', 'err-gh-config', 'Podaj poprawną nazwę repozytorium (np. user/repo) oraz token.');
+        return;
+      }
+
+      localStorage.setItem(GH_REPO_KEY, repo);
+      localStorage.setItem(GH_TOKEN_KEY, token);
+      closeModal('github-config-modal');
+    }
+
+    function handleLocalImageSelected(rawBlob) {
+      clearFieldError('mf-image', 'err-mf-image');
+      pendingImageBlob = rawBlob;
+
+      const targetId = getActiveFormMeshId();
+      const targetPath = getMeshImagePathById(targetId);
+
+      const statusText = document.getElementById('mf-paste-status');
+      const previewEl = document.getElementById('mf-paste-preview');
+
+      previewEl.src = URL.createObjectURL(rawBlob);
+      previewEl.classList.add('visible');
+      statusText.innerHTML = `✅ Obraz gotowy jako <strong>${targetPath}</strong> (wyśle się po zapisie)`;
+      document.getElementById('mf-image').value = targetPath;
+
+      if (isAutoAiEnabled()) {
+        generateAiMeshDescription();
+      }
+    }
+
+    function handleStreetviewImageSelected(rawBlob) {
+      pendingStreetviewBlob = rawBlob;
+      const statusText = document.getElementById('sv-paste-status');
+      const previewEl = document.getElementById('sv-paste-preview');
+      const searchBtn = document.getElementById('btn-sv-search');
+
+      previewEl.src = URL.createObjectURL(rawBlob);
+      previewEl.classList.add('visible');
+      statusText.innerHTML = '✅ Zrzut Street View gotowy do analizy!';
+      searchBtn.disabled = false;
+    }
+
+    function handleStreetviewFileSelect(e) {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        handleStreetviewImageSelected(file);
+      }
+      e.target.value = '';
+    }
+
+    function updateDeepScanToggleLabel() {
+      const checked = document.getElementById('sv-deep-scan-toggle').checked;
+      document.getElementById('sv-deep-scan-label').textContent = checked ? 'ON' : 'OFF';
+    }
+
+    function stopDeepScan() {
+      deepScanAbortController = true;
+      document.getElementById('sv-progress-current').textContent = 'Zatrzymywanie skanowania...';
+    }
+
+    function syncFloatingScanBar() {
+      const bar = document.getElementById('floating-scan-bar');
+      const isOnStreetView = document.getElementById('view-streetview').classList.contains('active');
+
+      if (isDeepScanRunning && !isOnStreetView) {
+        bar.classList.add('visible');
+        const newBadge = document.getElementById('float-scan-new');
+        if (awayNewMatchesCount > 0) {
+          newBadge.textContent = `+${awayNewMatchesCount} nowe`;
+          newBadge.classList.add('visible');
+        } else {
+          newBadge.classList.remove('visible');
+        }
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
+
+    function updateScanProgressUi(pct, etaText, doneCount, totalCount) {
+      const safePct = Math.max(0, Math.min(100, Number(pct) || 0));
+      const safeDone = Math.max(0, Number(doneCount) || 0);
+      const safeTotal = Math.max(0, Number(totalCount) || 0);
+
+      document.getElementById('sv-progress-pct').textContent = `${safePct}%`;
+      document.getElementById('sv-progress-eta').textContent = etaText;
+      document.getElementById('sv-progress-fill').style.width = `${safePct}%`;
+      document.getElementById('sv-count-done').textContent = `${safeDone}`;
+      document.getElementById('sv-count-total').textContent = `${safeTotal}`;
+
+      document.getElementById('float-scan-pct').textContent = `${safePct}%`;
+      document.getElementById('float-scan-eta').textContent = etaText;
+      document.getElementById('float-scan-fill').style.width = `${safePct}%`;
+      document.getElementById('float-count-done').textContent = `${safeDone}`;
+      document.getElementById('float-count-total').textContent = `${safeTotal}`;
+    }
+
+    function formatEtaSeconds(sec) {
+      const safeSec = Math.max(0, Number(sec) || 0);
+      if (!isFinite(safeSec) || safeSec <= 0) return '0 s';
+      const total = Math.ceil(safeSec);
+      const mins = Math.floor(total / 60);
+      const rem = total % 60;
+      if (mins <= 0) return `${rem} s`;
+      return `${mins} min ${rem} s`;
+    }
+
+    function parseRetryAfterSeconds(errorMessage) {
       if (!errorMessage) return null;
       const match = String(errorMessage).match(/retry\s+in\s+([\d.]+)\s*s/i);
       if (match && match[1]) {
@@ -26,3 +3039,1730 @@ function parseRetryAfterSeconds(errorMessage) {
       }
       return !deepScanAbortController;
     }
+
+    async function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function matchesPrimaryCategoryTag(asset, primaryCategory) {
+      const tagsLower = (asset.tags || []).map(t => String(t).toLowerCase().trim());
+
+      const isWindow = tagsLower.some(t => t === 'okno' || t === 'okna' || t.startsWith('okno ') || t.startsWith('okna '));
+      const isDoor = tagsLower.some(t => t === 'drzwi' || t.startsWith('drzwi '));
+      const isBalcony = tagsLower.some(t => t === 'balkon' || t === 'balkony' || t.startsWith('balkon '));
+
+      if (primaryCategory === 'Okno') return isWindow;
+      if (primaryCategory === 'Drzwi') return isDoor;
+      if (primaryCategory === 'Balkon') return isBalcony;
+      return true;
+    }
+
+    async function analyzeUserStreetviewGate(apiKey, mimeType, base64Data) {
+      const gatePrompt = `Jesteś asystentem bazy assetów architektonicznych 3D do gry The Bus.
+Sprawdź załączone zdjęcie i wykonaj 2 zadania:
+
+1. "isBuildingElement": ustaw true TYLKO jeśli na zdjęciu widoczny jest fragment budynku, fasady, elewacji, okna, drzwi, balkonu, witryny, dachu, gzymsu lub konstrukcji architektonicznej.
+   Ustaw false, jeśli zdjęcie przedstawia roślinę/kwiat, zwierzę, jedzenie, samochód/pojazd niezwiązany z fasadą budynku, twarz, krajobraz bez architektury budynków, mem lub losowy przedmiot niebędący elementem budynku.
+
+2. "primaryCategory": wybierz JEDNĄ z trzech ogólnych kategorii: "Okno", "Drzwi" lub "Balkon".
+   - Jeśli widać główne drzwi / wejście / bramę -> "Drzwi"
+   - Jeśli widać balkon / balustradę balkonową / balkon francuski -> "Balkon"
+   - W pozostałych przypadkach okien / fasad / witryn -> "Okno"
+
+3. "detectedTags": wybierz pasujące ogólne cechy spośród: ["Okno", "Drzwi", "Balkon", "Okno dwuskrzydłowe", "Okno trójskrzydłowe", "Okno wielokwaterowe", "Okno łukowe", "Okno poziome", "Świetlik nadokienny", "Balkon francuski", "Balustrada", "Gzyms", "Nadokiennik", "Witryna", "Kamienica", "Klasyczny", "Nowe", "Roleta", "Parapet", "Cokół"].
+
+4. "rejectionReason": jeśli "isBuildingElement" jest false, podaj krótki powód po polsku. W przeciwnym razie "".
+
+5. "description": krótki opis architektoniczny po polsku (1-2 zdania).
+
+Zwróć WYŁĄCZNIE poprawny JSON:
+{
+  "isBuildingElement": true,
+  "primaryCategory": "Okno",
+  "detectedTags": ["Okno"],
+  "rejectionReason": "",
+  "description": "..."
+}`;
+
+      const aiJson = await callGeminiWithFallback(apiKey, gatePrompt, mimeType, base64Data);
+      const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      const parsed = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+
+      let cat = parsed.primaryCategory;
+      if (!['Okno', 'Drzwi', 'Balkon'].includes(cat)) {
+        cat = 'Okno';
+      }
+
+      const tags = Array.isArray(parsed.detectedTags) ? parsed.detectedTags.map(String) : [];
+      if (!tags.includes(cat)) {
+        tags.unshift(cat);
+      }
+
+      return {
+        isBuildingElement: Boolean(parsed.isBuildingElement),
+        primaryCategory: cat,
+        detectedTags: tags,
+        rejectionReason: parsed.rejectionReason || 'Zdjęcie nie przedstawia elementu budynku.',
+        description: parsed.description || ''
+      };
+    }
+
+    function isModelUnavailableOrRetryableError(status, msg) {
+      const lower = (msg || '').toLowerCase();
+      return (
+        status === 404 ||
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504 ||
+        lower.includes('no longer available') ||
+        lower.includes('not found') ||
+        (lower.includes('model') && lower.includes('available')) ||
+        lower.includes('overloaded')
+      );
+    }
+
+    async function scoreSingleMeshWithImage(apiKey, userMimeType, userBase64, userGate, asset) {
+      const assetId = getNumericMeshId(asset, 0);
+      const imgPath = asset.image || getMeshImagePathById(assetId);
+
+      let meshPart = null;
+      try {
+        const resp = await fetch(asset._imgVersion ? `${imgPath}?v=${asset._imgVersion}` : imgPath);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const b64 = await blobToBase64(blob);
+          meshPart = {
+            inlineData: {
+              mimeType: blob.type || 'image/png',
+              data: b64
+            }
+          };
+        }
+      } catch (e) {
+        meshPart = null;
+      }
+
+      const meshPrompt = `Porównaj dokładnie ten mesh 3D ze zdjęciem źródłowym ze Street View pod kątem dopasowania 1:1.
+
+Kontekst zdjęcia źródłowego:
+- Kategoria: "${userGate.primaryCategory}"
+- Tagi: ${JSON.stringify(userGate.detectedTags)}
+- Opis: "${userGate.description}"
+
+Dane ocenianego mesha:
+- Nazwa: "${asset.name}"
+- Tagi: ${JSON.stringify(asset.tags || [])}
+- Opis: "${asset.description || ''}"
+
+Zasady punktacji (0-100) — BĄDŹ DOKŁADNY I SPÓJNY:
+1. Jeśli na zdjęciu źródłowym jest pojedyncze, proste okno dwuskrzydłowe bez przyczółków i zdobień, a mesh 3D również przedstawia okno/elewację z prostym oknem dwuskrzydłowym o zbliżonych proporcjach -> daj WYSOKI wynik (75-95%).
+2. Jeśli mesh 3D ma wyraźnie inne elementy niż zdjęcie źródłowe (np. trójkątne przyczółki, tralki, ozdobne opaski/gzymsy, balkon albo kilka okien zamiast jednego) -> daj NISKI wynik (5-25%), a jeśli zupełnie nie pasuje -> 0.
+3. Pojedynczy drobny tag "Parapet" sam w sobie NIE zaniża wyniku, jeśli reszta bryły się zgadza.
+
+W polu "reason" napisz WYŁĄCZNIE konkretny WNIOSEK po polsku (1-2 zdania), dlaczego ten mesh ma taki procent dopasowania do zdjęcia źródłowego.
+ABSOLUTNY ZAKAZ pisania w "reason" sformułowań typu "Zdjęcie 1 przedstawia..." ani "Zdjęcie 2 / ID ... przedstawia...". Od razu przejdź do wniosku.
+
+Zwróć WYŁĄCZNIE poprawny JSON:
+{
+  "score": 85,
+  "reason": "Konkretny wniosek o dopasowaniu bryły, liczby okien i detali."
+}`;
+
+      const parts = [{ text: meshPrompt }];
+      if (meshPart) {
+        parts.push(meshPart);
+      }
+
+      let lastErrorMsg = '';
+      while (true) {
+        if (deepScanAbortController) {
+          throw new ScanFatalError('Skan przerwany przez użytkownika.');
+        }
+
+        let switchedModel = false;
+        for (const modelName of GEMINI_MODELS_FALLBACK) {
+          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  ...parts,
+                  {
+                    inlineData: {
+                      mimeType: userMimeType,
+                      data: userBase64
+                    }
+                  }
+                ]
+              }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
+
+          const data = await resp.json();
+          if (!data.error) {
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+            const parsed = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+            let sc = Number(parsed.score);
+            if (isNaN(sc)) sc = 0;
+            sc = Math.max(0, Math.min(100, Math.round(sc)));
+            return {
+              score: sc,
+              reason: (parsed.reason || '').trim() || 'Brak wniosku z analizy.'
+            };
+          }
+
+          const msg = data.error.message || 'Błąd komunikacji z Google AI.';
+          const status = data.error.code || resp.status;
+          lastErrorMsg = msg;
+
+          if (status === 400 || status === 403 || msg.toLowerCase().includes('api key not valid')) {
+            localStorage.removeItem(GEMINI_KEY_STORAGE);
+            throw new ScanFatalError('Nieprawidłowy klucz Google AI API.');
+          }
+
+          const retrySec = parseRetryAfterSeconds(msg);
+          if (status === 429 || retrySec !== null || msg.toLowerCase().includes('quota')) {
+            const waitSec = retrySec || 15;
+            const ok = await waitForQuotaReset(waitSec, 'Oczekiwanie na odnowienie limitu API');
+            if (!ok) {
+              throw new ScanFatalError('Skan przerwany przez użytkownika.');
+            }
+            switchedModel = true;
+            break;
+          }
+
+          if (isModelUnavailableOrRetryableError(status, msg)) {
+            continue;
+          }
+
+          throw new ScanFatalError(msg);
+        }
+
+        if (!switchedModel) {
+          throw new ScanFatalError(lastErrorMsg || 'Żaden model AI nie odpowiedział poprawnie.');
+        }
+      }
+    }
+
+    function renderStreetviewScoredGrid(scoredList) {
+      const resultsGrid = document.getElementById('sv-results-grid');
+      resultsGrid.innerHTML = '';
+
+      const visibleMatches = scoredList.filter(item => Number(item.similarityScore) > 0);
+      const sorted = [...visibleMatches].sort((a, b) => b.similarityScore - a.similarityScore);
+      const favIds = getFavoriteIds();
+
+      sorted.forEach(item => {
+        const assetObj = item.asset;
+        const score = item.similarityScore;
+        const assetId = getNumericMeshId(assetObj, item.index);
+        const isFav = favIds.includes(assetId);
+        const favBtnClass = isFav ? 'fav-btn is-favorite' : 'fav-btn';
+        const favSymbol = isFav ? '❤️' : '♡';
+
+        let badgeColor = 'var(--accent-red)';
+        if (score >= 85) {
+          badgeColor = 'var(--accent-green)';
+        } else if (score >= 50) {
+          badgeColor = 'var(--accent-yellow)';
+        }
+
+        let breakdownHtml = `<strong style="color:#ffffff;">Dopasowanie: ${score}%</strong><br>`;
+        breakdownHtml += `<span style="color:#d1d5db;">${item.reason}</span>`;
+
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.onclick = () => openModal(assetObj);
+
+        const cacheBuster = assetObj._imgVersion ? `?v=${assetObj._imgVersion}` : '';
+        const imgContent = assetObj.image
+          ? `<img src="${assetObj.image}${cacheBuster}" alt="${assetObj.name}" loading="lazy" onerror="handleImageError(this)">`
+          : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+
+        const tagsHtml = (assetObj.tags || []).map(t => `<span class="card-tag">${t}</span>`).join('');
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-title">${assetObj.name}</div>
+              <div class="card-score-tooltip-wrap">
+                <span class="card-score-badge" style="background:${badgeColor}25; border:1px solid ${badgeColor}; color:${badgeColor};">${score}% DOPASOWANIA</span>
+                <div class="card-score-tooltip-box">
+                  ${breakdownHtml}
+                </div>
+              </div>
+            </div>
+            <div class="card-header-actions">
+              <button class="${favBtnClass}" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}" onclick="toggleFavorite(event, ${assetId})">${favSymbol}</button>
+              <button class="copy-btn" onclick="copyFullPath(event, ${JSON.stringify(assetObj).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
+            </div>
+          </div>
+          <div class="card-image-wrap">${imgContent}</div>
+          <div class="card-desc" style="-webkit-line-clamp: 4; color: #d1d5db;">✨ <strong>Analiza:</strong> ${item.reason}</div>
+          <div class="card-footer">
+            <div class="card-tags-list">${tagsHtml}</div>
+          </div>
+        `;
+        resultsGrid.appendChild(card);
+      });
+    }
+
+    async function searchStreetviewMatches() {
+      if (!pendingStreetviewBlob) return;
+
+      let apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+      if (!apiKey) {
+        apiKey = prompt('Wklej swój darmowy klucz Google AI API:');
+        if (!apiKey || !apiKey.trim()) return;
+        apiKey = apiKey.trim();
+        localStorage.setItem(GEMINI_KEY_STORAGE, apiKey);
+      }
+
+      const isDeepScan = document.getElementById('sv-deep-scan-toggle').checked;
+      const wrapper = document.getElementById('sv-target-wrapper');
+      const searchBtn = document.getElementById('btn-sv-search');
+      const resultsInfo = document.getElementById('sv-results-info');
+      const resultsGrid = document.getElementById('sv-results-grid');
+      const progressCard = document.getElementById('sv-progress-card');
+      const progressFillEl = document.getElementById('sv-progress-fill');
+      const floatFillEl = document.getElementById('float-scan-fill');
+      const progressCurrentEl = document.getElementById('sv-progress-current');
+
+      deepScanAbortController = false;
+      isDeepScanRunning = false;
+      awayNewMatchesCount = 0;
+      liveScoredMatches = [];
+      searchBtn.disabled = true;
+      resultsGrid.innerHTML = '';
+      progressCard.classList.remove('active');
+      progressFillEl.classList.remove('scanning-pulse');
+      floatFillEl.classList.remove('scanning-pulse');
+      syncFloatingScanBar();
+
+      let etaIntervalId = null;
+
+      if (!isDeepScan) {
+        wrapper.classList.add('ai-loading');
+      }
+      resultsInfo.textContent = 'Sprawdzam zdjęcie i określam kategorię (Okno / Drzwi / Balkon)...';
+
+      try {
+        const mimeType = pendingStreetviewBlob.type || 'image/jpeg';
+        const base64Data = await blobToBase64(pendingStreetviewBlob);
+
+        const gateResult = await analyzeUserStreetviewGate(apiKey, mimeType, base64Data);
+
+        if (!gateResult.isBuildingElement) {
+          wrapper.classList.remove('ai-loading');
+          resultsInfo.innerHTML = `
+            <div class="sv-summary-bar" style="border-color: rgba(239, 68, 68, 0.55); background: rgba(239, 68, 68, 0.08);">
+              <div class="sv-analysis-text" style="color: #fca5a5;">
+                ⛔ <strong>Zdjęcie odrzucone:</strong> ${gateResult.rejectionReason} Wgraj zrzut ekranu przedstawiający fragment budynku, okno, drzwi lub balkon.
+              </div>
+            </div>
+          `;
+          searchBtn.disabled = false;
+          return;
+        }
+
+        const targetTags = (gateResult.detectedTags || []).map(t => t.toLowerCase());
+        const primaryCat = gateResult.primaryCategory;
+
+        if (!isDeepScan) {
+          const scoredAssets = allAssets
+            .filter(a => a._status !== 'deleted')
+            .map((asset, idx) => {
+              const assetTags = (asset.tags || []).map(t => t.toLowerCase());
+              const assetNameLower = asset.name.toLowerCase();
+              const assetDescLower = (asset.description || '').toLowerCase();
+              let score = 92;
+
+              const hasCatTag = matchesPrimaryCategoryTag(asset, primaryCat);
+              if (!hasCatTag) {
+                score -= 25;
+              }
+
+              const isTargetFrenchBalcony = targetTags.includes('balkon francuski');
+              const isAssetHasRegularBalcony = assetTags.includes('balkon') || assetNameLower.includes('balkon') || assetDescLower.includes('balkon');
+              const isAssetHasFrenchBalcony = assetTags.includes('balkon francuski') || assetNameLower.includes('balkon francuski');
+
+              if (isTargetFrenchBalcony && isAssetHasRegularBalcony && !isAssetHasFrenchBalcony) {
+                score -= 35;
+              }
+
+              targetTags.forEach(tTag => {
+                if (tTag === 'parapet') return;
+                if (!assetTags.includes(tTag)) {
+                  score -= 10;
+                }
+              });
+
+              const extraTags = assetTags.filter(aTag => aTag !== 'parapet' && !targetTags.includes(aTag)).length;
+              score -= (extraTags * 2);
+
+              if (score < 5) score = 5;
+              if (score > 100) score = 100;
+
+              const matchedList = targetTags.filter(t => assetTags.includes(t));
+              const missingList = targetTags.filter(t => !assetTags.includes(t));
+              const extraList = assetTags.filter(t => !targetTags.includes(t));
+
+              const reason = `Wstępny dobór dla kategorii ${primaryCat} — zgodne cechy: ${matchedList.join(', ') || 'brak'}.`;
+
+              return {
+                asset,
+                index: idx,
+                similarityScore: Math.round(score),
+                reason,
+                matchedList,
+                missingList,
+                extraList
+              };
+            });
+
+          scoredAssets.sort((a, b) => b.similarityScore - a.similarityScore);
+          liveScoredMatches = scoredAssets.filter(s => s.similarityScore > 0).slice(0, 6);
+
+          const detectedTagsListStr = (gateResult.detectedTags || []).join(', ');
+          resultsInfo.innerHTML = `
+            <div class="sv-summary-bar">
+              <div class="sv-analysis-text">
+                ✨ <strong>Kategoria główna: ${primaryCat}</strong> • ${gateResult.description} (Tagi: <em>${detectedTagsListStr}</em>).
+              </div>
+              <div class="sv-tooltip-wrap">
+                <div class="sv-info-badge">ℹ️ Tagi analizy</div>
+                <div class="sv-tooltip-box">
+                  <strong>Wykryte tagi:</strong><br>
+                  <span style="color: #93c5fd; font-family: 'JetBrains Mono', monospace;">${detectedTagsListStr}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          renderStreetviewScoredGrid(liveScoredMatches);
+          wrapper.classList.remove('ai-loading');
+          searchBtn.disabled = false;
+          return;
+        }
+
+        wrapper.classList.remove('ai-loading');
+        isDeepScanRunning = true;
+        progressCard.classList.add('active');
+        progressFillEl.classList.add('scanning-pulse');
+        floatFillEl.classList.add('scanning-pulse');
+        syncFloatingScanBar();
+
+        const allActiveAssets = allAssets.filter(a => a._status !== 'deleted');
+        const filteredAssets = allActiveAssets.filter(a => matchesPrimaryCategoryTag(a, primaryCat));
+        const rejectedCount = allActiveAssets.length - filteredAssets.length;
+        const totalItems = filteredAssets.length;
+        const startTime = Date.now();
+        let completedItems = 0;
+        let currentItemStartTime = Date.now();
+        const detectedTagsListStr = (gateResult.detectedTags || []).join(', ');
+
+        updateScanProgressUi(0, `Szacowany czas: obliczanie... (0/${totalItems})`, 0, totalItems);
+
+        resultsInfo.innerHTML = `
+          <div class="sv-summary-bar">
+            <div class="sv-analysis-text">
+              🔬 <strong>Szczegółowy skan LIVE (${primaryCat}):</strong> Odrzucono <strong>${rejectedCount}</strong> obiektów o niezgodnej kategorii. Pozostało do skanowania: <strong>${totalItems}</strong> z ${allActiveAssets.length} meshów.
+            </div>
+            <div class="sv-tooltip-wrap">
+              <div class="sv-info-badge">ℹ️ Tagi analizy</div>
+              <div class="sv-tooltip-box">
+                <strong>Kategoria główna:</strong> ${primaryCat}<br>
+                <strong>Wykryte tagi:</strong> <span style="color: #93c5fd; font-family: 'JetBrains Mono', monospace;">${detectedTagsListStr}</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        if (totalItems === 0) {
+          isDeepScanRunning = false;
+          syncFloatingScanBar();
+          progressCard.classList.remove('active');
+          progressFillEl.classList.remove('scanning-pulse');
+          floatFillEl.classList.remove('scanning-pulse');
+          resultsInfo.innerHTML += `<div style="color:#fbbf24;">Brak obiektów w bazie z tagiem kategorii <strong>${primaryCat}</strong>.</div>`;
+          searchBtn.disabled = false;
+          return;
+        }
+
+        const updateLiveEtaDisplay = () => {
+          const now = Date.now();
+          const elapsedTotalSec = Math.max(0.2, (now - startTime) / 1000);
+          const currentItemElapsedSec = Math.max(0, (now - currentItemStartTime) / 1000);
+
+          let avgSecPerItem;
+          if (completedItems > 0) {
+            avgSecPerItem = elapsedTotalSec / completedItems;
+          } else {
+            avgSecPerItem = Math.max(currentItemElapsedSec, 8);
+          }
+
+          const remainingItems = Math.max(0, totalItems - completedItems - (currentItemElapsedSec > 0 ? 0.5 : 0));
+          const remainingSec = Math.max(0, avgSecPerItem * remainingItems);
+
+          const etaLabel = (completedItems === 0 && currentItemElapsedSec < 5)
+            ? `Szacowany czas: obliczanie... (${completedItems}/${totalItems})`
+            : `Szacowany pozostały czas: ~${formatEtaSeconds(remainingSec)} (${completedItems}/${totalItems})`;
+
+          const pct = Math.round((completedItems / totalItems) * 100);
+          updateScanProgressUi(pct, etaLabel, completedItems, totalItems);
+        };
+
+        updateLiveEtaDisplay();
+        etaIntervalId = setInterval(updateLiveEtaDisplay, 5000);
+
+        for (let i = 0; i < totalItems; i++) {
+          if (deepScanAbortController) {
+            progressCurrentEl.textContent = `Skan przerwany przez użytkownika na ${completedItems} / ${totalItems}.`;
+            break;
+          }
+
+          const asset = filteredAssets[i];
+          const assetId = getNumericMeshId(asset, i);
+          currentItemStartTime = Date.now();
+
+          const pct = Math.round((completedItems / totalItems) * 100);
+          updateScanProgressUi(pct, document.getElementById('sv-progress-eta').textContent, completedItems, totalItems);
+          progressCurrentEl.textContent = `Analizuję [${primaryCat}] ${asset.name} (${asset.image || getMeshImagePathById(assetId)})...`;
+
+          const singleEval = await scoreSingleMeshWithImage(apiKey, mimeType, base64Data, gateResult, asset);
+
+          completedItems = i + 1;
+          const updatedPct = Math.round((completedItems / totalItems) * 100);
+          updateScanProgressUi(updatedPct, document.getElementById('sv-progress-eta').textContent, completedItems, totalItems);
+          updateLiveEtaDisplay();
+
+          if (singleEval.score > 0) {
+            liveScoredMatches.push({
+              asset,
+              index: i,
+              similarityScore: singleEval.score,
+              reason: singleEval.reason,
+              matchedList: (asset.tags || []).filter(t => targetTags.includes(t.toLowerCase())),
+              missingList: [],
+              extraList: []
+            });
+            renderStreetviewScoredGrid(liveScoredMatches);
+
+            if (!document.getElementById('view-streetview').classList.contains('active')) {
+              awayNewMatchesCount += 1;
+              syncFloatingScanBar();
+            }
+          }
+        }
+
+        clearInterval(etaIntervalId);
+        etaIntervalId = null;
+        isDeepScanRunning = false;
+        progressFillEl.classList.remove('scanning-pulse');
+        floatFillEl.classList.remove('scanning-pulse');
+        syncFloatingScanBar();
+
+        if (!deepScanAbortController) {
+          updateScanProgressUi(100, `Szacowany pozostały czas: 0 s (${totalItems}/${totalItems})`, totalItems, totalItems);
+          progressCurrentEl.textContent = `Przeanalizowano wszystkie ${totalItems} obiektów z kategorii "${primaryCat}".`;
+        }
+
+      } catch (err) {
+        if (etaIntervalId) clearInterval(etaIntervalId);
+        isDeepScanRunning = false;
+        syncFloatingScanBar();
+        progressFillEl.classList.remove('scanning-pulse');
+        floatFillEl.classList.remove('scanning-pulse');
+        progressCard.classList.remove('active');
+        resultsInfo.innerHTML = `<span style="color:#ef4444">Błąd AI Street View: ${err.message}</span>`;
+      } finally {
+        if (etaIntervalId) clearInterval(etaIntervalId);
+        isDeepScanRunning = false;
+        syncFloatingScanBar();
+        progressFillEl.classList.remove('scanning-pulse');
+        floatFillEl.classList.remove('scanning-pulse');
+        wrapper.classList.remove('ai-loading');
+        searchBtn.disabled = false;
+      }
+    }
+
+    async function uploadPendingImageToGithubInBackground(blob, targetRepoFilePath, meshId) {
+      if (!blob) return targetRepoFilePath;
+      const toast = showToast(`Wysyłanie ${targetRepoFilePath}...`);
+
+      const repo = localStorage.getItem(GH_REPO_KEY) || detectDefaultGithubRepo();
+      const token = localStorage.getItem(GH_TOKEN_KEY);
+      if (!repo || !token) {
+        toast.success(`Zapisano lokalnie (${targetRepoFilePath})`);
+        return targetRepoFilePath;
+      }
+
+      try {
+        const base64Content = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${targetRepoFilePath}`;
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        };
+
+        let existingSha = null;
+        const headCheck = await fetch(apiUrl, { method: 'GET', headers });
+        if (headCheck.ok) {
+          const existingData = await headCheck.json();
+          if (existingData && existingData.sha) {
+            existingSha = existingData.sha;
+          }
+        }
+
+        const payload = {
+          message: existingSha
+            ? `Nadpisano zdjęcie ${targetRepoFilePath} (ID ${meshId})`
+            : `Dodano zdjęcie ${targetRepoFilePath} (ID ${meshId})`,
+          content: base64Content
+        };
+        if (existingSha) {
+          payload.sha = existingSha;
+        }
+
+        const resp = await fetch(apiUrl, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (resp.ok) {
+          toast.success(existingSha ? `Nadpisano na serwerze: ${targetRepoFilePath}` : `Wgrano na serwer: ${targetRepoFilePath}`);
+        } else {
+          toast.error(`Błąd wgrania pliku na serwer GitHub`);
+        }
+      } catch (e) {
+        toast.error(`Błąd sieci podczas wgrania zdjęcia`);
+      }
+
+      return targetRepoFilePath;
+    }
+
+    function handleManualFileSelect(e) {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        handleLocalImageSelected(file);
+      }
+      e.target.value = '';
+    }
+
+    function onManualImageUrlInput() {
+      clearFieldError('mf-image', 'err-mf-image');
+      pendingImageBlob = null;
+      const val = document.getElementById('mf-image').value.trim();
+      const previewEl = document.getElementById('mf-paste-preview');
+      if (val) {
+        previewEl.src = val;
+        previewEl.classList.add('visible');
+      } else {
+        previewEl.classList.remove('visible');
+      }
+    }
+
+    document.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const isMeshModalOpen = document.getElementById('mesh-form-modal').classList.contains('open') && isAdminLoggedIn();
+      const isStreetViewActive = document.getElementById('view-streetview').classList.contains('active');
+
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          if (!blob) break;
+
+          if (isMeshModalOpen) {
+            handleLocalImageSelected(blob);
+          } else if (isStreetViewActive) {
+            handleStreetviewImageSelected(blob);
+          }
+          break;
+        }
+      }
+    });
+
+    const pasteZone = document.getElementById('mf-paste-zone');
+    pasteZone.addEventListener('dragover', (e) => { e.preventDefault(); pasteZone.classList.add('dragover'); });
+    pasteZone.addEventListener('dragleave', () => { pasteZone.classList.remove('dragover'); });
+    pasteZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      pasteZone.classList.remove('dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file && file.type.startsWith('image/')) handleLocalImageSelected(file);
+    });
+
+    const svPasteZone = document.getElementById('sv-paste-zone');
+    svPasteZone.addEventListener('dragover', (e) => { e.preventDefault(); svPasteZone.classList.add('dragover'); });
+    svPasteZone.addEventListener('dragleave', () => { svPasteZone.classList.remove('dragover'); });
+    svPasteZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      svPasteZone.classList.remove('dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file && file.type.startsWith('image/')) handleStreetviewImageSelected(file);
+    });
+
+    function refreshAdminActivity() {
+      if (localStorage.getItem(SESSION_KEY)) {
+        localStorage.setItem(SESSION_KEY, (Date.now() + IDLE_TIMEOUT_MS).toString());
+        updateAdminUI();
+      }
+    }
+
+    function isAdminLoggedIn() {
+      const expires = localStorage.getItem(SESSION_KEY);
+      if (!expires) return false;
+      if (Date.now() > parseInt(expires, 10)) {
+        localStorage.removeItem(SESSION_KEY);
+        return false;
+      }
+      return true;
+    }
+
+    function updateAdminUI() {
+      const logged = isAdminLoggedIn();
+      document.body.classList.toggle('is-admin', logged);
+
+      const trigger = document.getElementById('admin-auth-trigger');
+      if (logged) {
+        const minsLeft = Math.max(1, Math.round((parseInt(localStorage.getItem(SESSION_KEY), 10) - Date.now()) / 60000));
+        trigger.innerHTML = `🔓 Panel admina aktywny (wygasa po ${minsLeft} min bezczynności) — Wyloguj`;
+        trigger.style.color = '#34d399';
+      } else {
+        trigger.innerHTML = `🔒 Logowanie admina`;
+        trigger.style.color = '';
+      }
+    }
+
+    function handleAdminAuthClick() {
+      if (isAdminLoggedIn()) {
+        localStorage.removeItem(SESSION_KEY);
+        updateAdminUI();
+      } else {
+        document.getElementById('admin-password-input').value = '';
+        clearFieldError('admin-password-input', 'login-error-msg');
+        document.getElementById('login-modal').classList.add('open');
+        setTimeout(() => document.getElementById('admin-password-input').focus(), 50);
+      }
+    }
+
+    function submitAdminLogin() {
+      const input = document.getElementById('admin-password-input');
+      if (input.value === ADMIN_PASS) {
+        localStorage.setItem(SESSION_KEY, (Date.now() + IDLE_TIMEOUT_MS).toString());
+        closeModal('login-modal');
+        updateAdminUI();
+      } else {
+        showFieldError('admin-password-input', 'login-error-msg', 'Nieprawidłowe hasło administratora.');
+      }
+    }
+
+    setInterval(updateAdminUI, 30000);
+
+    function showFieldError(inputId, errorId, message) {
+      const inputEl = document.getElementById(inputId);
+      const errEl = document.getElementById(errorId);
+      if (inputEl) inputEl.classList.add('input-error');
+      if (errEl) {
+        if (message) errEl.textContent = message;
+        errEl.classList.add('visible');
+      }
+    }
+
+    function clearFieldError(inputId, errorId) {
+      const inputEl = document.getElementById(inputId);
+      const errEl = document.getElementById(errorId);
+      if (inputEl) inputEl.classList.remove('input-error');
+      if (errEl) errEl.classList.remove('visible');
+    }
+
+    function switchTab(tab) {
+      ['start', 'meshes', 'tutorials', 'streetview', 'api'].forEach(name => {
+        document.getElementById(`view-${name}`).classList.toggle('active', name === tab);
+        document.getElementById(`nav-${name}`).classList.toggle('active', name === tab);
+      });
+      if (tab === 'streetview') {
+        awayNewMatchesCount = 0;
+      }
+      syncFloatingScanBar();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function getYoutubeId(url) {
+      if (!url) return null;
+      const regExp = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+      const match = url.match(regExp);
+      return match ? match[1] : null;
+    }
+
+    function getYoutubeThumbnail(url) {
+      const id = getYoutubeId(url);
+      return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
+    }
+
+    function handleImageError(imgEl) {
+      const parent = imgEl.parentElement;
+      if (!parent) return;
+      parent.innerHTML = `
+        <div class="no-image-placeholder">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <path d="m21 15-5-5L5 21"></path>
+          </svg>
+          <span>Brak podglądu obrazu</span>
+        </div>
+      `;
+    }
+
+    async function init() {
+      updateAdminUI();
+
+      try {
+        const res = await fetch('assets.json');
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          allAssets = data;
+          availableTags = Array.from(new Set(allAssets.flatMap(a => a.tags)));
+        } else {
+          allAssets = data.assets || [];
+          availableTags = data.tags || Array.from(new Set(allAssets.flatMap(a => a.tags)));
+        }
+
+        allAssets = allAssets.map((a, idx) => ({
+          ...a,
+          id: getNumericMeshId(a, idx)
+        }));
+
+        updateMeshStats();
+        renderTags();
+        renderGrid();
+        renderMeshPreview();
+      } catch (err) {
+        document.getElementById('results-info').innerHTML = '<span style="color:#ef4444">Błąd wczytywania assets.json.</span>';
+      }
+
+      try {
+        const resTut = await fetch('poradniki.json');
+        allTutorials = await resTut.json();
+        updateTutorialStats();
+        renderTutorialsGrid();
+        renderTutorialsPreview();
+      } catch (err) {
+        document.getElementById('tutorials-results-info').innerHTML = '<span style="color:#ef4444">Brak pliku poradniki.json.</span>';
+      }
+    }
+
+    function updateMeshStats() {
+      const activeCount = allAssets.filter(a => a._status !== 'deleted').length;
+      const uniqueTags = new Set([...availableTags, ...allAssets.flatMap(a => a.tags)]).size;
+
+      document.getElementById('total-count').textContent = activeCount;
+      document.getElementById('tags-count').textContent = uniqueTags;
+      document.getElementById('start-total-count').textContent = activeCount;
+    }
+
+    function updateTutorialStats() {
+      const activeCount = allTutorials.filter(t => t._status !== 'deleted').length;
+      document.getElementById('tutorials-total-count').textContent = activeCount;
+      document.getElementById('start-tutorials-count').textContent = activeCount;
+    }
+
+    function matchesSearchText(asset) {
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        asset.name.toLowerCase().includes(q) ||
+        (asset.fullPath && asset.fullPath.toLowerCase().includes(q)) ||
+        (asset.description && asset.description.toLowerCase().includes(q)) ||
+        asset.tags.some(t => t.toLowerCase().includes(q))
+      );
+    }
+
+    function renderTags() {
+      const allUniqueTags = Array.from(new Set([...availableTags, ...allAssets.flatMap(a => a.tags)]))
+        .sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
+
+      const tagsBar = document.getElementById('tags-bar');
+      tagsBar.innerHTML = '';
+
+      const allBtn = document.createElement('button');
+      allBtn.className = `tag-pill ${(!showFavoritesOnly && selectedTags.size === 0) ? 'active' : ''}`;
+      allBtn.innerHTML = `<span>Wszystkie</span> <span class="tag-count">${allAssets.filter(matchesSearchText).length}</span>`;
+      allBtn.onclick = () => {
+        showFavoritesOnly = false;
+        selectedTags.clear();
+        renderTags();
+        renderGrid();
+      };
+      tagsBar.appendChild(allBtn);
+
+      const favIds = getFavoriteIds();
+      const favCount = allAssets.filter(a => favIds.includes(getNumericMeshId(a, 0)) && matchesSearchText(a)).length;
+
+      const favBtn = document.createElement('button');
+      favBtn.className = `tag-pill favorites-pill ${showFavoritesOnly ? 'active' : ''}`;
+      favBtn.innerHTML = `<span>❤️ Ulubione</span> <span class="tag-count">${favCount}</span>`;
+      favBtn.onclick = () => {
+        showFavoritesOnly = !showFavoritesOnly;
+        renderTags();
+        renderGrid();
+      };
+      tagsBar.appendChild(favBtn);
+
+      allUniqueTags.forEach(tag => {
+        const isSelected = selectedTags.has(tag);
+        const matchingCount = allAssets.filter(asset => {
+          if (!matchesSearchText(asset)) return false;
+          if (showFavoritesOnly && !favIds.includes(getNumericMeshId(asset, 0))) return false;
+          for (const activeTag of selectedTags) {
+            if (!asset.tags.includes(activeTag)) return false;
+          }
+          return asset.tags.includes(tag);
+        }).length;
+
+        const btn = document.createElement('button');
+        btn.className = `tag-pill ${isSelected ? 'active' : ''}`;
+        btn.innerHTML = `<span>${tag}</span> <span class="tag-count">${matchingCount}</span>`;
+
+        if (matchingCount === 0 && !isSelected) {
+          btn.disabled = true;
+        } else {
+          btn.onclick = () => {
+            if (selectedTags.has(tag)) selectedTags.delete(tag);
+            else selectedTags.add(tag);
+            renderTags();
+            renderGrid();
+          };
+        }
+        tagsBar.appendChild(btn);
+      });
+
+      if (showFavoritesOnly || selectedTags.size > 0 || searchQuery.trim() !== '') {
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'btn-reset-filters';
+        resetBtn.textContent = '✕ Resetuj filtry';
+        resetBtn.onclick = () => {
+          showFavoritesOnly = false;
+          selectedTags.clear();
+          searchQuery = '';
+          document.getElementById('search-input').value = '';
+          renderTags();
+          renderGrid();
+        };
+        tagsBar.appendChild(resetBtn);
+      }
+    }
+
+    function copyShortName(e, name) {
+      e.stopPropagation();
+      navigator.clipboard.writeText(name);
+    }
+
+    function copyFullPath(e, asset, btn) {
+      e.stopPropagation();
+      const pathText = asset.fullPath || `/Game/Generated_Buildings/Mesh/${asset.name}.${asset.name}`;
+      navigator.clipboard.writeText(pathText);
+      const original = btn.textContent;
+      btn.textContent = 'Skopiowano!';
+      btn.style.background = '#10b981';
+      btn.style.color = '#000';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 1200);
+    }
+
+    function createMeshCardElement(asset, index) {
+      const card = document.createElement('article');
+      const statusClass = asset._status ? `status-${asset._status}` : '';
+      card.className = `card ${statusClass}`;
+      card.onclick = () => openModal(asset);
+
+      const assetId = getNumericMeshId(asset, index);
+      const favIds = getFavoriteIds();
+      const isFav = favIds.includes(assetId);
+      const favBtnClass = isFav ? 'fav-btn is-favorite' : 'fav-btn';
+      const favSymbol = isFav ? '❤️' : '♡';
+
+      const tagsHtml = asset.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+      const newBadgeHtml = buildNewBadgeHtml(asset.addedAt);
+      const cacheBuster = asset._imgVersion ? `?v=${asset._imgVersion}` : '';
+      const imgSrc = asset.image ? `${asset.image}${cacheBuster}` : '';
+      const imgContent = imgSrc
+        ? `<img src="${imgSrc}" alt="${asset.name}" loading="lazy" onerror="handleImageError(this)">`
+        : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-title" title="Kliknij, aby skopiować samą nazwę" onclick="copyShortName(event, '${asset.name}')">${asset.name}</div>
+            ${newBadgeHtml}
+          </div>
+          <div class="card-header-actions">
+            <button class="${favBtnClass}" title="${isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}" onclick="toggleFavorite(event, ${assetId})">${favSymbol}</button>
+            <div class="admin-card-actions">
+              <button class="icon-btn edit" title="Edytuj mesh" onclick="openMeshFormModal(event, ${index})">✎</button>
+              <button class="icon-btn delete" title="Oznacz do usunięcia / Cofnij" onclick="toggleDeleteMesh(event, ${index})">🗑</button>
+            </div>
+            <button class="copy-btn" title="Kopiuj ścieżkę od /Game/..." onclick="copyFullPath(event, ${JSON.stringify(asset).replace(/"/g, '&quot;')}, this)">Kopiuj</button>
+          </div>
+        </div>
+        <div class="card-image-wrap">
+          ${imgContent}
+        </div>
+        <div class="card-footer">
+          <div class="card-tags-list">${tagsHtml}</div>
+        </div>
+      `;
+      return card;
+    }
+
+    function renderMeshPreview() {
+      const previewGrid = document.getElementById('preview-meshes-grid');
+      previewGrid.innerHTML = '';
+      const indexed = allAssets.map((asset, idx) => ({ asset, idx }));
+      const latestThree = indexed.slice(-3).reverse();
+      latestThree.forEach(({ asset, idx }) => {
+        previewGrid.appendChild(createMeshCardElement(asset, idx));
+      });
+    }
+
+    function renderGrid() {
+      let indexedAssets = allAssets.map((asset, index) => ({ asset, index }));
+      const favIds = getFavoriteIds();
+
+      let filtered = indexedAssets.filter(({ asset, index }) => {
+        if (!matchesSearchText(asset)) return false;
+        if (showFavoritesOnly && !favIds.includes(getNumericMeshId(asset, index))) return false;
+        for (const tag of selectedTags) {
+          if (!asset.tags.includes(tag)) return false;
+        }
+        return true;
+      });
+
+      if (sortMode === 'default') {
+        filtered.sort((a, b) => getNumericMeshId(a.asset, a.index) - getNumericMeshId(b.asset, b.index));
+      } else if (sortMode === 'newest') {
+        filtered.sort((a, b) => {
+          const timeDiff = getTimestamp(b.asset.addedAt) - getTimestamp(a.asset.addedAt);
+          if (timeDiff !== 0) return timeDiff;
+          return getNumericMeshId(b.asset, b.index) - getNumericMeshId(a.asset, a.index);
+        });
+      } else if (sortMode === 'oldest') {
+        filtered.sort((a, b) => {
+          const timeDiff = getTimestamp(a.asset.addedAt) - getTimestamp(b.asset.addedAt);
+          if (timeDiff !== 0) return timeDiff;
+          return getNumericMeshId(a.asset, a.index) - getNumericMeshId(b.asset, b.index);
+        });
+      } else if (sortMode === 'az') {
+        filtered.sort((a, b) => a.asset.name.localeCompare(b.asset.name));
+      } else if (sortMode === 'za') {
+        filtered.sort((a, b) => b.asset.name.localeCompare(a.asset.name));
+      }
+
+      document.getElementById('results-info').innerHTML = `Wyświetlono <strong>${filtered.length}</strong> z ${allAssets.length} obiektów`;
+
+      const grid = document.getElementById('assets-grid');
+      grid.innerHTML = '';
+      filtered.forEach(({ asset, index }) => {
+        grid.appendChild(createMeshCardElement(asset, index));
+      });
+    }
+
+    function openMeshFormModal(e, index = null) {
+      if (e) e.stopPropagation();
+      refreshAdminActivity();
+      editingMeshIndex = index;
+      pendingImageBlob = null;
+      aiSuggestedNewTags.clear();
+      document.getElementById('ai-tags-hint').classList.remove('visible');
+      document.getElementById('ai-target-wrapper').classList.remove('ai-loading');
+      document.getElementById('mf-tag-search').value = '';
+
+      document.getElementById('mf-auto-ai-checkbox').checked = isAutoAiEnabled();
+
+      clearFieldError('mf-name', 'err-mf-name');
+      clearFieldError('mf-image', 'err-mf-image');
+      clearFieldError('mf-desc', 'err-mf-desc');
+
+      const statusText = document.getElementById('mf-paste-status');
+      const previewEl = document.getElementById('mf-paste-preview');
+      const submitNextBtn = document.getElementById('mf-submit-next-btn');
+      const activeId = getActiveFormMeshId();
+      const defaultPath = getMeshImagePathById(activeId);
+
+      statusText.innerHTML = `Wciśnij <kbd>Ctrl + V</kbd> aby wkleić zdjęcie PNG (zapisze się jako <strong>${defaultPath}</strong>), przeciągnij lub <u>wybierz z dysku</u>`;
+
+      if (index !== null) {
+        const asset = allAssets[index];
+        document.getElementById('mesh-form-eyebrow').textContent = `EDYCJA OBIEKTU • ID ${activeId}`;
+        document.getElementById('mesh-form-title').textContent = 'EDYTUJ MESH';
+        document.getElementById('mf-submit-btn').textContent = 'Zapisz zmiany';
+        submitNextBtn.style.display = 'none';
+        document.getElementById('mf-name').value = asset.fullPath || asset.name;
+        document.getElementById('mf-image').value = asset.image || defaultPath;
+        document.getElementById('mf-desc').value = asset.description || '';
+        modalSelectedTags = new Set(asset.tags);
+
+        if (asset.image) {
+          previewEl.src = asset._imgVersion ? `${asset.image}?v=${asset._imgVersion}` : asset.image;
+          previewEl.classList.add('visible');
+        } else {
+          previewEl.classList.remove('visible');
+        }
+      } else {
+        document.getElementById('mesh-form-eyebrow').textContent = `NOWY WPIS • ID ${activeId}`;
+        document.getElementById('mesh-form-title').textContent = 'DODAJ MESH';
+        document.getElementById('mf-submit-btn').textContent = 'Dodaj do listy';
+        submitNextBtn.style.display = 'inline-block';
+        document.getElementById('mf-name').value = '';
+        document.getElementById('mf-image').value = defaultPath;
+        document.getElementById('mf-desc').value = '';
+        modalSelectedTags = new Set();
+        previewEl.classList.remove('visible');
+      }
+
+      renderModalTagSelector();
+      document.getElementById('mesh-form-modal').classList.add('open');
+      if (index === null) {
+        setTimeout(() => document.getElementById('mf-name').focus(), 40);
+      }
+    }
+
+    function updateAiTagsHintVisibility() {
+      const hint = document.getElementById('ai-tags-hint');
+      const hasAnySuggested = Array.from(aiSuggestedNewTags).some(t => modalSelectedTags.has(t));
+      hint.classList.toggle('visible', hasAnySuggested);
+    }
+
+    function rejectAllAiSuggestedTags() {
+      for (const tag of aiSuggestedNewTags) {
+        modalSelectedTags.delete(tag);
+      }
+      aiSuggestedNewTags.clear();
+      updateAiTagsHintVisibility();
+      renderModalTagSelector();
+    }
+
+    function renderModalTagSelector() {
+      const q = document.getElementById('mf-tag-search').value.toLowerCase().trim();
+      const list = document.getElementById('mf-tag-list');
+      list.innerHTML = '';
+
+      const sortedExisting = [...availableTags].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
+      const combinedTags = Array.from(new Set([...aiSuggestedNewTags, ...sortedExisting]));
+      const tagsToShow = combinedTags.filter(t => t.toLowerCase().includes(q));
+
+      tagsToShow.forEach(tag => {
+        const isSuggested = aiSuggestedNewTags.has(tag);
+        const isSelected = modalSelectedTags.has(tag);
+        const el = document.createElement('div');
+        el.className = `tag-option ${isSuggested ? 'ai-suggested' : ''} ${isSelected ? 'selected' : ''}`;
+        el.textContent = isSuggested ? `✨ ${tag}` : tag;
+
+        el.onclick = () => {
+          refreshAdminActivity();
+          if (modalSelectedTags.has(tag)) {
+            modalSelectedTags.delete(tag);
+            if (isSuggested) aiSuggestedNewTags.delete(tag);
+          } else {
+            modalSelectedTags.add(tag);
+          }
+          updateAiTagsHintVisibility();
+          renderModalTagSelector();
+        };
+        list.appendChild(el);
+      });
+    }
+
+    function saveMeshForm(addAnother = false) {
+      const rawPathVal = document.getElementById('mf-name').value.trim();
+      let image = document.getElementById('mf-image').value.trim();
+      const description = document.getElementById('mf-desc').value.trim();
+      const tags = Array.from(modalSelectedTags);
+
+      if (!rawPathVal) {
+        showFieldError('mf-name', 'err-mf-name', 'To pole jest wymagane — wklej ścieżkę mesha.');
+        document.getElementById('mf-name').focus();
+        return;
+      }
+
+      refreshAdminActivity();
+      const { fullName, fullPath } = parseUnrealPath(rawPathVal);
+      const meshId = getActiveFormMeshId();
+      const imgVersion = Date.now();
+
+      if (pendingImageBlob) {
+        image = getMeshImagePathById(meshId);
+        uploadPendingImageToGithubInBackground(pendingImageBlob, image, meshId).then(() => {
+          const found = allAssets.find(a => getNumericMeshId(a, 0) === meshId);
+          if (found) {
+            found.image = image;
+            found._imgVersion = Date.now();
+            renderGrid();
+            renderMeshPreview();
+          }
+        });
+      } else if (!image) {
+        image = getMeshImagePathById(meshId);
+      }
+
+      tags.forEach(tag => {
+        if (!availableTags.includes(tag)) availableTags.push(tag);
+      });
+
+      if (editingMeshIndex !== null) {
+        const current = allAssets[editingMeshIndex];
+        allAssets[editingMeshIndex] = {
+          ...current,
+          id: meshId,
+          name: fullName,
+          fullPath,
+          image,
+          tags,
+          description,
+          addedAt: current.addedAt || new Date().toISOString(),
+          _status: current._status === 'added' ? 'added' : 'edited',
+          _imgVersion: imgVersion
+        };
+      } else {
+        allAssets.push({
+          id: meshId,
+          name: fullName,
+          fullPath,
+          image,
+          tags,
+          description,
+          addedAt: new Date().toISOString(),
+          _status: 'added',
+          _imgVersion: imgVersion
+        });
+      }
+
+      updateMeshStats();
+      renderTags();
+      renderGrid();
+      renderMeshPreview();
+
+      if (addAnother) {
+        openMeshFormModal(null, null);
+        document.getElementById('mesh-form-eyebrow').textContent = `DODANO POPRZEDNI (${fullName}) • KOLEJNY WPIS (ID ${getActiveFormMeshId()})`;
+      } else {
+        closeModal('mesh-form-modal');
+      }
+    }
+
+    function toggleDeleteMesh(e, index) {
+      e.stopPropagation();
+      refreshAdminActivity();
+      const item = allAssets[index];
+      if (item._status === 'deleted') {
+        item._status = item._prevStatus || null;
+      } else {
+        item._prevStatus = item._status || null;
+        item._status = 'deleted';
+      }
+      updateMeshStats();
+      renderGrid();
+      renderMeshPreview();
+    }
+
+    function exportAssetsJson(btn) {
+      refreshAdminActivity();
+      const cleanAssets = allAssets
+        .filter(a => a._status !== 'deleted')
+        .map(({ _status, _prevStatus, _imgVersion, ...rest }) => rest);
+
+      const sortedExportTags = [...availableTags].sort((a, b) => a.localeCompare(b, 'pl', { sensitivity: 'base' }));
+      const output = { tags: sortedExportTags, assets: cleanAssets };
+      navigator.clipboard.writeText(JSON.stringify(output, null, 2));
+      const orig = btn.textContent;
+      btn.textContent = '✓ Skopiowano JSON do schowka!';
+      btn.style.background = '#10b981';
+      btn.style.color = '#000';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 2000);
+    }
+
+    function changeGeminiApiKey() {
+      const current = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+      const newKey = prompt('Wklej swój klucz Google AI API (AIza...):', current);
+      if (newKey !== null && newKey.trim() !== '') {
+        localStorage.setItem(GEMINI_KEY_STORAGE, newKey.trim());
+        clearFieldError('mf-desc', 'err-mf-desc');
+      }
+    }
+
+    async function callGeminiWithFallback(apiKey, promptText, mimeType, base64Data) {
+      let lastError = null;
+      for (const modelName of GEMINI_MODELS_FALLBACK) {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: promptText },
+                { inlineData: { mimeType, data: base64Data } }
+              ]
+            }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        const data = await resp.json();
+        if (!data.error) return data;
+
+        lastError = data.error;
+        const msg = data.error.message || 'Błąd komunikacji z Google AI.';
+        const status = data.error.code || resp.status;
+
+        if (status === 400 || status === 403 || msg.toLowerCase().includes('api key not valid')) {
+          localStorage.removeItem(GEMINI_KEY_STORAGE);
+          throw new Error('Nieprawidłowy klucz Google AI API.');
+        }
+
+        if (!isModelUnavailableOrRetryableError(status, msg)) {
+          throw new Error(msg);
+        }
+      }
+      throw new Error(lastError?.message || 'Serwery Google AI są chwilowo niedostępne.');
+    }
+
+    async function generateAiMeshDescription() {
+      const imgUrl = document.getElementById('mf-image').value.trim();
+      clearFieldError('mf-image', 'err-mf-image');
+      clearFieldError('mf-desc', 'err-mf-desc');
+
+      if (!imgUrl && !pendingImageBlob) {
+        showFieldError('mf-image', 'err-mf-image', 'Wklej najpierw zdjęcie ze schowka lub link.');
+        document.getElementById('mf-image').focus();
+        return;
+      }
+
+      let apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+      if (!apiKey) {
+        apiKey = prompt('Wklej swój darmowy klucz Google AI API:');
+        if (!apiKey || !apiKey.trim()) return;
+        apiKey = apiKey.trim();
+        localStorage.setItem(GEMINI_KEY_STORAGE, apiKey);
+      }
+
+      refreshAdminActivity();
+      const btn = document.getElementById('btn-ai-desc');
+      const wrapper = document.getElementById('ai-target-wrapper');
+      const origText = btn.textContent;
+
+      btn.disabled = true;
+      btn.textContent = 'Analiza detali...';
+      wrapper.classList.add('ai-loading');
+
+      try {
+        let blob = pendingImageBlob;
+        if (!blob) {
+          const imgResp = await fetch(imgUrl);
+          if (!imgResp.ok) throw new Error('Nie udało się pobrać obrazka.');
+          blob = await imgResp.blob();
+        }
+
+        const base64Data = await blobToBase64(blob);
+        const existingTagsJson = JSON.stringify(availableTags);
+
+        const promptText = `Jesteś profesjonalnym architektem i asystentem bazy assetów 3D do gry The Bus. Przeanalizuj ten Static Mesh budynku. Wykonaj 3 zadania i zwróć WYŁĄCZNIE poprawny obiekt JSON:
+
+1. "description": Opisz swobodnie i szczegółowo po polsku w 2-3 konkretnych zdaniach wszystko, co widzisz w konstrukcji tego elementu (liczba skrzydeł okiennych, np. dwuskrzydłowe/trójskrzydłowe, dodatkowe okna poziome/lufciki nad oknem, gzymsy, balkony, pasy podokienne, zadaszenia, kształt bryły).
+   ABSOLUTNY ZAKAZ wspominania w opisie o szachownicy, przezroczystości, teksturach, kolorach tła czy otoczeniu.
+
+2. "matchedTags": Wybierz z poniższej listy istniejących tagów TYLKO te, które w 100% pasują do obiektu: ${existingTagsJson}
+
+3. "suggestedNewTags": BĄDŹ BARDZO RYGORYSTYCZNY. NIE wymyślaj nowych tagów na siłę ani szczegółowych opisowych etykiet (ZAKAZ tagów typu "Okno poziome nad głównym", "Podwójny gzyms", "Ozdobna oprawa" itp. — takie detale mają trafić WYŁĄCZNIE do pola "description").
+   Zaproponuj maksymalnie 1 (słownie: JEDEN) nowy, krótki (1-2 słowa), ogólny tag kategorii (np. "Balkon", "Dach", "Schody", "Witryna", "Filary") TYLKO wtedy, gdy na liście istniejących tagów ewidentnie brakuje głównego, ogólnego elementu widocznego na zdjęciu. W 90% przypadków zwróć pustą tablicę [].
+
+Format JSON: { "description": "...", "matchedTags": ["..."], "suggestedNewTags": [] }`;
+
+        const aiJson = await callGeminiWithFallback(apiKey, promptText, blob.type || 'image/jpeg', base64Data);
+        const rawText = aiJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const parsed = JSON.parse(rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+
+        if (parsed.description) document.getElementById('mf-desc').value = parsed.description.trim();
+
+        for (const oldSug of aiSuggestedNewTags) modalSelectedTags.delete(oldSug);
+        aiSuggestedNewTags.clear();
+
+        if (Array.isArray(parsed.matchedTags)) {
+          parsed.matchedTags.forEach(tag => {
+            const exactMatch = availableTags.find(t => t.toLowerCase() === String(tag).toLowerCase().trim());
+            if (exactMatch) modalSelectedTags.add(exactMatch);
+          });
+        }
+
+        if (Array.isArray(parsed.suggestedNewTags)) {
+          parsed.suggestedNewTags.slice(0, 1).forEach(rawTag => {
+            const cleanTag = String(rawTag).trim();
+            if (!cleanTag || cleanTag.split(/\s+/).length > 2) return;
+            const alreadyExists = availableTags.find(t => t.toLowerCase() === cleanTag.toLowerCase());
+            if (alreadyExists) {
+              modalSelectedTags.add(alreadyExists);
+            } else {
+              const formattedTag = cleanTag.charAt(0).toUpperCase() + cleanTag.slice(1);
+              aiSuggestedNewTags.add(formattedTag);
+              modalSelectedTags.add(formattedTag);
+            }
+          });
+        }
+
+        updateAiTagsHintVisibility();
+        renderModalTagSelector();
+      } catch (err) {
+        showFieldError('mf-desc', 'err-mf-desc', 'Błąd AI: ' + err.message);
+      } finally {
+        wrapper.classList.remove('ai-loading');
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+
+    function createTutorialCardElement(tut, index) {
+      const card = document.createElement('div');
+      const statusClass = tut._status ? `status-${tut._status}` : '';
+      card.className = `card ${statusClass}`;
+      card.onclick = () => {
+        if (tut.youtubeUrl) window.open(tut.youtubeUrl, '_blank', 'noopener,noreferrer');
+      };
+
+      const thumbUrl = tut.thumbnail || getYoutubeThumbnail(tut.youtubeUrl);
+      const newBadgeHtml = buildNewBadgeHtml(tut.addedAt);
+      const imgHtml = thumbUrl
+        ? `<img src="${thumbUrl}" alt="${tut.title}" loading="lazy" onerror="handleImageError(this)"><div class="yt-play-badge">▶</div>`
+        : `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="tutorial-card-title">${tut.title}</div>
+            ${newBadgeHtml}
+          </div>
+          <div class="admin-card-actions">
+            <button class="icon-btn edit" title="Edytuj poradnik" onclick="openTutorialFormModal(event, ${index})">✎</button>
+            <button class="icon-btn delete" title="Oznacz do usunięcia / Cofnij" onclick="toggleDeleteTutorial(event, ${index})">🗑</button>
+          </div>
+        </div>
+        <div class="card-image-wrap">${imgHtml}</div>
+        <p class="card-desc">${tut.description || ''}</p>
+        <div class="card-footer">
+          <div class="tutorial-author">Autor: <span>${tut.author || 'Społeczność'}</span></div>
+          <span class="yt-watch-label">Oglądaj na YT ↗</span>
+        </div>
+      `;
+      return card;
+    }
+
+    function renderTutorialsPreview() {
+      const previewGrid = document.getElementById('preview-tutorials-grid');
+      previewGrid.innerHTML = '';
+      allTutorials.slice(0, 3).forEach((tut, idx) => {
+        previewGrid.appendChild(createTutorialCardElement(tut, idx));
+      });
+    }
+
+    function renderTutorialsGrid() {
+      const q = tutorialSearchQuery.toLowerCase().trim();
+      const indexed = allTutorials.map((tut, index) => ({ tut, index }));
+
+      let filtered = indexed.filter(({ tut }) => {
+        if (!q) return true;
+        return (
+          tut.title.toLowerCase().includes(q) ||
+          (tut.author && tut.author.toLowerCase().includes(q)) ||
+          (tut.description && tut.description.toLowerCase().includes(q))
+        );
+      });
+
+      if (tutorialSortMode === 'newest') {
+        filtered.sort((a, b) => getTimestamp(b.tut.addedAt) - getTimestamp(a.tut.addedAt));
+      } else if (tutorialSortMode === 'oldest') {
+        filtered.sort((a, b) => getTimestamp(a.tut.addedAt) - getTimestamp(b.tut.addedAt));
+      } else if (tutorialSortMode === 'az') {
+        filtered.sort((a, b) => a.tut.title.localeCompare(b.tut.title));
+      } else if (tutorialSortMode === 'za') {
+        filtered.sort((a, b) => b.tut.title.localeCompare(a.tut.title));
+      }
+
+      document.getElementById('tutorials-results-info').innerHTML = `Wyświetlono <strong>${filtered.length}</strong> z ${allTutorials.length} poradników`;
+
+      const grid = document.getElementById('tutorials-grid');
+      grid.innerHTML = '';
+      filtered.forEach(({ tut, index }) => {
+        grid.appendChild(createTutorialCardElement(tut, index));
+      });
+    }
+
+    function openTutorialFormModal(e, index = null) {
+      if (e) e.stopPropagation();
+      refreshAdminActivity();
+      editingTutorialIndex = index;
+      clearFieldError('tf-title', 'err-tf-title');
+      clearFieldError('tf-url', 'err-tf-url');
+
+      if (index !== null) {
+        const tut = allTutorials[index];
+        document.getElementById('tut-form-eyebrow').textContent = 'EDYCJA PORADNIKA';
+        document.getElementById('tut-form-title').textContent = 'EDYTUJ PORADNIK';
+        document.getElementById('tf-submit-btn').textContent = 'Zapisz zmiany';
+        document.getElementById('tf-title').value = tut.title;
+        document.getElementById('tf-url').value = tut.youtubeUrl || '';
+        document.getElementById('tf-author').value = tut.author || '';
+        document.getElementById('tf-desc').value = tut.description || '';
+      } else {
+        document.getElementById('tut-form-eyebrow').textContent = 'NOWY WPIS';
+        document.getElementById('tut-form-title').textContent = 'DODAJ PORADNIK';
+        document.getElementById('tf-submit-btn').textContent = 'Dodaj poradnik';
+        document.getElementById('tf-title').value = '';
+        document.getElementById('tf-url').value = '';
+        document.getElementById('tf-author').value = '';
+        document.getElementById('tf-desc').value = '';
+      }
+
+      document.getElementById('tutorial-form-modal').classList.add('open');
+    }
+
+    function saveTutorialForm() {
+      const title = document.getElementById('tf-title').value.trim();
+      const youtubeUrl = document.getElementById('tf-url').value.trim();
+      const author = document.getElementById('tf-author').value.trim() || 'Społeczność';
+      const description = document.getElementById('tf-desc').value.trim();
+
+      let hasError = false;
+      if (!title) {
+        showFieldError('tf-title', 'err-tf-title', 'Podaj tytuł poradnika.');
+        hasError = true;
+      }
+      if (!youtubeUrl) {
+        showFieldError('tf-url', 'err-tf-url', 'Wklej link do filmu na YouTube.');
+        hasError = true;
+      }
+      if (hasError) return;
+
+      refreshAdminActivity();
+
+      if (editingTutorialIndex !== null) {
+        const current = allTutorials[editingTutorialIndex];
+        allTutorials[editingTutorialIndex] = {
+          ...current,
+          title, author, youtubeUrl, description,
+          addedAt: current.addedAt || new Date().toISOString(),
+          _status: current._status === 'added' ? 'added' : 'edited'
+        };
+      } else {
+        allTutorials.push({
+          title, author, youtubeUrl, description,
+          addedAt: new Date().toISOString(),
+          _status: 'added'
+        });
+      }
+
+      closeModal('tutorial-form-modal');
+      updateTutorialStats();
+      renderTutorialsGrid();
+      renderTutorialsPreview();
+    }
+
+    function toggleDeleteTutorial(e, index) {
+      e.stopPropagation();
+      refreshAdminActivity();
+      const item = allTutorials[index];
+      if (item._status === 'deleted') {
+        item._status = item._prevStatus || null;
+      } else {
+        item._prevStatus = item._status || null;
+        item._status = 'deleted';
+      }
+      updateTutorialStats();
+      renderTutorialsGrid();
+      renderTutorialsPreview();
+    }
+
+    function applyPreviewTransform() {
+      const box = document.getElementById('modal-media-box');
+      const img = document.getElementById('modal-preview-img');
+      const hint = document.getElementById('zoom-hint-badge');
+      const btn = document.getElementById('zoom-toggle-btn');
+      if (!img) return;
+
+      if (previewZoomState.isZoomed) {
+        box.classList.add('is-zoomed');
+
+        const maxPanX = (box.clientWidth * (previewZoomState.scale - 1)) / 2;
+        const maxPanY = (box.clientHeight * (previewZoomState.scale - 1)) / 2;
+        previewZoomState.panX = Math.max(-maxPanX, Math.min(maxPanX, previewZoomState.panX));
+        previewZoomState.panY = Math.max(-maxPanY, Math.min(maxPanY, previewZoomState.panY));
+
+        img.style.transform = `translate(${previewZoomState.panX}px, ${previewZoomState.panY}px) scale(${previewZoomState.scale})`;
+        if (hint) hint.innerHTML = '✋ Przeciągaj obiekt wewnątrz okna • Kliknij, aby oddalić';
+        if (btn) btn.textContent = '−';
+      } else {
+        box.classList.remove('is-zoomed', 'is-dragging');
+        img.style.transform = 'translate(0px, 0px) scale(1)';
+        if (hint) hint.innerHTML = '🔍 Kliknij obraz, aby przybliżyć';
+        if (btn) btn.textContent = '+';
+      }
+    }
+
+    function resetPreviewZoom() {
+      previewZoomState.isZoomed = false;
+      previewZoomState.panX = 0;
+      previewZoomState.panY = 0;
+      previewZoomState.isDragging = false;
+      previewZoomState.hasMoved = false;
+      applyPreviewTransform();
+    }
+
+    function openModal(asset) {
+      resetPreviewZoom();
+      const mediaBox = document.getElementById('modal-media-box');
+
+      if (asset.image) {
+        const src = asset._imgVersion ? `${asset.image}?v=${asset._imgVersion}` : asset.image;
+        mediaBox.innerHTML = `
+          <button type="button" class="zoom-toggle-btn" id="zoom-toggle-btn" title="Przybliż / Oddal">+</button>
+          <img id="modal-preview-img" src="${src}" alt="${asset.name}" draggable="false" onerror="handleImageError(this)">
+          <div class="zoom-hint-badge" id="zoom-hint-badge">🔍 Kliknij obraz, aby przybliżyć</div>
+        `;
+        setupPreviewZoomControls();
+      } else {
+        mediaBox.innerHTML = `<div class="no-image-placeholder"><span>Brak podglądu obrazu</span></div>`;
+      }
+
+      const tagsListEl = document.getElementById('modal-tags-list');
+      tagsListEl.innerHTML = (asset.tags && asset.tags.length > 0)
+        ? asset.tags.map(t => `<span class="card-tag">${t}</span>`).join('')
+        : '<span style="font-size:12px; color:var(--text-muted);">Brak przypisanych tagów</span>';
+
+      document.getElementById('modal-title').textContent = asset.name;
+      document.getElementById('modal-desc').textContent = asset.description || 'Brak dodatkowego opisu dla tego obiektu.';
+
+      const copyBtn = document.getElementById('modal-copy-btn');
+      copyBtn.onclick = (e) => copyFullPath(e, asset, copyBtn);
+
+      document.getElementById('modal-backdrop').classList.add('open');
+    }
+
+    function setupPreviewZoomControls() {
+      const box = document.getElementById('modal-media-box');
+      const toggleBtn = document.getElementById('zoom-toggle-btn');
+
+      if (toggleBtn) {
+        toggleBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (previewZoomState.isZoomed) resetPreviewZoom();
+          else {
+            previewZoomState.isZoomed = true;
+            previewZoomState.panX = 0;
+            previewZoomState.panY = 0;
+            applyPreviewTransform();
+          }
+        };
+      }
+
+      box.onmousedown = (e) => {
+        if (e.button !== 0 || e.target === toggleBtn) return;
+        e.preventDefault();
+        previewZoomState.isDragging = true;
+        previewZoomState.hasMoved = false;
+        previewZoomState.startX = e.clientX - previewZoomState.panX;
+        previewZoomState.startY = e.clientY - previewZoomState.panY;
+        if (previewZoomState.isZoomed) box.classList.add('is-dragging');
+
+        const onDocumentMouseMove = (moveEvent) => {
+          if (!previewZoomState.isDragging) return;
+          const dx = moveEvent.clientX - previewZoomState.startX;
+          const dy = moveEvent.clientY - previewZoomState.startY;
+          if (Math.abs(dx - previewZoomState.panX) > 3 || Math.abs(dy - previewZoomState.panY) > 3) {
+            previewZoomState.hasMoved = true;
+          }
+          if (previewZoomState.isZoomed) {
+            previewZoomState.panX = dx;
+            previewZoomState.panY = dy;
+            applyPreviewTransform();
+          }
+        };
+
+        const onDocumentMouseUp = (upEvent) => {
+          if (!previewZoomState.isDragging) return;
+          previewZoomState.isDragging = false;
+          box.classList.remove('is-dragging');
+
+          document.removeEventListener('mousemove', onDocumentMouseMove);
+          document.removeEventListener('mouseup', onDocumentMouseUp);
+
+          if (!previewZoomState.hasMoved) {
+            if (!previewZoomState.isZoomed) {
+              const rect = box.getBoundingClientRect();
+              const offsetX = (rect.width / 2 - (upEvent.clientX - rect.left)) * 0.85;
+              const offsetY = (rect.height / 2 - (upEvent.clientY - rect.top)) * 0.85;
+              previewZoomState.isZoomed = true;
+              previewZoomState.panX = offsetX;
+              previewZoomState.panY = offsetY;
+              applyPreviewTransform();
+            } else resetPreviewZoom();
+          }
+        };
+
+        document.addEventListener('mousemove', onDocumentMouseMove);
+        document.addEventListener('mouseup', onDocumentMouseUp);
+      };
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderTags();
+      renderGrid();
+    });
+
+    document.getElementById('sort-select').addEventListener('change', (e) => {
+      sortMode = e.target.value;
+      renderGrid();
+    });
+
+    document.getElementById('tutorial-search-input').addEventListener('input', (e) => {
+      tutorialSearchQuery = e.target.value;
+      renderTutorialsGrid();
+    });
+
+    document.getElementById('tutorial-sort-select').addEventListener('change', (e) => {
+      tutorialSortMode = e.target.value;
+      renderTutorialsGrid();
+    });
+
+    init();
+  </script>
+</body>
+</html>
