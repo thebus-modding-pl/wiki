@@ -638,7 +638,6 @@
         "Opaska okienna",
         "Przyczółek",
         "Tralki",
-        "Przyczółek trójkątny",
         "Gzyms nadokienny",
         "Wnęka okienna"
       ],
@@ -895,7 +894,6 @@
         "Witryna",
         "Ściana",
         "Fasada",
-        "Parapet",
         "Opaska okienna",
         "Witryna sklepowa",
         "Zadaszenie"
@@ -962,7 +960,6 @@
         "Balustrada",
         "Wnęka okienna",
         "Okno trójskrzydłowe",
-        "Świetlik nadokienny",
         "Okno wielokwaterowe",
         "Bariera okienna",
         "Okno dwuskrzydłowe"
@@ -1716,7 +1713,6 @@
         "Ściana",
         "Fasada",
         "Cokół",
-        "Parapet",
         "Witryna sklepowa",
         "Świetlik nadokienny",
         "Okno poziome",
@@ -1931,7 +1927,6 @@
         "Zadaszenie",
         "Przeszklenie strukturalne",
         "Witryna sklepowa",
-        "Świetlik nadokienny",
         "Okno wielokwaterowe"
       ],
       "description": "Przedstawiony obiekt to nowoczesna fasada ze szklanymi witrynami oraz wejściem, wsparta na zewnętrznej konstrukcji słupowej tworzącej zadaszenie. Całość ma prostopadłościenną bryłę z przeszklonym parterem podzielonym na sekcje za pomocą pionowych profili oraz pasów podokiennych.",
